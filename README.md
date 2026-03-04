@@ -414,3 +414,8 @@ If you have any questions or suggestions, please provide feedback through:
 ---
 
 ⭐ If this project is helpful to you, please give us a star to show your support!
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/image?repos=Tswoen/Paper-Agent&type=date&legend=top-left)](https://www.star-history.com/?repos=Tswoen%2FPaper-Agent&type=date&logscale=&legend=top-left)
