@@ -10,8 +10,11 @@ from src.core.state_models import State,ExecutionState
 from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
+from openai import RateLimitError
+from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, before_sleep_log
 import re, json, ast
 import asyncio
+import logging
 
 logger = setup_logger(__name__)
 
@@ -32,7 +35,7 @@ class ExtractedPaperData(BaseModel):
     contributions: List[str] = Field(default=[], description="贡献")
     # author_institutions: Optional[str]  # 如“Stanford University, Department of CS”
     
-    # 清理空字符串和列表
+    # 清理空字符串和列表，统一格式
     @field_validator("datasets_used", "evaluation_metrics", "contributions", mode="before")
     @classmethod
     def _validate_list_fields(cls, v):
@@ -64,13 +67,14 @@ read_agent = AssistantAgent(
 )
 
 def sanitize_metadata(paper: Dict[str, Any]) -> Dict[str, Any]:
+    """把论文Dict清洗、标准化，防止存入Chroma时不稳定"""
     new_meta = {}
     for k, v in paper.items():
-        if v is None:
+        if v is None: # None 值直接丢弃
             continue
-        if isinstance(v, list):
+        if isinstance(v, list): # list 转成逗号拼接字符串
             new_meta[k] = ", ".join(str(x) for x in v)
-        elif isinstance(v, dict):
+        elif isinstance(v, dict): # dict 转成 JSON 字符串
             new_meta[k] = json.dumps(v, ensure_ascii=False)
         else:
             new_meta[k] = v
@@ -90,18 +94,17 @@ async def add_papers_to_kb(papers:Optional[List[Dict[str, Any]]], extracted_pape
         "api_key": provider_dic.get("api_key"),
     }
     kb_type = config.get("KB_TYPE")
+    
+    # 创建临时库
     database_info = await knowledge_base.create_database(
         "临时知识库", "用于存储临时提取的论文数据，仅用于本次报告的生成，用完即删", kb_type=kb_type, embed_info=embed_info, llm_info=None,
     )
     db_id = database_info["db_id"]
     config.set("tmp_db_id", db_id) # 记录临时知识库的db_id，后面retrieval_agent中使用
     
-    # 注释掉原本的代码，因为papers中包含了一些None值，导致报错
-    # documents = [json.dumps(paper.model_dump(), ensure_ascii=False) for paper in extracted_papers.papers],
-    # metadatas = [paper for paper in papers],
-    # ids = [str(i) for i in range(len(papers))]
-    
+    # 把论文数据转成JSON字符串
     documents=[json.dumps(paper.model_dump(),ensure_ascii=False) for paper in extracted_papers.papers]
+    # 把论文数据转成适合存入Chroma的结构
     sanitized_metadatas = []
     if papers:
         for paper in papers:
@@ -115,46 +118,57 @@ async def add_papers_to_kb(papers:Optional[List[Dict[str, Any]]], extracted_pape
             sanitized_metadatas.append(sanitize_metadata(paper))          
     metadatas = sanitized_metadatas
     
-    # # 确保 ids, metadatas 和 documents 长度一致
-    # # 注意：这里假设 extracted_papers.papers 和 papers 是一一对应的
-    # min_len = min(len(documents), len(metadatas))
-    # documents = documents[:min_len]
-    # metadatas = metadatas[:min_len]
-    # ids = [str(i) for i in range(min_len)]
     ids = [str(i) for i in range(len(documents))] 
     
     data = {
-        "documents": documents,
-        "metadatas": metadatas,
+        "documents": documents, # 提炼后的论文信息，用于embedding后相似度检索
+        "metadatas": metadatas, # 元数据，用于检索时过滤
         "ids": ids,
     }
 
+    # 写入向量库
     await knowledge_base.add_processed_content(db_id, data)
 
 
 async def reading_node(state: State) -> State:
-    """搜索论文节点"""
+    """阅读论文节点"""
     state_queue = state["state_queue"]
     current_state = state["value"]
     current_state.current_step = ExecutionState.READING
+    # 将初始状态推送到队列
     await state_queue.put(BackToFrontData(step=ExecutionState.READING,state="initializing",data=None))
 
     papers = current_state.search_results
 
-    # 将papers合理分割成多个任务，交给多个read_agent并行执行，最后合并结果
-    # 并行执行任务，使用asyncio.gather
-    results = await asyncio.gather(*[read_agent.run(task=str(paper)) for paper in papers])
+    # 创建信号量，限制并发数，避免被限流
+    semaphore = asyncio.Semaphore(2)
+
+    @retry(
+        retry=retry_if_exception_type(RateLimitError), # 只在抛出RateLimitError时重试
+        wait=wait_exponential(multiplier=10, min=15, max=120), # 指数退避，最小等待15秒，最大等待120秒
+        stop=stop_after_attempt(5), # 最多重试5次 
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True, # 如果重试5次都失败，则抛出异常
+    )
+    async def read_single_paper(paper):
+        return await read_agent.run(task=str(paper))
+
+    async def read_with_limit(paper):
+        async with semaphore:
+            return await read_single_paper(paper)
+
+    # 并行阅读多篇论文
+    results = await asyncio.gather(*[read_with_limit(paper) for paper in papers])
 
     # 合并结果
     extracted_papers = ExtractedPapersData()
-    # 注释掉原本的代码，防止数据格式导致报错
     # for result in results:
     #     if result.messages[-1].content:
     #         parsed_paper = result.messages[-1].content
     #         extracted_papers.papers.append(parsed_paper)   
     
-    # 清洗和预处理获取的数据    
-    successful_papers = []
+    # 清洗、预处理获取的数据    
+    successful_papers = [] 
     for i, result in enumerate(results):
         raw_content = result.messages[-1].content
         # logger.info(f"Reading Agent Raw Output: {raw_content}") # 打印原始输出

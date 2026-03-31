@@ -233,7 +233,8 @@ def get_embedding_config(embed_info: dict) -> dict:
         logger.error(f"Error in get_embedding_config: {e}, {embed_info}")
         raise ValueError(f"Error in get_embedding_config: {e}")
 
-    logger.debug(f"Embedding config: {config_dict}")
+    safe_config = {k: (v[:8] + "****" if k == "api_key" and v else v) for k, v in config_dict.items()}
+    logger.debug(f"Embedding config: {safe_config}")
     return config_dict
 
 def validate_img_embedding_file(file_path: str) -> bool:

@@ -24,7 +24,7 @@ class GlobalanalyseAgent:
     def __init__(self, model_client=None):
         """初始化聚类智能体"""
         self.model_client = create_subanalyse_global_analyse_model_client()
-        self.global_analyse_agent = AssistantAgent(
+        self.global_analyse_agent = AssistantAgent( 
             name="global_analyse_agent",
             model_client= self.model_client,
             system_message = global_analyse_agent_prompt,
@@ -32,7 +32,7 @@ class GlobalanalyseAgent:
         )
     
     async def generate_global_analyse(self, analyse_results: List[DeepAnalyseResult]) -> Dict[str, Any]:
-        """生成全局分析草稿 - 汇总各主题分析结果"""
+        """一次性处理所有的深入分析结果，生成全局分析草稿 - 汇总各主题分析结果"""
         try:
             # 准备所有聚类的分析内容
             cluster_summaries = []
@@ -113,8 +113,8 @@ class GlobalanalyseAgent:
             # global_analyse = response.messages[-1].content
             is_First = True
             response = self.global_analyse_agent.run_stream(task=prompt)
-            async for chunk in response: 
-                if is_First:
+            async for chunk in response:  # 持续读流式响应
+                if is_First: # 跳过第一条事件。通常第一条可能是起始元信息/非正文消息
                     is_First = False
                     continue
                 if not isinstance(chunk, TaskResult):

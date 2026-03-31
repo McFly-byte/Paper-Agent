@@ -1,0 +1,41 @@
+---
+description: Vue 3 前端开发规范，涵盖组件、状态管理、SSE 通信等约定
+globs: "web/**/*.{vue,js,ts,css}"
+alwaysApply: false
+---
+
+# Vue 前端开发规范
+
+## 技术栈
+- Vue 3.4+（Composition API + `<script setup>`）
+- Vite 5 构建
+- Vue Router 4 路由
+- axios 网络请求
+- marked + DOMPurify 渲染 Markdown
+
+## 组件规范
+- 使用 `<script setup>` 语法，单文件组件（SFC）
+- 组件命名 PascalCase，文件名与组件名一致
+- Props 使用 `defineProps` 并声明类型
+- Emits 使用 `defineEmits` 显式声明
+
+## 状态管理
+- 当前使用组件内 `ref()` / `reactive()` 管理状态
+- 如需跨组件共享状态，考虑引入 Pinia
+- SSE 事件数据通过 `EventSource.onmessage` 接收并解析
+
+## SSE 通信
+- 前端通过 `EventSource` 连接 `/api/research?query=...`
+- 接收 `BackToFrontData` JSON，根据 `step` 和 `state` 更新 UI
+- 人工审核通过 `POST /send_input` 提交结果
+- 注意 SSE 连接的错误处理和重连机制
+
+## 路由结构
+- `/` - 报告生成主页
+- `/history` - 历史记录
+- `/knowledge` - 知识库管理
+
+## 样式
+- 优先使用 scoped CSS
+- 响应式设计，适配不同屏幕尺寸
+- UI 交互需有加载状态和错误提示反馈

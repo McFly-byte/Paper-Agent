@@ -92,8 +92,8 @@ class PaperAgentState(BaseModel):
 
 class State(TypedDict):
     """LangGraph兼容的状态定义"""
-    state_queue: Queue
-    value: PaperAgentState
+    state_queue: Queue # 全局队列，用于存储状态
+    value: PaperAgentState # 全局状态对象
 
 class ConfigSchema(TypedDict):
     """LangGraph兼容的配置定义"""

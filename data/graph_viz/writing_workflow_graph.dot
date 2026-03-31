@@ -1,0 +1,17 @@
+digraph {
+    rankdir=LR;
+    splines=polyline;
+    label="写作子工作流 (WritingWorkflow)";
+    labelloc=t;
+    fontsize=14;
+    fontname="Microsoft YaHei";
+
+    START [shape=ellipse, style=filled, fillcolor="#e8f5e9", label="START"];
+    writing_director_node [shape=box, style="rounded,filled", fillcolor="#c5cae9", label="writing_director_node\n(大纲/任务拆分)"];
+    parallel_writing_node [shape=box, style="rounded,filled", fillcolor="#c5cae9", label="parallel_writing_node\n(并行写作)"];
+    END [shape=ellipse, style=filled, fillcolor="#fff3e0", label="END"];
+
+    START -> writing_director_node;
+    writing_director_node -> parallel_writing_node;
+    parallel_writing_node -> END;
+}

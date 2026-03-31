@@ -1,11 +1,11 @@
 from autogen_agentchat.agents import AssistantAgent
-from src.core.model_client import create_default_client
+from src.core.model_client import create_subwriting_retrieval_model_client
 from autogen_core.tools import FunctionTool
 from src.services.retrieval_tool import retrieval_tool
 from src.core.prompts import retrieval_agent_prompt
 
 def create_retrieval_agent():
-    model_client = create_default_client()
+    model_client = create_subwriting_retrieval_model_client()
 
     retriever = FunctionTool(retrieval_tool, description="用于从本地知识库中查询外部资料，来辅助写作的工具")
 

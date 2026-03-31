@@ -25,7 +25,10 @@ from src.agents.sub_analyse_agent.deep_analyse_agent import DeepAnalyseAgent
 from src.agents.sub_analyse_agent.global_analyse_agent import GlobalanalyseAgent
 from src.core.model_client import create_default_client
 from src.core.state_models import BackToFrontData
+from openai import RateLimitError
+from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, before_sleep_log
 import json
+import logging
 
 from src.core.state_models import State,ExecutionState
 from autogen_core import message_handler
@@ -69,7 +72,9 @@ class AnalyseAgent(BaseChatAgent):
         # async for msg in self.on_messages_stream(stream_message, cancellation_token):
         #     if isinstance(msg, Response):
         #         response = msg
-        response = await self.on_messages_stream(stream_message, cancellation_token)
+
+        # 下层还是调on_messages_stream() 等起输出完成后一次性返回
+        response = await self.on_messages_stream(stream_message, cancellation_token) 
         assert response is not None
         return response
 
@@ -85,29 +90,46 @@ class AnalyseAgent(BaseChatAgent):
             生成分析过程中的事件或消息
             AsyncGenerator[BaseAgentEvent | BaseChatMessage | Response, None]
         """
-        # 1. 调用聚类智能体进行论文聚类
+        # 1. 聚类
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文聚类分析\n"))
-        cluster_results = await self.cluster_agent.run(message)
+        cluster_results = await self.cluster_agent.run(message) # PaperCluster列表
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data=f"论文聚类分析完成，共形成 {len(cluster_results)} 个聚类\n"))
 
-        # 2. 调用深度分析智能体分析每个聚类的论文
+        # 2. 深度分析每个聚类的论文
         deep_analysis_results = []
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文深度分析\n"))
-        deep_analysis_results = await asyncio.gather(*[self.deep_analyse_agent.run(cluster) for cluster in cluster_results])
+        semaphore = asyncio.Semaphore(2)
+
+        @retry(
+            retry=retry_if_exception_type(RateLimitError),
+            wait=wait_exponential(multiplier=10, min=15, max=120),
+            stop=stop_after_attempt(5),
+            before_sleep=before_sleep_log(logger, logging.WARNING),
+            reraise=True,
+        )
+        async def analyse_single(cluster):
+            return await self.deep_analyse_agent.run(cluster)
+
+        # 每个cluster包装一个携程，并发执行
+        async def analyse_with_limit(cluster):
+            async with semaphore:
+                return await analyse_single(cluster)
+
+        deep_analysis_results = await asyncio.gather(*[analyse_with_limit(cluster) for cluster in cluster_results]) # 对每个cluster进行深度分析，返回DeepAnalyseResult列表
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="论文深度分析完成\n"))
         
         # 3. 调用全局分析智能体生成整体分析报告
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="等待全局分析\n"))
         is_thinking = None
-        async for chunk in self.global_analyse_agent.run(deep_analysis_results):
+        async for chunk in self.global_analyse_agent.run(deep_analysis_results): # 消费全局分析的流式输出
             if isinstance(chunk, Dict):
-                if not chunk.get("isSuccess", False):
+                if not chunk.get("isSuccess", False): # 全局分析失败
                     await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="error",data=chunk.get("global_analyse", "Unknown error")))
                     break
-                global_analysis = chunk
+                global_analysis = chunk # 全局分析结果
                 break
-            state,is_thinking = handlerChunk(is_thinking,chunk)
-            if state is None:
+            state,is_thinking = handlerChunk(is_thinking,chunk) # 处理流式响应中的chunk，判断是否是思考状态，并返回状态和是否思考
+            if state is None: # state 为None不用推送
                 continue
             await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state=state,data=chunk))
             
@@ -120,7 +142,7 @@ class AnalyseAgent(BaseChatAgent):
 
     async def on_reset(self, cancellation_token: CancellationToken) -> None:
         pass
-   
+
 async def analyse_node(state: State) -> State:
     """搜索论文节点"""
     try:
@@ -131,7 +153,7 @@ async def analyse_node(state: State) -> State:
         extracted_papers = current_state.extracted_data
 
         analyse_agent = AnalyseAgent(state_queue=state_queue)
-        task = StructuredMessage(content=extracted_papers, source="User")
+        task = StructuredMessage(content=extracted_papers, source="User") # 把对象转成结构化消息
         # task = TextMessage(content=json.dumps(extracted_papers.model_dump(),ensure_ascii=False), source="User")
         response = await analyse_agent.run(task=task)
 
@@ -142,9 +164,9 @@ async def analyse_node(state: State) -> State:
         # 尝试解析 JSON 并只提取 global_analyse 字段发送给前端，避免显示杂乱的 JSON 数据
         display_content = analyse_results
         try:
-            data_obj = json.loads(analyse_results)
-            if isinstance(data_obj, dict) and "global_analyse" in data_obj:
-                 display_content = data_obj["global_analyse"]
+            data_obj = json.loads(analyse_results) # 解析成JSON对象
+            if isinstance(data_obj, dict) and "global_analyse" in data_obj: # 如果是字典且包含global_analyse字段
+                 display_content = data_obj["global_analyse"] # 只提取global_analyse字段，用来显示给前端
         except Exception:
             pass # 如果解析失败，就还是保持原样，或者可以改为发送简短提示
              
@@ -155,8 +177,8 @@ async def analyse_node(state: State) -> State:
         return {"value": current_state}
             
     except Exception as e:
-        err_msg = f"Analyse failed: {str(e)}"
-        state["value"].error.analyse_node_error = err_msg
+        err_msg = f"Analyse failed: {str(e)}" 
+        state["value"].error.analyse_node_error = err_msg # 把错误写回状态对象
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="error",data=err_msg))
         return state
 

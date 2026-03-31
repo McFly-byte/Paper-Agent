@@ -46,7 +46,7 @@ class WritingWorkflow:
         return graph
     
 async def writing_node(state: State) -> State:
-    """运行写入工作流"""
+    """调度子工作流写作"""
     state_queue = state["state_queue"]
     try:
         current_state = state["value"]
@@ -61,6 +61,7 @@ async def writing_node(state: State) -> State:
         writing_state["current_section_index"] = -1
         writing_state["retrieved_docs"] = []
         writingWorkFlow = WritingWorkflow()
+        # 执行写作子图
         writing_state = await writingWorkFlow.workflow.ainvoke(writing_state)
         logger.info(f"writing_state: {writing_state}")
         current_state.writted_sections = [section.content for section in writing_state["writted_sections"]]

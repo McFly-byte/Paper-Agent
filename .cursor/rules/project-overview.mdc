@@ -1,0 +1,65 @@
+---
+description: Paper-Agent 项目背景、目标和整体架构概述，所有对话都应了解这些上下文
+alwaysApply: true
+---
+
+# Paper-Agent 项目概述
+
+## 项目定位
+Paper-Agent 是一个面向科研人员的智能学术调研报告生成系统，具备"检索-阅读-分析-写作-报告"全流程自动化能力。
+
+## 项目目标
+1. **求职目标**：作为大厂后端/大模型应用开发实习的简历项目，需体现工程能力和系统设计水平
+2. **比赛目标**：参加校内 AI 相关比赛，需具备创新性和完整度
+
+## 技术栈
+- **后端**：Python 3.12+, FastAPI, Uvicorn
+- **Agent 框架**：AutoGen (pyautogen, autogen-agentchat, autogen-ext)
+- **工作流编排**：LangGraph (StateGraph)
+- **向量数据库**：ChromaDB
+- **论文检索**：arXiv API
+- **ML**：scikit-learn (KMeans 聚类, 肘部法则)
+- **前端**：Vue 3.4 + Vite 5 + Vue Router 4
+- **实时通信**：SSE (sse-starlette)
+- **包管理**：Poetry
+
+## 核心架构
+LangGraph 工作流五大节点：
+1. `search_node` → 自然语言转结构化查询 + 人工审核 + arXiv 检索
+2. `reading_node` → 并行阅读论文 + 结构化信息提取 + 向量存储
+3. `analyse_node` → 聚类分析 → 深度分析 → 全局分析（三阶段）
+4. `writing_node` → 大纲生成 → 任务拆分 → 并行写作（多智能体协作）
+5. `report_node` → 章节汇总 → Markdown 报告流式输出
+
+## 关键设计模式
+- 单例模式（Config）
+- 工厂模式（ModelClient, KnowledgeBaseFactory）
+- 生产者-消费者（asyncio.Queue + SSE）
+- Human-in-the-loop（WebUserProxyAgent + asyncio.Future）
+- RAG（ChromaDB 检索增强写作）
+- 多智能体协作（SelectorGroupChat + TextMentionTermination）
+
+## 目录结构
+```
+src/
+├── agents/              # Agent 节点 & 子 Agent
+│   ├── orchestrator.py  # LangGraph 工作流编排
+│   ├── sub_analyse_agent/
+│   └── sub_writing_agent/
+├── core/                # 配置、模型客户端、状态模型、提示词
+├── services/            # 外部服务（ChromaDB、检索工具）
+├── knowledge/           # 知识库模块
+├── plugins/             # 插件（OCR 等）
+├── tasks/               # 论文搜索任务
+└── utils/               # 工具函数
+web/                     # Vue 3 前端
+test/                    # 测试文件
+```
+
+## 改进方向
+在修改代码时，始终考虑以下维度：
+- **工程规范**：类型注解、异常处理、日志规范、代码可测试性
+- **系统设计**：可扩展性、模块解耦、接口抽象
+- **性能优化**：并发控制、缓存策略、资源管理
+- **用户体验**：错误提示、进度反馈、交互流畅度
+- **创新亮点**：适合在简历/比赛中突出的技术特色

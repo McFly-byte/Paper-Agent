@@ -48,11 +48,12 @@ class DeepAnalyseAgent:
     def __init__(self, model_client=None):
         """初始化聚类智能体"""
         self.model_client = create_subanalyse_deep_analyse_model_client()
-        self.deep_analyse_agent = AssistantAgent(
+        self.deep_analyse_agent = AssistantAgent( # 用于对单个聚类进行深入分析
             name="deep_analyse_agent",
             model_client= self.model_client,
             system_message = deep_analyse_agent_prompt
         )
+        
     async def deep_analyze_cluster(self, cluster: PaperCluster) -> DeepAnalyseResult:
         """对单个聚类进行深入分析"""
         try:
@@ -71,7 +72,7 @@ class DeepAnalyseAgent:
                 请以结构化的方式组织你的分析结果。
 """
             
-            response = await self.deep_analyse_agent.run(task=prompt)
+            response = await self.deep_analyse_agent.run(task=prompt) # 深入分析
             analyse_content = response.messages[-1].content
             
             return DeepAnalyseResult(

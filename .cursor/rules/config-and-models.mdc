@@ -1,0 +1,46 @@
+---
+description: 配置文件和模型配置的编辑规范
+globs: "src/core/{config.py,models.yaml,system_params.yaml}"
+alwaysApply: false
+---
+
+# 配置与模型管理规范
+
+## 配置架构
+- `Config` 类为单例模式，全局通过 `from src.core.config import config` 访问
+- 配置加载顺序：`.env` → `models.yaml` → `system_params.yaml`，后者覆盖前者
+- 支持点分路径访问：`config.get("siliconflow.api_key")`
+
+## models.yaml 结构
+```yaml
+default-model:           # 默认 LLM 模型
+  model-provider: "xxx"
+  model: "xxx"
+default-embedding-model: # 默认 Embedding 模型
+  model-provider: "xxx"
+  model: "xxx"
+# 各模块可配置独立模型
+search-model:
+reading-model:
+subanalyse-cluster-model:
+# ...
+# Provider 配置
+siliconflow:
+  api_key: SILICONFLOW_API_KEY  # 引用 .env 中的变量名
+  base_url: https://api.siliconflow.cn/v1
+```
+
+## 新增模型 Provider
+1. 在 `models.yaml` 中添加 provider 配置块（api_key 引用 .env 变量名）
+2. 在 `model-provider` 列表中注册
+3. 在 `.env` 中添加对应的 API Key
+4. `ModelClient` 会自动根据 provider 配置创建客户端
+
+## system_params.yaml
+- 系统级参数：知识库类型、存储路径、检索参数、并发数等
+- 修改时注意参数间的关联影响
+
+## 注意事项
+- API Key 值只在 `.env` 文件中设置，`models.yaml` 中只放变量名引用
+- 新增配置项后检查 `_resolve_config_references` 是否需要更新
+- 路径类配置会被自动解析为绝对路径（相对于项目根目录）

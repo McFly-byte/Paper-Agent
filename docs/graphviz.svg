@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1078pt" height="251pt" viewBox="0.00 0.00 1078.00 251.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 247.4)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-247.4 1074.39,-247.4 1074.39,4 -4,4"/>
+<text xml:space="preserve" text-anchor="middle" x="535.19" y="-226.8" font-family="Microsoft YaHei" font-size="14.00">Paper-Agent 主编排 DAG (LangGraph)</text>
+<!-- START -->
+<g id="node1" class="node">
+<title>START</title>
+<ellipse fill="#e8f5e9" stroke="black" cx="41.62" cy="-20.8" rx="41.62" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="41.62" y="-16.6" font-family="Times,serif" font-size="14.00">START</text>
+</g>
+<!-- search_node -->
+<g id="node2" class="node">
+<title>search_node</title>
+<path fill="#bbdefb" stroke="black" d="M194.21,-41.6C194.21,-41.6 132.24,-41.6 132.24,-41.6 126.24,-41.6 120.24,-35.6 120.24,-29.6 120.24,-29.6 120.24,-12 120.24,-12 120.24,-6 126.24,0 132.24,0 132.24,0 194.21,0 194.21,0 200.21,0 206.21,-6 206.21,-12 206.21,-12 206.21,-29.6 206.21,-29.6 206.21,-35.6 200.21,-41.6 194.21,-41.6"/>
+<text xml:space="preserve" text-anchor="middle" x="163.22" y="-25" font-family="Times,serif" font-size="14.00">search_node</text>
+<text xml:space="preserve" text-anchor="middle" x="163.22" y="-8.2" font-family="Times,serif" font-size="14.00">(检索)</text>
+</g>
+<!-- START&#45;&gt;search_node -->
+<g id="edge1" class="edge">
+<title>START-&gt;search_node</title>
+<path fill="none" stroke="black" d="M83.45,-20.8C91.54,-20.8 100.15,-20.8 108.6,-20.8"/>
+<polygon fill="black" stroke="black" points="108.44,-24.3 118.44,-20.8 108.44,-17.3 108.44,-24.3"/>
+</g>
+<!-- reading_node -->
+<g id="node3" class="node">
+<title>reading_node</title>
+<path fill="#bbdefb" stroke="black" d="M343.4,-74.6C343.4,-74.6 275.21,-74.6 275.21,-74.6 269.21,-74.6 263.21,-68.6 263.21,-62.6 263.21,-62.6 263.21,-45 263.21,-45 263.21,-39 269.21,-33 275.21,-33 275.21,-33 343.4,-33 343.4,-33 349.4,-33 355.4,-39 355.4,-45 355.4,-45 355.4,-62.6 355.4,-62.6 355.4,-68.6 349.4,-74.6 343.4,-74.6"/>
+<text xml:space="preserve" text-anchor="middle" x="309.3" y="-58" font-family="Times,serif" font-size="14.00">reading_node</text>
+<text xml:space="preserve" text-anchor="middle" x="309.3" y="-41.2" font-family="Times,serif" font-size="14.00">(阅读)</text>
+</g>
+<!-- search_node&#45;&gt;reading_node -->
+<g id="edge2" class="edge">
+<title>search_node-&gt;reading_node</title>
+<path fill="none" stroke="black" d="M206.67,-30.52C220.9,-33.78 236.99,-37.47 252.1,-40.93"/>
+<polygon fill="black" stroke="black" points="250.89,-44.24 261.42,-43.06 252.45,-37.42 250.89,-44.24"/>
+<text xml:space="preserve" text-anchor="middle" x="234.71" y="-43.48" font-family="Times,serif" font-size="14.00">成功</text>
+</g>
+<!-- handle_error_node -->
+<g id="node7" class="node">
+<title>handle_error_node</title>
+<path fill="#ffcdd2" stroke="black" d="M959.62,-139.6C959.62,-139.6 861.89,-139.6 861.89,-139.6 855.89,-139.6 849.89,-133.6 849.89,-127.6 849.89,-127.6 849.89,-110 849.89,-110 849.89,-104 855.89,-98 861.89,-98 861.89,-98 959.62,-98 959.62,-98 965.62,-98 971.62,-104 971.62,-110 971.62,-110 971.62,-127.6 971.62,-127.6 971.62,-133.6 965.62,-139.6 959.62,-139.6"/>
+<text xml:space="preserve" text-anchor="middle" x="910.76" y="-123" font-family="Times,serif" font-size="14.00">handle_error_node</text>
+<text xml:space="preserve" text-anchor="middle" x="910.76" y="-106.2" font-family="Times,serif" font-size="14.00">(错误处理)</text>
+</g>
+<!-- search_node&#45;&gt;handle_error_node -->
+<g id="edge3" class="edge">
+<title>search_node-&gt;handle_error_node</title>
+<path fill="none" stroke="red" d="M206.67,-16.09C249.17,-11.37 308.3,-4.8 308.3,-4.8 308.3,-4.8 308.3,-4.8 752.07,-4.8 752.07,-4.8 824.53,-57.19 871.22,-90.94"/>
+<polygon fill="red" stroke="red" points="869.08,-93.72 879.24,-96.74 873.19,-88.04 869.08,-93.72"/>
+<text xml:space="preserve" text-anchor="middle" x="533.09" y="-9" font-family="Times,serif" font-size="14.00">错误</text>
+</g>
+<!-- analyse_node -->
+<g id="node4" class="node">
+<title>analyse_node</title>
+<path fill="#bbdefb" stroke="black" d="M492.59,-120.6C492.59,-120.6 424.4,-120.6 424.4,-120.6 418.4,-120.6 412.4,-114.6 412.4,-108.6 412.4,-108.6 412.4,-91 412.4,-91 412.4,-85 418.4,-79 424.4,-79 424.4,-79 492.59,-79 492.59,-79 498.59,-79 504.59,-85 504.59,-91 504.59,-91 504.59,-108.6 504.59,-108.6 504.59,-114.6 498.59,-120.6 492.59,-120.6"/>
+<text xml:space="preserve" text-anchor="middle" x="458.5" y="-104" font-family="Times,serif" font-size="14.00">analyse_node</text>
+<text xml:space="preserve" text-anchor="middle" x="458.5" y="-87.2" font-family="Times,serif" font-size="14.00">(分析)</text>
+</g>
+<!-- reading_node&#45;&gt;analyse_node -->
+<g id="edge4" class="edge">
+<title>reading_node-&gt;analyse_node</title>
+<path fill="none" stroke="black" d="M355.67,-67.98C370.08,-72.48 386.19,-77.52 401.27,-82.23"/>
+<polygon fill="black" stroke="black" points="399.99,-85.5 410.58,-85.14 402.08,-78.82 399.99,-85.5"/>
+<text xml:space="preserve" text-anchor="middle" x="383.9" y="-83.75" font-family="Times,serif" font-size="14.00">成功</text>
+</g>
+<!-- reading_node&#45;&gt;handle_error_node -->
+<g id="edge5" class="edge">
+<title>reading_node-&gt;handle_error_node</title>
+<path fill="none" stroke="red" d="M355.67,-52.88C398.92,-51.99 457.5,-50.8 457.5,-50.8 457.5,-50.8 457.5,-50.8 752.07,-50.8 752.07,-50.8 805.52,-73.85 850.19,-93.11"/>
+<polygon fill="red" stroke="red" points="848.77,-96.31 859.34,-97.06 851.54,-89.88 848.77,-96.31"/>
+<text xml:space="preserve" text-anchor="middle" x="606.92" y="-55" font-family="Times,serif" font-size="14.00">错误</text>
+</g>
+<!-- writing_node -->
+<g id="node5" class="node">
+<title>writing_node</title>
+<path fill="#bbdefb" stroke="black" d="M640.25,-165.6C640.25,-165.6 573.59,-165.6 573.59,-165.6 567.59,-165.6 561.59,-159.6 561.59,-153.6 561.59,-153.6 561.59,-136 561.59,-136 561.59,-130 567.59,-124 573.59,-124 573.59,-124 640.25,-124 640.25,-124 646.25,-124 652.25,-130 652.25,-136 652.25,-136 652.25,-153.6 652.25,-153.6 652.25,-159.6 646.25,-165.6 640.25,-165.6"/>
+<text xml:space="preserve" text-anchor="middle" x="606.92" y="-149" font-family="Times,serif" font-size="14.00">writing_node</text>
+<text xml:space="preserve" text-anchor="middle" x="606.92" y="-132.2" font-family="Times,serif" font-size="14.00">(写作)</text>
+</g>
+<!-- analyse_node&#45;&gt;writing_node -->
+<g id="edge6" class="edge">
+<title>analyse_node-&gt;writing_node</title>
+<path fill="none" stroke="black" d="M505.02,-113.79C519.41,-118.21 535.47,-123.15 550.48,-127.76"/>
+<polygon fill="black" stroke="black" points="549.14,-131.01 559.73,-130.6 551.2,-124.32 549.14,-131.01"/>
+<text xml:space="preserve" text-anchor="middle" x="533.09" y="-129.19" font-family="Times,serif" font-size="14.00">成功</text>
+</g>
+<!-- analyse_node&#45;&gt;handle_error_node -->
+<g id="edge7" class="edge">
+<title>analyse_node-&gt;handle_error_node</title>
+<path fill="none" stroke="red" d="M504.73,-101.71C583.08,-105.02 744.63,-111.83 838.29,-115.78"/>
+<polygon fill="red" stroke="red" points="837.99,-119.27 848.13,-116.2 838.29,-112.28 837.99,-119.27"/>
+<text xml:space="preserve" text-anchor="middle" x="680.75" y="-113.72" font-family="Times,serif" font-size="14.00">错误</text>
+</g>
+<!-- report_node -->
+<g id="node6" class="node">
+<title>report_node</title>
+<path fill="#bbdefb" stroke="black" d="M780.89,-218.6C780.89,-218.6 721.25,-218.6 721.25,-218.6 715.25,-218.6 709.25,-212.6 709.25,-206.6 709.25,-206.6 709.25,-189 709.25,-189 709.25,-183 715.25,-177 721.25,-177 721.25,-177 780.89,-177 780.89,-177 786.89,-177 792.89,-183 792.89,-189 792.89,-189 792.89,-206.6 792.89,-206.6 792.89,-212.6 786.89,-218.6 780.89,-218.6"/>
+<text xml:space="preserve" text-anchor="middle" x="751.07" y="-202" font-family="Times,serif" font-size="14.00">report_node</text>
+<text xml:space="preserve" text-anchor="middle" x="751.07" y="-185.2" font-family="Times,serif" font-size="14.00">(报告)</text>
+</g>
+<!-- writing_node&#45;&gt;report_node -->
+<g id="edge8" class="edge">
+<title>writing_node-&gt;report_node</title>
+<path fill="none" stroke="black" d="M652.51,-161.42C667.05,-166.85 683.32,-172.91 698.35,-178.52"/>
+<polygon fill="black" stroke="black" points="697.01,-181.75 707.61,-181.97 699.46,-175.19 697.01,-181.75"/>
+<text xml:space="preserve" text-anchor="middle" x="680.75" y="-178.67" font-family="Times,serif" font-size="14.00">成功</text>
+</g>
+<!-- writing_node&#45;&gt;handle_error_node -->
+<g id="edge9" class="edge">
+<title>writing_node-&gt;handle_error_node</title>
+<path fill="none" stroke="red" d="M652.46,-140.96C701.42,-136.75 780.79,-129.91 838.44,-124.94"/>
+<polygon fill="red" stroke="red" points="838.49,-128.45 848.15,-124.11 837.89,-121.48 838.49,-128.45"/>
+<text xml:space="preserve" text-anchor="middle" x="751.07" y="-140.26" font-family="Times,serif" font-size="14.00">错误</text>
+</g>
+<!-- report_node&#45;&gt;handle_error_node -->
+<g id="edge11" class="edge">
+<title>report_node-&gt;handle_error_node</title>
+<path fill="none" stroke="red" d="M793.09,-177.25C812.6,-167.47 836.17,-155.66 857,-145.23"/>
+<polygon fill="red" stroke="red" points="858.57,-148.36 865.94,-140.75 855.43,-142.1 858.57,-148.36"/>
+<text xml:space="preserve" text-anchor="middle" x="821.39" y="-171.9" font-family="Times,serif" font-size="14.00">错误</text>
+</g>
+<!-- END -->
+<g id="node8" class="node">
+<title>END</title>
+<ellipse fill="#fff3e0" stroke="black" cx="1039.5" cy="-173.8" rx="30.88" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="1039.5" y="-169.6" font-family="Times,serif" font-size="14.00">END</text>
+</g>
+<!-- report_node&#45;&gt;END -->
+<g id="edge10" class="edge">
+<title>report_node-&gt;END</title>
+<path fill="none" stroke="black" d="M793.11,-194.36C847.44,-189.81 942.71,-181.83 997.18,-177.26"/>
+<polygon fill="black" stroke="black" points="997.3,-180.76 1006.97,-176.44 996.72,-173.79 997.3,-180.76"/>
+<text xml:space="preserve" text-anchor="middle" x="910.76" y="-193.74" font-family="Times,serif" font-size="14.00">成功</text>
+</g>
+<!-- handle_error_node&#45;&gt;END -->
+<g id="edge12" class="edge">
+<title>handle_error_node-&gt;END</title>
+<path fill="none" stroke="black" d="M960.76,-140.06C975.02,-146.25 990.3,-152.88 1003.51,-158.62"/>
+<polygon fill="black" stroke="black" points="1002.1,-161.82 1012.66,-162.59 1004.88,-155.4 1002.1,-161.82"/>
+</g>
+</g>
+</svg>

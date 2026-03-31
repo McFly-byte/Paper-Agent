@@ -23,14 +23,14 @@ from src.utils.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
-@dataclass
+@dataclass # 装饰器，自动补齐__init__、__repr__、__eq__、__hash__、__str__等方法
 class PaperCluster:
     """论文聚类结果"""
     cluster_id: int
-    papers: List[Dict[str, Any]]
-    theme_description: str
+    papers: List[Dict[str, Any]]  # 簇中包括的论文列表
+    theme_description: str # 簇主题描述
     keywords: List[str]
-    centroid_vector: np.ndarray = None
+    centroid_vector: np.ndarray = None # KMeans中心向量
 
 class PaperClusterAgent:
     """论文聚类智能体"""
@@ -38,7 +38,7 @@ class PaperClusterAgent:
     def __init__(self, model_client=None):
         """初始化聚类智能体"""
         self.model_client = create_subanalyse_cluster_model_client()
-        self.clustering_agent = AssistantAgent(
+        self.clustering_agent = AssistantAgent( # 专用于给每篇论文生成主题描述和关键词
             name="clustering_agent",
             model_client= self.model_client,
             system_message = clustering_agent_prompt
@@ -58,7 +58,7 @@ class PaperClusterAgent:
         return res
 
     def prepare_text_for_embedding(self, paper: Dict[str, Any]) -> str:
-        """准备用于生成嵌入向量的文本"""
+        """准备用于生成嵌入向量的文本（把dict拼成长str）"""
         text_parts = []
         
         # 核心问题
@@ -85,13 +85,21 @@ class PaperClusterAgent:
             
         return " ".join(text_parts)
     
-    def generate_embeddings(self, papers: List[Dict[str, Any]]) -> np.ndarray:
-       
+    def generate_embeddings(self, papers: List[Dict[str, Any]], batch_size: int = 5) -> np.ndarray:
+        import time
+        
+        # 把dict拼成长str（一篇论文一个str）
         texts = [self.prepare_text_for_embedding(paper) for paper in papers]
         
-        embeddings = self.get_embedding(texts)
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size): # 一次性处理多篇文章，batch_size是文章数（str数）
+            batch = texts[i:i + batch_size]
+            batch_embeddings = self.get_embedding(batch)
+            all_embeddings.extend(batch_embeddings)
+            if i + batch_size < len(texts):
+                time.sleep(3)
         
-        return np.array(embeddings)
+        return np.array(all_embeddings) # 维度：论文数 × embedding维度
         
     def determine_optimal_clusters(self, embeddings: np.ndarray, max_k: int = 5) -> int:
         """使用肘部法则确定最佳聚类数量"""
@@ -124,7 +132,7 @@ class PaperClusterAgent:
         if not papers:
             return []
             
-        # 生成嵌入向量
+        # 生成嵌入向量，每篇文章一条向量
         embeddings = self.generate_embeddings(papers)
         
         # 确定聚类数量
@@ -278,7 +286,7 @@ class PaperClusterAgent:
                 
         except Exception as e:
             logger.error(f"生成聚类主题时出错: \n{e}")
-            return "未分类研究主题"
+            return "未分类研究主题", ["research"]
     
 
     async def run_clustering_analyse(self, papers_data: Dict[str, Any]) -> List[PaperCluster]:
@@ -296,7 +304,7 @@ class PaperClusterAgent:
         # 为每个聚类生成主题和关键词
         results = []
         for cluster in clusters:
-            theme_description, keywords = await self.generate_cluster_theme(cluster)
+            theme_description, keywords = await self.generate_cluster_theme(cluster) # 根据每个聚类下论文原文生成主题描述和关键词
             paperCluster = PaperCluster(
                 cluster_id=cluster.cluster_id,
                 papers=cluster.papers,
@@ -305,9 +313,10 @@ class PaperClusterAgent:
             results.append(paperCluster)
         
         return results
+
     def run(self, papers_data: ExtractedPapersData):
         """统一接口方法"""
-        papers = papers_data.model_dump()
+        papers = papers_data.model_dump() # 把对象转成dict
         return self.run_clustering_analyse(papers)
 
 async def main():

@@ -70,7 +70,9 @@ class ModelClient:
             model=model,
             api_key=api_key,
             base_url=base_url,
-            model_info=model_info
+            model_info=model_info,
+            max_retries=5,
+            timeout=120.0,
         )
 
     @staticmethod
@@ -93,10 +95,12 @@ class ModelClient:
             raise ValueError(f"未指定API基础URL，请在参数中提供或在配置文件中设置{provider}.base_url")
 
         client = OpenAI(
-                api_key= api_key,
+                api_key=api_key,
                 base_url=base_url,
+                max_retries=5,
+                timeout=120.0,
                 default_headers={
-                    "X-Model": model  # 设置默认模型
+                    "X-Model": model
                 }
         )
         return client

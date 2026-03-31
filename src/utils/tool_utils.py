@@ -1,4 +1,5 @@
-def handlerChunk(is_thinking,chunk):
+def handlerChunk(is_thinking,chunk): 
+    """处理流式响应中的chunk，判断是否是思考状态，并返回状态和是否思考"""
     if is_thinking is None:
         is_thinking = False  # 初始为非思考状态
 

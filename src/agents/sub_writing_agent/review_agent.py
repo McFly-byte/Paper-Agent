@@ -1,10 +1,10 @@
 from autogen_agentchat.agents import AssistantAgent
-from src.core.model_client import create_default_client
+from src.core.model_client import create_subwriting_writing_model_client
 from src.core.prompts import review_agent_prompt
 
 
 def create_review_agent():
-    model_client = create_default_client()
+    model_client = create_subwriting_writing_model_client()
 
     review_agent = AssistantAgent(
         name="review_agent",

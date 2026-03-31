@@ -3,7 +3,7 @@
 main.py是整个项目的启动类，使用fastapi定义api接口（知识库接口和报告生成接口）
 ## 报告生成接口
 1.后端返回 EventSourceResponse ，建立 SSE 连接。
-2.event_generator 从队列读取状态并实时推送到前端。event_generator 从队列读取状态并实时推送到前端。
+2.event_generator 从队列读取状态并实时推送到前端。
 3.通过langgraph构建生成报告业务流程图，并启动流程的执行。
 ```python
 async def event_generator():

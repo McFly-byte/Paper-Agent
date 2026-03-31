@@ -81,7 +81,7 @@ async def writing_director_node(state: WritingState) -> Dict[str, Any]:
                 if chunk.type == "TextMessage":
                     outline = chunk.content
                     break
-                state,is_thinking = handlerChunk(is_thinking,chunk.content)
+                state,is_thinking = handlerChunk(is_thinking,chunk.content) 
                 if state is None:
                     continue
                 await state_queue.put(BackToFrontData(step=ExecutionState.WRITING_DIRECTOR,state=state,data=chunk.content))

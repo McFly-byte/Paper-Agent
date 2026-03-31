@@ -1,0 +1,31 @@
+
+digraph {
+    rankdir=LR;
+    splines=polyline;
+    label="Paper-Agent 主编排 DAG (LangGraph)";
+    labelloc=t;
+    fontsize=14;
+    fontname="Microsoft YaHei";
+
+    START [shape=ellipse, style=filled, fillcolor="#e8f5e9", label="START"];
+    search_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="search_node\n(检索)"];
+    reading_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="reading_node\n(阅读)"];
+    analyse_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="analyse_node\n(分析)"];
+    writing_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="writing_node\n(写作)"];
+    report_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="report_node\n(报告)"];
+    handle_error_node [shape=box, style="rounded,filled", fillcolor="#ffcdd2", label="handle_error_node\n(错误处理)"];
+    END [shape=ellipse, style=filled, fillcolor="#fff3e0", label="END"];
+
+    START -> search_node;
+    search_node -> reading_node [label="成功"];
+    search_node -> handle_error_node [label="错误", color=red];
+    reading_node -> analyse_node [label="成功"];
+    reading_node -> handle_error_node [label="错误", color=red];
+    analyse_node -> writing_node [label="成功"];
+    analyse_node -> handle_error_node [label="错误", color=red];
+    writing_node -> report_node [label="成功"];
+    writing_node -> handle_error_node [label="错误", color=red];
+    report_node -> END [label="成功"];
+    report_node -> handle_error_node [label="错误", color=red];
+    handle_error_node -> END;
+}

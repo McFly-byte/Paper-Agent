@@ -1,40 +1,68 @@
 # 可选模型提供商
 model-provider:
   - siliconflow
+  - ollama
   - openai
   - dashscope
   - ark
 
-# 项目默认使用的模型和嵌入模型配置
-# default-model:
-#   model-provider: siliconflow
-#   model: Qwen/Qwen3-32B
+# 项目默认使用的模型和嵌入模型配置（未单独配置的 create_default_client 等仍走此处）
 default-model:
-  model-provider: ark
-  model: doubao-seed-1-6-thinking-250715
+  model-provider: siliconflow
+  model: deepseek-ai/DeepSeek-V3.2
 
 default-embedding-model:
-  model-provider: dashscope
-  model: text-embedding-v4
+  model-provider: siliconflow
+  model: Qwen/Qwen3-Embedding-8B
   dimension: 1024
 
-# embedding-model:
-#   model-provider: siliconflow
-#   model: Qwen/Qwen3-Embedding-8B
-#   dimension: 1024
 embedding-model:
-  model-provider: dashscope
-  model: text-embedding-v4
+  model-provider: siliconflow
+  model: Qwen/Qwen3-Embedding-8B
   dimension: 1024
+
+# 检索节点：保持联网 API（与 reading / analyse / writing / report 的本地模型分离）
+search-model:
+  model-provider: siliconflow
+  model: deepseek-ai/DeepSeek-V3.2
+
+# 阅读 / 分析 / 写作 / 报告：本地 Ollama（OpenAI 兼容 /v1；模型名须与 ollama list 一致）
+reading-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subanalyse-cluster-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subanalyse-deep-analyse-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subanalyse-global-analyse-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subwriting-writing-director-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subwriting-writing-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+subwriting-retrieval-model:
+  model-provider: ollama
+  model: qwen3.5:122b
+
+report-model:
+  model-provider: ollama
+  model: qwen3.5:122b
 
 # 项目模块具体使用的模型和嵌入模型配置（可选）
-reading-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-32B
-
 writing-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-32B
+  model-provider: ollama
+  model: qwen3.5:122b
 
 chroma-embedding-model:
   model-provider: siliconflow
@@ -45,6 +73,11 @@ cluster-embedding-model:
   model: Qwen/Qwen3-Embedding-8B
 
 # 各个模型提供商的API密钥和基础URL
+ollama:
+  # Ollama 对 key 不校验。勿用字面量 ollama，否则与下方顶级键 ollama 冲突导致 config 解析错误
+  api_key: sk-local-ollama
+  base_url: http://127.0.0.1:11434/v1
+
 siliconflow:
   api_key: SILICONFLOW_API_KEY
   base_url: https://api.siliconflow.cn/v1

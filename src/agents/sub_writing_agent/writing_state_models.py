@@ -22,16 +22,10 @@ class SectionState(BaseModel):
 
 class WritingState(TypedDict):
     state_queue: Queue
-    user_request: str
-    # 全局分析结果
-    global_analysis: Optional[str] = None
-    # 输入的大纲内容
-    # outline: str = ""
-    # 写作任务列表
-    sections: Optional[List[str]] = []
-    writted_sections: Optional[List[SectionState]] = []
-    # 当前正在处理的小节索引
-    current_section_index: int = 0
-    # 检索到的相关资料
-    retrieved_docs: List[Dict[str, Any]] = []
+    user_request: str # 用户需求
+    global_analysis: Optional[str] = None     # 全局分析结果
+    sections: Optional[List[str]] = [] # 写作任务列表
+    writted_sections: Optional[List[SectionState]] = [] # 已写章节内容
+    current_section_index: int = 0 # 当前正在处理的小节索引
+    retrieved_docs: List[Dict[str, Any]] = [] # 检索到的相关资料
 

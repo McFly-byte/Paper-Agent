@@ -1,0 +1,68 @@
+---
+description: Python 后端编码规范，包括类型注解、异步编程、异常处理、日志等约定
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python 后端编码规范
+
+## 语言与版本
+- Python 3.12+，充分利用新语法特性（type 语句、match-case 等）
+
+## 类型注解
+- 所有函数签名必须有完整的参数类型和返回值类型注解
+- 复杂类型使用 `typing` 模块（`Optional`, `Union`, `TypedDict` 等）
+- Pydantic BaseModel 用于数据校验和序列化
+
+```python
+# ✅ 正确
+async def search_papers(query: str, max_results: int = 10) -> list[dict[str, Any]]:
+    ...
+
+# ❌ 错误
+async def search_papers(query, max_results=10):
+    ...
+```
+
+## 异步编程
+- I/O 密集操作一律使用 `async/await`
+- 并行任务使用 `asyncio.gather`，注意 `return_exceptions=True` 防止单任务失败导致全部中断
+- 并发控制使用 `asyncio.Semaphore` 限制并行度
+- 避免在 async 函数中使用阻塞调用（`requests.get` 等），使用 `aiohttp` 替代
+
+## 异常处理
+- 不允许空的 `except` 块，至少要记录日志
+- 自定义异常类继承自项目基类，携带上下文信息
+- 对外接口（FastAPI 端点）统一捕获异常并返回结构化错误响应
+- Agent 节点中的异常应设置到 `NodeError` 并触发 `handle_error_node`
+
+```python
+# ✅ 正确
+try:
+    result = await client.chat(prompt)
+except OpenAIError as e:
+    logger.error(f"LLM 调用失败: {e}", exc_info=True)
+    raise AgentExecutionError(f"模型调用异常: {e}") from e
+```
+
+## 日志规范
+- 使用项目的 `setup_logger(__name__)` 创建 logger
+- 关键操作使用 `logger.info`，调试信息使用 `logger.debug`
+- 错误日志携带 `exc_info=True` 以保留堆栈
+- 避免使用 `print()` 输出，统一走 logger
+
+## 配置管理
+- 通过 `from src.core.config import config` 访问配置
+- 配置使用点分路径：`config.get("siliconflow.api_key")`
+- 敏感信息（API Key 等）只能通过 `.env` 加载，禁止硬编码
+
+## 导入规范
+- 标准库 → 第三方库 → 项目内部模块，各组之间空一行
+- 项目内部使用 `from src.xxx import xxx` 绝对导入
+
+## 命名约定
+- 类名：PascalCase（`PaperClusterAgent`）
+- 函数/方法：snake_case（`create_model_client`）
+- 常量：UPPER_SNAKE_CASE（`MAX_RETRIES`）
+- 文件名：snake_case（`paper_search.py`）
+- Agent 相关类带 `Agent` 后缀，Node 函数带 `_node` 后缀

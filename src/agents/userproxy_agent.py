@@ -13,15 +13,15 @@ class WebUserProxyAgent(UserProxyAgent):
     
     async def on_messages(self, messages, cancellation_token: CancellationToken):
         # 触发等待：通知前端“等待人工输入”
-        self.waiting_future = asyncio.get_event_loop().create_future()
+        self.waiting_future = asyncio.get_event_loop().create_future() # create_future() 只创建占位符
         # 等待前端输入
-        user_input = await self.waiting_future
-        # 收到输入后返回给AutoGen
+        user_input = await self.waiting_future # 挂起等待前端输入
+        # 收到输入后返回给AutoGen 
         return TextMessage(content=user_input, source="human")
 
     def set_user_input(self, user_input: str):
         """外部接口：被前端调用时唤醒等待"""
         if self.waiting_future and not self.waiting_future.done():
-            self.waiting_future.set_result(user_input)
+            self.waiting_future.set_result(user_input) # 被唤醒，Futrue保存此次user_input
 
 userProxyAgent = WebUserProxyAgent("user_proxy")
