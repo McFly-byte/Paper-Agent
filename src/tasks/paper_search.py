@@ -1,5 +1,7 @@
-import arxiv
+import asyncio
 import logging
+import time
+import arxiv
 from typing import List, Dict, Optional, Union
 from datetime import datetime, timedelta
 
@@ -7,76 +9,159 @@ from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
+# arXiv API 要求「约每 3 秒至多一次请求」；略放大间隔并避免 429 时快速连打
+_ARXIV_DELAY_SECONDS = 5.0
+_ARXIV_CLIENT_RETRIES = 1  # 库内重试间隔过短，429 改由本模块长退避处理
+# 429 限流与 503 服务不可用：长退避后整段重试（arxiv 官方建议控制频率）
+_ARXIV_RETRY_BACKOFF_SECS = (35, 70, 120)
+_ARXIV_USER_AGENT = (
+    "Paper-Agent/1.0 (compatible; +https://arxiv.org/help/api/tou; academic research tool)"
+)
+
 class PaperSearcher:
     """论文搜索器，使用arxiv库搜索论文"""
     
     def __init__(self):
         """初始化论文搜索器"""
         pass
-    
-    async def search_papers(self, 
-                      querys: List[str], 
-                      max_results: int = 50, 
-                      sort_by: arxiv.SortCriterion = arxiv.SortCriterion.Relevance, 
-                      sort_order: arxiv.SortOrder = arxiv.SortOrder.Descending, 
-                      start_date: Optional[Union[str, datetime]] = None, 
-                      end_date: Optional[Union[str, datetime]] = None) -> List[Dict]:
+
+    def _build_arxiv_search_query(
+        self,
+        querys: List[str],
+        start_date: Optional[Union[str, datetime]],
+        end_date: Optional[Union[str, datetime]],
+    ) -> str:
         """
-        搜索arXiv论文
-        
-        参数:
-            querys: 搜索关键词
-            max_results: 最大返回结果数量
-            sort_by: 排序方式 (Relevance, LastUpdatedDate, SubmittedDate)
-            sort_order: 排序顺序 (Ascending, Descending)
-            start_date: 开始日期，可以是字符串(YYYY-MM-DD)或datetime对象
-            end_date: 结束日期，可以是字符串(YYYY-MM-DD)或datetime对象
-        
-        返回:
-            论文列表，每项包含论文的详细信息
+        构造 arXiv search_query。旧逻辑用 all:%22 + 片段 + %22，与 LLM 已带引号的布尔式叠加后
+        易产生畸形语法（如 all:\"\"Diffusion...）并加重服务端压力；改为 all:(...) 包裹每条子表达式。
         """
-        # querys = ['artificial intelligence', 'AI', 'llm', 'machine learning', 'deep learning']
+        parts: List[str] = []
+        for raw in querys:
+            t = (raw or "").strip()
+            if not t:
+                continue
+            if not (t.startswith("(") and t.endswith(")")):
+                t = f"({t})"
+            parts.append(f"all:{t}")
+        if not parts:
+            return ""
+        search_query = " OR ".join(parts)
+        if start_date or end_date:
+            start_date_str = self._format_date(start_date) if start_date else "190001010000"
+            end_date_str = (
+                self._format_date(end_date)
+                if end_date
+                else datetime.now().strftime("%Y%m%d2359")
+            )
+            date_filter = f"submittedDate:[{start_date_str} TO {end_date_str}]"
+            search_query = f"({search_query}) AND {date_filter}"
+        return search_query
+
+    def _fetch_with_retry_backoff(self, search: arxiv.Search, max_results: int) -> List[Dict]:
+        """执行检索；遇 HTTP 429/503 时长等待后整段重试（库内重试间隔过短易持续失败）。"""
+        page_size = max(1, min(50, max_results))
+        n_backoffs = len(_ARXIV_RETRY_BACKOFF_SECS)
+        for attempt in range(n_backoffs + 1):
+            client = arxiv.Client(
+                page_size=page_size,
+                delay_seconds=_ARXIV_DELAY_SECONDS,
+                num_retries=_ARXIV_CLIENT_RETRIES,
+            )
+            client._session.headers.update({"User-Agent": _ARXIV_USER_AGENT})
+            try:
+                return self.format_papers_list(client.results(search))
+            except arxiv.HTTPError as e:
+                status = getattr(e, "status", None)
+                if status not in (429, 503):
+                    raise
+                if attempt >= n_backoffs:
+                    raise
+                wait = _ARXIV_RETRY_BACKOFF_SECS[attempt]
+                reason = "请求过频" if status == 429 else "服务暂时不可用"
+                logger.warning(
+                    "arXiv 返回 HTTP %s（%s），等待 %s 秒后重试 (%s/%s)",
+                    status,
+                    reason,
+                    wait,
+                    attempt + 1,
+                    n_backoffs,
+                )
+                time.sleep(wait)
+
+    def _search_papers_sync(
+        self,
+        querys: List[str],
+        max_results: int,
+        sort_by: arxiv.SortCriterion,
+        sort_order: arxiv.SortOrder,
+        start_date: Optional[Union[str, datetime]],
+        end_date: Optional[Union[str, datetime]],
+    ) -> List[Dict]:
+        """同步执行 arXiv 查询与解析（供 asyncio.to_thread 调用）。"""
+        if not querys:
+            logger.warning("论文搜索跳过：querys 为空")
+            return []
         try:
-            # 构建搜索查询
-            search_query = ""
-            for query in querys:
-                search_query += "all:%22"+query+"%22 OR "
-            search_query = search_query[:-4]
-            # 添加日期范围过滤
-            if start_date or end_date:
-                start_date_str = self._format_date(start_date) if start_date else "190001010000"
-                end_date_str = self._format_date(end_date) if end_date else datetime.now().strftime("%Y%m%d2359")
-                date_filter = f"submittedDate:[{start_date_str} TO {end_date_str}]"
-                search_query = f"{search_query} AND {date_filter}"
+            search_query = self._build_arxiv_search_query(querys, start_date, end_date)
+            if not search_query.strip():
+                logger.warning("论文搜索跳过：拼接后的 arXiv 查询为空")
+                return []
 
             logger.info(f"开始搜索论文: query='{search_query}', max_results={max_results}, sort_by={sort_by}")
 
 
             logger.info(f"论文搜索查询条件: {search_query}")
 
-            # 创建搜索对象
             try:
                 search = arxiv.Search(
                     query=search_query,
                     max_results=max_results,
                     sort_by=sort_by,
-                    sort_order=sort_order
+                    sort_order=sort_order,
                 )
             except Exception as e:
                 logger.error(f"创建arxiv搜索对象失败: {str(e)}")
                 return []
-            
-            # logger.info(f"论文搜索结果为：{search.results()}")
-            # 执行搜索并解析结果
-            # 使用新方法格式化论文列表
-            papers = self.format_papers_list(search.results())
-            
+
+            papers = self._fetch_with_retry_backoff(search, max_results)
+
             logger.info(f"论文搜索完成，共找到 {len(papers)} 篇论文")
             return papers
         except Exception as e:
             logger.error(f"论文搜索失败: {str(e)}")
             raise
-    
+
+    async def search_papers(self,
+                      querys: List[str],
+                      max_results: int = 50,
+                      sort_by: arxiv.SortCriterion = arxiv.SortCriterion.Relevance,
+                      sort_order: arxiv.SortOrder = arxiv.SortOrder.Descending,
+                      start_date: Optional[Union[str, datetime]] = None,
+                      end_date: Optional[Union[str, datetime]] = None) -> List[Dict]:
+        """
+        搜索 arXiv 论文（在线程池中执行同步 arxiv 客户端，避免阻塞事件循环）。
+
+        参数:
+            querys: 搜索关键词
+            max_results: 最大返回结果数量
+            sort_by: 排序方式 (Relevance, LastUpdatedDate, SubmittedDate)
+            sort_order: 排序顺序 (Ascending, Descending)
+            start_date: 开始日期，可以是字符串(YYYY-MM-DD)或 datetime
+            end_date: 结束日期，可以是字符串(YYYY-MM-DD)或 datetime
+
+        返回:
+            论文列表，每项包含论文的详细信息
+        """
+        return await asyncio.to_thread(
+            self._search_papers_sync,
+            querys,
+            max_results,
+            sort_by,
+            sort_order,
+            start_date,
+            end_date,
+        )
+
     async def search_by_topic(self, 
                        topic: str, 
                        limit: int = 10, 

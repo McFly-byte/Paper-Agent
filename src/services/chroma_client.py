@@ -15,13 +15,13 @@ class ChromaClient:
     
     def __init__(self, 
                  collection_name: str = "default_collection",
-                 embedding_model: str = "Qwen/Qwen3-Embedding-8B"):
+                 embedding_model: str = "bge-m3"):
         """
         初始化Chroma客户端
         
         :param collection_name: 集合名称
         :param persist_directory: 数据持久化目录
-        :param embedding_model: 嵌入模型名称
+        :param embedding_model: 嵌入模型名称（实际嵌入以 models.yaml 中 chroma-embedding-model 为准）
         """
         self.collection_name = collection_name
         self.embedding_model = embedding_model

@@ -7,10 +7,7 @@ from src.core.state_models import ExecutionState
 from typing import Dict, Any, List
 
 from src.utils.log_utils import setup_logger
-from src.utils.tool_utils import handlerChunk
-
-from src.core.model_client import create_default_client, create_subwriting_writing_director_model_client
-from autogen_agentchat.base import TaskResult
+from src.core.model_client import create_subwriting_writing_director_model_client
 
 
 logger = setup_logger(__name__)
@@ -24,7 +21,8 @@ writing_director_agent = AssistantAgent(
     description="一个写作主管，你只负责拆分写作任务，并返回小节列表。",
     model_client=model_client,
     system_message=writing_director_agent_prompt,
-    model_client_stream=True,
+    # 非流式：避免 run_stream 内 break/中断触发 GeneratorExit，与 OTel span 清理冲突（见 global_analyse_agent）
+    model_client_stream=False,
 )
 
 def parse_outline(outline_str: str) -> List[str]:
@@ -68,23 +66,13 @@ async def writing_director_node(state: WritingState) -> Dict[str, Any]:
         {global_analysis}
         请根据用户提供的需求和关于该领域的分析，生成结构清晰、逻辑连贯的写作子任务：
         """
-        # response = await writing_director_agent.run(task = prompt)
-        is_thinking = None
-        is_first = True
-        async for chunk in writing_director_agent.run_stream(task = prompt):
-            if is_first:
-                is_first = False
-                continue
-            if not isinstance(chunk, TaskResult):
-                if chunk.type == "ThoughtEvent":
-                    continue
-                if chunk.type == "TextMessage":
-                    outline = chunk.content
-                    break
-                state,is_thinking = handlerChunk(is_thinking,chunk.content) 
-                if state is None:
-                    continue
-                await state_queue.put(BackToFrontData(step=ExecutionState.WRITING_DIRECTOR,state=state,data=chunk.content))
+        logger.info("[工作流·写作] 写作主管：调用 LLM 生成大纲（非流式，请稍候）…")
+        response = await writing_director_agent.run(task=prompt)
+        msgs = getattr(response, "messages", None) or []
+        last = msgs[-1] if msgs else None
+        raw = last.content if last is not None else ""
+        outline = raw if isinstance(raw, str) else str(raw)
+        logger.info("[工作流·写作] 写作主管：大纲已返回，解析为小节列表…")
         sections = parse_outline(outline)
         await state_queue.put(BackToFrontData(step=ExecutionState.WRITING_DIRECTOR,state="completed",data=None))
         return {"sections": sections}

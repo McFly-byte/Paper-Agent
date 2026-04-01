@@ -49,8 +49,10 @@ async def report_node(state: State) -> State:
         【额外说明】
         请确保章节逻辑顺序合理，如有需要可调整章节排列。
         """
+        logger.info("[工作流·报告] 流式组装最终 Markdown 报告（LLM）…")
         is_thinking = None
         is_First = True
+        report_text_captured = False
         async for chunk in report_agent.run_stream(task = prompt):
             if is_First:
                 is_First = False
@@ -60,7 +62,10 @@ async def report_node(state: State) -> State:
                     continue
                 if chunk.type == "TextMessage":
                     current_state.report_markdown = chunk.content
-                    break
+                    report_text_captured = True
+                    continue
+                if report_text_captured:
+                    continue
 
                 state,is_thinking = handlerChunk(is_thinking,chunk.content)
                 if state is None:

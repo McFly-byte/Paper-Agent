@@ -8,79 +8,87 @@ model-provider:
 
 # 项目默认使用的模型和嵌入模型配置（未单独配置的 create_default_client 等仍走此处）
 default-model:
-  model-provider: siliconflow
-  model: deepseek-ai/DeepSeek-V3.2
+  model-provider: ollama
+  model: qwen3.5:9b
 
+# 嵌入专用模型（与 chat 分离）：Ollama bge-m3，稠密向量 1024 维（须与 ollama list 中名称一致）
 default-embedding-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-Embedding-8B
+  model-provider: ollama
+  model: bge-m3
   dimension: 1024
 
 embedding-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-Embedding-8B
+  model-provider: ollama
+  model: bge-m3
   dimension: 1024
 
-# 检索节点：保持联网 API（与 reading / analyse / writing / report 的本地模型分离）
+# 检索节点（自然语言转查询等）— 高调用/前置阶段，使用小模型加速（与 default 122B 分离）
 search-model:
-  model-provider: siliconflow
-  model: deepseek-ai/DeepSeek-V3.2
+  model-provider: ollama
+  model: qwen3.5:9b
 
-# 阅读 / 分析 / 写作 / 报告：本地 Ollama（OpenAI 兼容 /v1；模型名须与 ollama list 一致）
+# 阅读：篇级结构化提取，耗时主因 → 小模型；写作/报告与 subwriting-* / report-model 统一为 9B（可按机器再调大）
 reading-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
+# 分析子流程（聚类主题 / 深度 / 全局）— 长链路 LLM，与写作主管/章节生成分离，用小模型换吞吐
 subanalyse-cluster-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 subanalyse-deep-analyse-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 subanalyse-global-analyse-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 subwriting-writing-director-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 subwriting-writing-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 subwriting-retrieval-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 report-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 # 项目模块具体使用的模型和嵌入模型配置（可选）
 writing-model:
   model-provider: ollama
-  model: qwen3.5:122b
+  model: qwen3.5:9b
 
 chroma-embedding-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-Embedding-8B
+  model-provider: ollama
+  model: bge-m3
+  dimension: 1024
 
 cluster-embedding-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3-Embedding-8B
+  model-provider: ollama
+  model: bge-m3
+  dimension: 1024
 
 # 各个模型提供商的API密钥和基础URL
 ollama:
   # Ollama 对 key 不校验。勿用字面量 ollama，否则与下方顶级键 ollama 冲突导致 config 解析错误
   api_key: sk-local-ollama
   base_url: http://127.0.0.1:11434/v1
+  # 本地大模型流式「相邻 chunk 间隔」易超时；122B 多并发阅读时可再调大
+  request_timeout: 1800
 
 siliconflow:
   api_key: SILICONFLOW_API_KEY
   base_url: https://api.siliconflow.cn/v1
+  # 流式长输出 / 排队时避免 httpx ReadTimeout（默认非 ollama 已放宽，此处可覆盖）
+  request_timeout: 600
 
 openai:
   api_key: OPENAI_API_KEY

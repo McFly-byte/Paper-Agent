@@ -18,6 +18,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAI
 from dataclasses import dataclass
 from src.utils.log_utils import setup_logger
+from src.core.config import config
 
 # 配置日志
 logger = setup_logger(__name__)
@@ -47,11 +48,13 @@ class PaperClusterAgent:
 
     def get_embedding(self, text: Union[str, List[str]]) -> list[float]:
         client = create_cluster_embedding_client()
-        response = client.embeddings.create(
-            model=client.default_headers["X-Model"],
-            input=text,
-            dimensions=1024
-        )
+        model_name = client.default_headers.get("X-Model")
+        cluster_cfg = config.get("cluster-embedding-model", {})
+        dim = cluster_cfg.get("dimension")
+        req: dict = {"model": model_name, "input": text}
+        if dim is not None:
+            req["dimensions"] = dim
+        response = client.embeddings.create(**req)
         res = []
         for tmp in response.data:
             res.append(tmp.embedding)

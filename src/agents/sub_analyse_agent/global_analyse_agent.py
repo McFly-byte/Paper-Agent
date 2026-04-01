@@ -6,7 +6,7 @@ import asyncio
 import sys
 import os
 import json
-from typing import Dict, Any, List
+from typing import Any, AsyncIterator, Dict, List
 from src.core.prompts import global_analyse_agent_prompt
 from src.core.model_client import create_default_client, create_subanalyse_global_analyse_model_client
 from autogen_agentchat.agents import AssistantAgent
@@ -24,15 +24,18 @@ class GlobalanalyseAgent:
     def __init__(self, model_client=None):
         """初始化聚类智能体"""
         self.model_client = create_subanalyse_global_analyse_model_client()
-        self.global_analyse_agent = AssistantAgent( 
+        self.global_analyse_agent = AssistantAgent(
             name="global_analyse_agent",
-            model_client= self.model_client,
-            system_message = global_analyse_agent_prompt,
-            model_client_stream=True
+            model_client=self.model_client,
+            system_message=global_analyse_agent_prompt,
+            # 使用非流式 run()，避免上游在首个结果处 break 时向内层 run_stream 注入 GeneratorExit，触发 OTel/AutoGen 上下文错误
+            model_client_stream=False,
         )
     
-    async def generate_global_analyse(self, analyse_results: List[DeepAnalyseResult]) -> Dict[str, Any]:
-        """一次性处理所有的深入分析结果，生成全局分析草稿 - 汇总各主题分析结果"""
+    async def generate_global_analyse(
+        self, analyse_results: List[DeepAnalyseResult]
+    ) -> AsyncIterator[Dict[str, Any]]:
+        """一次性处理所有的深入分析结果，生成全局分析草稿 - 汇总各主题分析结果（async 生成器）。"""
         try:
             # 准备所有聚类的分析内容
             cluster_summaries = []
@@ -108,30 +111,19 @@ class GlobalanalyseAgent:
 
 请生成结构清晰、内容完整的全局分析草稿。
 """
-            from autogen_agentchat.base import TaskResult
-            # response = await self.global_analyse_agent.run(task=prompt)
-            # global_analyse = response.messages[-1].content
-            is_First = True
-            response = self.global_analyse_agent.run_stream(task=prompt)
-            async for chunk in response:  # 持续读流式响应
-                if is_First: # 跳过第一条事件。通常第一条可能是起始元信息/非正文消息
-                    is_First = False
-                    continue
-                if not isinstance(chunk, TaskResult):
-                    if chunk.type == "ThoughtEvent":
-                        continue
-                    if chunk.type == "TextMessage":
-                        global_analyse = {
-                            "isSuccess": True,
-                            "total_clusters": len(analyse_results),
-                            "total_papers": sum(result.paper_count for result in analyse_results),
-                            "cluster_themes": [result.theme for result in analyse_results],
-                            "global_analyse": chunk.content,
-                            "cluster_summaries": cluster_summaries
-                        }
-                        yield global_analyse
-                    yield chunk.content
-            
+            logger.info("[工作流·分析] 全局分析：正在调用 LLM（非流式，一次性生成，请耐心等待）…")
+            response = await self.global_analyse_agent.run(task=prompt)
+            raw = response.messages[-1].content
+            text = raw if isinstance(raw, str) else str(raw)
+            yield {
+                "isSuccess": True,
+                "total_clusters": len(analyse_results),
+                "total_papers": sum(result.paper_count for result in analyse_results),
+                "cluster_themes": [result.theme for result in analyse_results],
+                "global_analyse": text,
+                "cluster_summaries": cluster_summaries,
+            }
+
         except Exception as e:
             logger.error(f"生成全局分析时出错: \n{e}")
             yield {

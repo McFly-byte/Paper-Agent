@@ -1,3 +1,8 @@
+import os
+
+# 避免 AutoGen + OpenTelemetry 在 run_stream 被提前关闭（break / 中断）时上下文 detach 报错刷屏
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
 from time import sleep
 from src.utils.log_utils import setup_logger
 from src.utils.tool_utils import handlerChunk
@@ -10,7 +15,7 @@ from src.knowledge.knowledge_router import knowledge
 from fastapi import APIRouter
 
 import asyncio
-from src.core.state_models import BackToFrontData
+from src.core.state_models import BackToFrontData, ExecutionState
 # 设置日志
 logger = setup_logger(name='main', log_file='project.log')
 
@@ -28,6 +33,28 @@ app.add_middleware(
 state_queue = asyncio.Queue() # 全局队列，用于存储状态
 
 # agent = WebUserProxyAgent("user_proxy")
+
+
+async def _run_research_workflow(query: str) -> None:
+    """后台执行工作流；异常时写入队列，避免 create_task 吞掉异常导致 SSE 永不结束。"""
+    from src.agents.orchestrator import PaperAgentOrchestrator
+
+    logger.info("[工作流] 已接收调研请求，后台任务启动（控制台将按阶段打印进度）…")
+    orchestrator = PaperAgentOrchestrator(state_queue=state_queue)
+    try:
+        await orchestrator.run(user_request=query)
+    except Exception as e:
+        logger.exception("调研工作流执行失败: %s", e)
+        await state_queue.put(
+            BackToFrontData(
+                step=ExecutionState.FAILED.value,
+                state="error",
+                data=f"工作流异常（如 LLM 超时）: {e!s}",
+            )
+        )
+        await state_queue.put(
+            BackToFrontData(step=ExecutionState.FINISHED.value, state="finished", data=None)
+        )
 
 # ---------------------------------------------------------------------------
 # 接口：接收前端的人工输入（Human-in-the-loop）
@@ -48,9 +75,6 @@ async def send_input(data: dict):
 # ---------------------------------------------------------------------------
 @app.get('/api/research')
 async def research_stream(query: str):
-    from src.agents.orchestrator import PaperAgentOrchestrator
-    from src.core.state_models import State, ExecutionState
-
     # 异步生成器：SSE 的“数据源”，每次 yield 一条会变成一次 SSE 事件推给前端
     async def event_generator():
         while True:
@@ -60,11 +84,8 @@ async def research_stream(query: str):
     # 用 sse-starlette 把异步生成器包装成 SSE 响应；
     event_source = EventSourceResponse(event_generator(), media_type="text/event-stream")
 
-    orchestrator = PaperAgentOrchestrator(state_queue=state_queue)
+    asyncio.create_task(_run_research_workflow(query))
 
-    asyncio.create_task(orchestrator.run(user_request=query)) 
-
-    
     return event_source
 
 if __name__ == "__main__":

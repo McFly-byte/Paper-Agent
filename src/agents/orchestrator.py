@@ -19,8 +19,11 @@ from src.agents.report_agent import report_node
 from typing import Dict, Any
 from src.core.state_models import BackToFrontData
 from src.core.state_models import State, ConfigSchema
+from src.utils.log_utils import setup_logger
 
 import asyncio
+
+logger = setup_logger(__name__)
 
 
 class PaperAgentOrchestrator:
@@ -87,7 +90,7 @@ class PaperAgentOrchestrator:
     
     async def run(self, user_request: str, max_papers: int = 50):
         """执行完整工作流：构造初始 PaperAgentState，通过 ainvoke 把 state_queue 与初始状态传入图并异步执行，结束时向 queue 放入 FINISHED。"""
-        print("Starting workflow...")
+        logger.info("[工作流] 开始执行：检索 → 阅读 → 分析 → 写作 → 报告（max_papers=%s）", max_papers)
         # 初始状态：只有用户输入、数量上限、空错误；各节点会按顺序填充 search_results、paper_contents、extracted_data、analyse_results、writted_sections、report_markdown
         initial_state = PaperAgentState(
             user_request=user_request,
@@ -97,6 +100,7 @@ class PaperAgentOrchestrator:
         )
 
         # 运行图：传入的 dict 会作为初始 state。ainvoke 会按边与条件依次执行节点，直到 END 或 handle_error_node → END
+        logger.info("[工作流] 进入 LangGraph，当前从检索节点启动…")
         await self.graph.ainvoke({"state_queue": self.state_queue, "value": initial_state})
         # 通知前端流程已完全结束（成功或已在 handle_error_node 里标记 FAILED），前端可关闭 SSE 或展示最终状态
         await self.state_queue.put(BackToFrontData(step=ExecutionState.FINISHED, state="finished", data=None))

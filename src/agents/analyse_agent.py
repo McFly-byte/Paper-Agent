@@ -92,12 +92,17 @@ class AnalyseAgent(BaseChatAgent):
         """
         # 1. 聚类
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文聚类分析\n"))
+        logger.info("[工作流·分析] 聚类阶段（嵌入 + KMeans 等，可能较慢）…")
         cluster_results = await self.cluster_agent.run(message) # PaperCluster列表
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data=f"论文聚类分析完成，共形成 {len(cluster_results)} 个聚类\n"))
 
         # 2. 深度分析每个聚类的论文
         deep_analysis_results = []
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文深度分析\n"))
+        logger.info(
+            "[工作流·分析] 深度分析 %s 个聚类（LLM，并发 2）…",
+            len(cluster_results),
+        )
         semaphore = asyncio.Semaphore(2)
 
         @retry(
@@ -110,33 +115,84 @@ class AnalyseAgent(BaseChatAgent):
         async def analyse_single(cluster):
             return await self.deep_analyse_agent.run(cluster)
 
-        # 每个cluster包装一个携程，并发执行
-        async def analyse_with_limit(cluster):
-            async with semaphore:
-                return await analyse_single(cluster)
+        n_cluster = len(cluster_results)
 
-        deep_analysis_results = await asyncio.gather(*[analyse_with_limit(cluster) for cluster in cluster_results]) # 对每个cluster进行深度分析，返回DeepAnalyseResult列表
+        # 每个 cluster 包装一个协程，并发执行；每占用/释放槽位打日志便于观感
+        async def analyse_with_limit(cluster, idx: int):
+            async with semaphore:
+                logger.info(
+                    "[工作流·分析] 深度分析进行中：簇 %s/%s（并发槽已占用）",
+                    idx + 1,
+                    n_cluster,
+                )
+                try:
+                    out = await analyse_single(cluster)
+                    logger.info("[工作流·分析] 深度分析完成：簇 %s/%s", idx + 1, n_cluster)
+                    return out
+                except Exception:
+                    logger.exception("[工作流·分析] 深度分析失败：簇 %s/%s", idx + 1, n_cluster)
+                    raise
+
+        deep_analysis_results = await asyncio.gather(
+            *[analyse_with_limit(c, i) for i, c in enumerate(cluster_results)]
+        )
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="论文深度分析完成\n"))
         
         # 3. 调用全局分析智能体生成整体分析报告
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="等待全局分析\n"))
+        logger.info("[工作流·分析] 全局综合分析（LLM，非流式；完成后一次性推送）…")
+        global_analysis: dict | None = None
         is_thinking = None
-        async for chunk in self.global_analyse_agent.run(deep_analysis_results): # 消费全局分析的流式输出
+        # 不在收到首个成功 Dict 后 break，以免提前关闭异步生成器链；全局侧已改为单次 yield + run() 完成后再产出
+        async for chunk in self.global_analyse_agent.run(deep_analysis_results):
             if isinstance(chunk, Dict):
-                if not chunk.get("isSuccess", False): # 全局分析失败
-                    await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="error",data=chunk.get("global_analyse", "Unknown error")))
-                    break
-                global_analysis = chunk # 全局分析结果
-                break
-            state,is_thinking = handlerChunk(is_thinking,chunk) # 处理流式响应中的chunk，判断是否是思考状态，并返回状态和是否思考
-            if state is None: # state 为None不用推送
+                if not chunk.get("isSuccess", False):
+                    err_text = chunk.get("global_analyse", "Unknown error")
+                    await self.state_queue.put(
+                        BackToFrontData(
+                            step=ExecutionState.ANALYZING,
+                            state="error",
+                            data=err_text,
+                        )
+                    )
+                    return Response(
+                        chat_message=TextMessage(
+                            content=json.dumps(
+                                {"isSuccess": False, "global_analyse": err_text},
+                                ensure_ascii=False,
+                                indent=2,
+                            ),
+                            source=self.name,
+                        )
+                    )
+                global_analysis = chunk
+                await self.state_queue.put(
+                    BackToFrontData(
+                        step=ExecutionState.ANALYZING,
+                        state="thinking",
+                        data="全局分析正文已生成，正在汇总…\n",
+                    )
+                )
                 continue
-            await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state=state,data=chunk))
-            
+            state, is_thinking = handlerChunk(is_thinking, chunk)
+            if state is None:
+                continue
+            await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING, state=state, data=chunk))
+
+        if global_analysis is None:
+            err = "全局分析未返回有效结果"
+            await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING, state="error", data=err))
+            return Response(
+                chat_message=TextMessage(
+                    content=json.dumps({"isSuccess": False, "global_analyse": err}, ensure_ascii=False, indent=2),
+                    source=self.name,
+                )
+            )
+
         return Response(
             chat_message=TextMessage(
                 content=json.dumps(global_analysis, ensure_ascii=False, indent=2),
-                 source=self.name
+                source=self.name,
             )
         )
 
@@ -151,6 +207,8 @@ async def analyse_node(state: State) -> State:
         current_state.current_step = ExecutionState.ANALYZING
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="initializing",data=None))
         extracted_papers = current_state.extracted_data
+        n_papers = len(extracted_papers.papers) if extracted_papers and extracted_papers.papers else 0
+        logger.info("[工作流·分析] 启动分析子流程，输入论文数：%s", n_papers)
 
         analyse_agent = AnalyseAgent(state_queue=state_queue)
         task = StructuredMessage(content=extracted_papers, source="User") # 把对象转成结构化消息

@@ -61,6 +61,7 @@ async def writing_node(state: State) -> State:
         writing_state["current_section_index"] = -1
         writing_state["retrieved_docs"] = []
         writingWorkFlow = WritingWorkflow()
+        logger.info("[工作流·写作] 启动写作子图：大纲 → 多章节并行撰写（LLM 密集，耗时较长）…")
         # 执行写作子图
         writing_state = await writingWorkFlow.workflow.ainvoke(writing_state)
         logger.info(f"writing_state: {writing_state}")

@@ -1,3 +1,5 @@
+from typing import Any, Dict, Optional
+
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_core.models import ModelInfo
 from .config import config
@@ -6,6 +8,20 @@ from openai import OpenAI
 
 
 logger = setup_logger(__name__)
+
+
+def _resolve_request_timeout(provider: str, model_entry: Optional[Dict[str, Any]] = None) -> float:
+    """Chat 接口超时。流式场景下 read 超时为「相邻数据块间隔」，本地大模型与结构化长输出易触发，默认放宽。"""
+    model_entry = model_entry or {}
+    for src in (model_entry, config.get(provider) or {}):
+        t = src.get("request_timeout")
+        if t is not None:
+            try:
+                return float(t)
+            except (TypeError, ValueError):
+                break
+    # Ollama 多并发 + 大模型单请求可能数分钟无新 chunk；远端 API 亦可能排队
+    return 1800.0 if provider == "ollama" else 600.0
 
 class ModelClient:
     """OpenAIChatCompletionClient的封装类，简化模型客户端的创建和配置"""
@@ -20,7 +36,8 @@ class ModelClient:
         function_calling: bool = True,
         json_output: bool = True,
         structured_output: bool = True,
-        family: str = "Qwen"
+        family: str = "Qwen",
+        timeout: Optional[float] = None,
     ) -> OpenAIChatCompletionClient:
         """
         创建并返回一个配置好的OpenAIChatCompletionClient实例
@@ -64,7 +81,10 @@ class ModelClient:
             family=family,
             structured_output=structured_output
         )
-        
+
+        if timeout is None:
+            timeout = _resolve_request_timeout(provider, {})
+
         # 创建并返回客户端实例
         return OpenAIChatCompletionClient(
             model=model,
@@ -72,7 +92,7 @@ class ModelClient:
             base_url=base_url,
             model_info=model_info,
             max_retries=5,
-            timeout=120.0,
+            timeout=timeout,
         )
 
     @staticmethod
@@ -81,13 +101,16 @@ class ModelClient:
         model: str = None,
         api_key: str = None,
         base_url: str = None,
+        timeout: Optional[float] = None,
     ) -> OpenAI:
         provider_config = config.get(provider)
 
         # 如果未提供参数，则使用配置中的默认值
         api_key = api_key or provider_config.get("api_key")
         base_url = base_url or provider_config.get("base_url")
-        
+
+        emb_timeout = timeout if timeout is not None else _resolve_request_timeout(provider, {})
+
         # 验证必要参数
         if not model:
             raise ValueError(f"未指定模型名称，请在参数中提供或在配置文件中设置{provider}.model")
@@ -98,7 +121,7 @@ class ModelClient:
                 api_key=api_key,
                 base_url=base_url,
                 max_retries=5,
-                timeout=120.0,
+                timeout=emb_timeout,
                 default_headers={
                     "X-Model": model
                 }
@@ -117,9 +140,11 @@ def create_model_client(client_type: str) -> OpenAIChatCompletionClient:
             logger.warning(f"警告：未配置{client_type}模型，使用默认模型代替")
             return create_default_client()
         
+        resolved = _resolve_request_timeout(provider, model_config)
         return ModelClient.create_client(
                 provider=provider,
-                model=model
+                model=model,
+                timeout=resolved,
         )
     except Exception as e:
         print(f"创建阅读模型客户端失败: {e}，使用默认模型代替")
@@ -138,7 +163,8 @@ def create_embedding_client(client_type: str) -> OpenAI:
         
         return ModelClient.create_embedding_client(
                 provider=provider,
-                model=model
+                model=model,
+                timeout=_resolve_request_timeout(provider, model_config),
         )
     except Exception as e:
         print(f"创建{client_type}模型客户端失败: {e}，使用默认模型代替")
@@ -152,7 +178,8 @@ def create_default_client() -> OpenAIChatCompletionClient:
     
     return ModelClient.create_client(
         provider=provider,
-        model=model
+        model=model,
+        timeout=_resolve_request_timeout(provider, default_model_config),
     )
 
 def create_default_embedding_client() -> OpenAI:
@@ -163,7 +190,8 @@ def create_default_embedding_client() -> OpenAI:
     
     return ModelClient.create_embedding_client(
         provider=provider,
-        model=model
+        model=model,
+        timeout=_resolve_request_timeout(provider, default_model_config),
     )
 
 def create_search_model_client() -> OpenAIChatCompletionClient:

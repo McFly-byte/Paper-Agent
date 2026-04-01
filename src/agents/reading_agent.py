@@ -11,7 +11,8 @@ from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
 from openai import RateLimitError
-from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, before_sleep_log
+from httpx import ReadTimeout
+from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt, before_sleep_log
 import re, json, ast
 import asyncio
 import logging
@@ -138,27 +139,49 @@ async def reading_node(state: State) -> State:
     # 将初始状态推送到队列
     await state_queue.put(BackToFrontData(step=ExecutionState.READING,state="initializing",data=None))
 
-    papers = current_state.search_results
+    papers = list(current_state.search_results or [])
 
     # 创建信号量，限制并发数，避免被限流
     semaphore = asyncio.Semaphore(2)
 
+    def _retryable_llm_error(exc: BaseException) -> bool:
+        return isinstance(exc, (RateLimitError, ReadTimeout))
+
     @retry(
-        retry=retry_if_exception_type(RateLimitError), # 只在抛出RateLimitError时重试
-        wait=wait_exponential(multiplier=10, min=15, max=120), # 指数退避，最小等待15秒，最大等待120秒
-        stop=stop_after_attempt(5), # 最多重试5次 
+        retry=retry_if_exception(_retryable_llm_error),
+        wait=wait_exponential(multiplier=2, min=5, max=120),
+        stop=stop_after_attempt(5),
         before_sleep=before_sleep_log(logger, logging.WARNING),
-        reraise=True, # 如果重试5次都失败，则抛出异常
+        reraise=True,
     )
     async def read_single_paper(paper):
         return await read_agent.run(task=str(paper))
 
-    async def read_with_limit(paper):
-        async with semaphore:
-            return await read_single_paper(paper)
+    n = len(papers)
 
+    async def read_with_limit(paper, index: int):
+        async with semaphore:
+            logger.info(
+                "[工作流·阅读] 进行中：第 %s/%s 篇（并发槽已占用）",
+                index + 1,
+                n,
+            )
+            try:
+                result = await read_single_paper(paper)
+                logger.info("[工作流·阅读] 完成：第 %s/%s 篇", index + 1, n)
+                return result
+            except Exception:
+                logger.exception("[工作流·阅读] 失败：第 %s/%s 篇", index + 1, n)
+                raise
+
+    logger.info(
+        "[工作流·阅读] 开始对 %s 篇论文做 LLM 结构化提取（并发上限 2，整体可能很慢）…",
+        n,
+    )
     # 并行阅读多篇论文
-    results = await asyncio.gather(*[read_with_limit(paper) for paper in papers])
+    results = await asyncio.gather(
+        *[read_with_limit(paper, i) for i, paper in enumerate(papers)]
+    )
 
     # 合并结果
     extracted_papers = ExtractedPapersData()
@@ -226,6 +249,10 @@ async def reading_node(state: State) -> State:
 
      # 还得存入向量数据库中
     # await add_papers_to_kb(papers,extracted_papers)
+    logger.info(
+        "[工作流·阅读] 将 %s 篇成功提取的论文写入临时向量库…",
+        len(extracted_papers.papers),
+    )
     await add_papers_to_kb(successful_papers,extracted_papers)
         
     current_state.extracted_data = extracted_papers
