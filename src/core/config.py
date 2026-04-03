@@ -32,6 +32,7 @@ class Config:
         self._load_yaml_config()
         # 解析配置变量引用
         self._resolve_config_references()
+        self._apply_langsmith_tracing()
         
         self._initialized = True
     
@@ -106,6 +107,21 @@ class Config:
         # 解析相对路径为绝对路径（相对于项目根目录）
         self._resolve_relative_paths()
     
+    def _apply_langsmith_tracing(self) -> None:
+        """按 system_params 与 .env 启用 LangSmith（LangGraph 使用 LANGCHAIN_* 环境变量）。"""
+        if not self.get_bool("observability.langsmith.tracing", False):
+            return
+        if not os.environ.get("LANGCHAIN_API_KEY"):
+            logger.warning(
+                "observability.langsmith.tracing 已开启但未设置 LANGCHAIN_API_KEY，跳过启用 LangSmith。"
+            )
+            return
+        os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
+        project = self.get("observability.langsmith.project")
+        if project and not os.environ.get("LANGCHAIN_PROJECT"):
+            os.environ["LANGCHAIN_PROJECT"] = str(project)
+        logger.info("LangSmith 链路追踪已启用（LANGCHAIN_TRACING_V2）。")
+
     def _resolve_relative_paths(self) -> None:
         """将配置中的相对路径转换为绝对路径（相对于项目根目录）"""
         project_root = Path(__file__).parent.parent.parent

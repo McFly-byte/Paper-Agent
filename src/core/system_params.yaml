@@ -41,6 +41,7 @@ paths:
   cache_dir: cache
   output_dir: output
   temp_dir: temp
+  reports_dir: data/reports
 
 # 性能配置
 performance:
@@ -54,3 +55,9 @@ security:
   rate_limit_per_minute: 60
   enable_cors: true
   allowed_origins: "*"
+
+# LangSmith（可选）：LangGraph/LangChain 链路在 LangSmith 中的可观测性；需在 .env 设置 LANGCHAIN_API_KEY
+observability:
+  langsmith:
+    tracing: true
+    project: "paper-agent"

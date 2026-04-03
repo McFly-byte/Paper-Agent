@@ -2,13 +2,13 @@ from autogen_agentchat.agents import AssistantAgent
 
 from src.utils.log_utils import setup_logger
 from src.utils.tool_utils import handlerChunk
-from src.tasks.paper_search import PaperSearcher
 from src.core.state_models import State,ExecutionState
 from src.core.prompts import report_agent_prompt
 from src.core.state_models import BackToFrontData
 from autogen_agentchat.base import TaskResult
 
-from src.core.model_client import create_default_client, create_report_model_client
+from src.core.model_client import create_report_model_client
+from src.services.report_history_store import append_completed
 
 logger = setup_logger(__name__)
 
@@ -71,7 +71,16 @@ async def report_node(state: State) -> State:
                 if state is None:
                     continue
                 await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state=state,data=chunk.content))
-        
+
+        kb_label = current_state.config.get("knowledge_base_label")
+        saved_id = await append_completed(
+            current_state.report_markdown or "",
+            current_state.user_request,
+            knowledge_base=kb_label,
+        )
+        if saved_id:
+            current_state.config["last_saved_report_id"] = saved_id
+
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="completed",data=None))
         return {"value": current_state}
 

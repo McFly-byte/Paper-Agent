@@ -88,15 +88,23 @@ class PaperAgentOrchestrator:
     
 
     
-    async def run(self, user_request: str, max_papers: int = 50):
+    async def run(
+        self,
+        user_request: str,
+        max_papers: int = 50,
+        knowledge_base_label: str | None = None,
+    ):
         """执行完整工作流：构造初始 PaperAgentState，通过 ainvoke 把 state_queue 与初始状态传入图并异步执行，结束时向 queue 放入 FINISHED。"""
         logger.info("[工作流] 开始执行：检索 → 阅读 → 分析 → 写作 → 报告（max_papers=%s）", max_papers)
         # 初始状态：只有用户输入、数量上限、空错误；各节点会按顺序填充 search_results、paper_contents、extracted_data、analyse_results、writted_sections、report_markdown
+        cfg: dict = {}
+        if knowledge_base_label:
+            cfg["knowledge_base_label"] = knowledge_base_label
         initial_state = PaperAgentState(
             user_request=user_request,
             max_papers=max_papers,
             error=NodeError(),
-            config={},
+            config=cfg,
         )
 
         # 运行图：传入的 dict 会作为初始 state。ainvoke 会按边与条件依次执行节点，直到 END 或 handle_error_node → END

@@ -1,7 +1,7 @@
 <template>
   <div class="history-container">
     <div class="page-header">
-      <h1>历史报告 （此功能还在开发中，暂不可使用）</h1>
+      <h1>历史报告</h1>
       <div class="header-actions">
         <button 
           class="btn-refresh"
@@ -80,6 +80,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { reportsApi } from '../api/reports'
 
 const router = useRouter()
 
@@ -89,12 +90,12 @@ const historyList = ref([])
 const loadHistory = async () => {
   isLoading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    const saved = localStorage.getItem('reportHistory')
-    historyList.value = saved ? JSON.parse(saved) : []
+    const { data } = await reportsApi.list()
+    historyList.value = Array.isArray(data) ? data : []
   } catch (error) {
     console.error('加载历史报告失败:', error)
     historyList.value = []
+    alert('加载历史报告失败，请确认后端已启动且可访问 /api/reports')
   } finally {
     isLoading.value = false
   }
@@ -129,14 +130,14 @@ const viewReport = (item) => {
   })
 }
 
-const deleteReport = (item) => {
+const deleteReport = async (item) => {
   if (!confirm(`确定要删除报告"${item.title || '未命名报告'}"吗？此操作不可恢复。`)) {
     return
   }
-  
+
   try {
+    await reportsApi.delete(item.id)
     historyList.value = historyList.value.filter(h => h.id !== item.id)
-    localStorage.setItem('reportHistory', JSON.stringify(historyList.value))
   } catch (error) {
     console.error('删除报告失败:', error)
     alert('删除失败，请重试')

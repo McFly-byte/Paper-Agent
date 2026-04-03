@@ -3,24 +3,26 @@ import os
 # 避免 AutoGen + OpenTelemetry 在 run_stream 被提前关闭（break / 中断）时上下文 detach 报错刷屏
 os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
-from time import sleep
+# 尽早加载 Config：写入 .env、合并 YAML，并应用 LangSmith LANGCHAIN_*（须在首次 LangGraph 执行前完成）
+from src.core.config import config  # noqa: F401
+
 from src.utils.log_utils import setup_logger
-from src.utils.tool_utils import handlerChunk
 from fastapi import FastAPI
 from sse_starlette.sse import EventSourceResponse
 from src.agents.userproxy_agent import WebUserProxyAgent, userProxyAgent
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.knowledge.knowledge_router import knowledge
-from fastapi import APIRouter
+from src.api.reports_router import reports_router
 
 import asyncio
 from src.core.state_models import BackToFrontData, ExecutionState
 # 设置日志
 logger = setup_logger(name='main', log_file='project.log')
 
-app = FastAPI() 
+app = FastAPI()
 app.include_router(knowledge)
+app.include_router(reports_router, prefix="/api")
 # === CORS 配置（开发时可用 "*"，生产需限定具体域名） ===
 app.add_middleware(
     CORSMiddleware,
@@ -35,14 +37,17 @@ state_queue = asyncio.Queue() # 全局队列，用于存储状态
 # agent = WebUserProxyAgent("user_proxy")
 
 
-async def _run_research_workflow(query: str) -> None:
+async def _run_research_workflow(query: str, knowledge_base_label: str | None = None) -> None:
     """后台执行工作流；异常时写入队列，避免 create_task 吞掉异常导致 SSE 永不结束。"""
     from src.agents.orchestrator import PaperAgentOrchestrator
 
     logger.info("[工作流] 已接收调研请求，后台任务启动（控制台将按阶段打印进度）…")
     orchestrator = PaperAgentOrchestrator(state_queue=state_queue)
     try:
-        await orchestrator.run(user_request=query)
+        await orchestrator.run(
+            user_request=query,
+            knowledge_base_label=knowledge_base_label,
+        )
     except Exception as e:
         logger.exception("调研工作流执行失败: %s", e)
         await state_queue.put(
@@ -73,8 +78,9 @@ async def send_input(data: dict):
 # 流程：前端 GET /api/research?query=xxx → 本函数返回 SSE 响应 → 后台启动 orchestrator
 #       orchestrator 各节点往 state_queue 里 put 状态 → event_generator 从 queue 取并 yield → 前端通过 EventSource 收到
 # ---------------------------------------------------------------------------
-@app.get('/api/research')
-async def research_stream(query: str):
+@app.get("/api/research")
+async def research_stream(query: str, kb_label: str | None = None):
+    """kb_label：可选，用于历史报告中展示关联知识库名称。"""
     # 异步生成器：SSE 的“数据源”，每次 yield 一条会变成一次 SSE 事件推给前端
     async def event_generator():
         while True:
@@ -84,7 +90,7 @@ async def research_stream(query: str):
     # 用 sse-starlette 把异步生成器包装成 SSE 响应；
     event_source = EventSourceResponse(event_generator(), media_type="text/event-stream")
 
-    asyncio.create_task(_run_research_workflow(query))
+    asyncio.create_task(_run_research_workflow(query, knowledge_base_label=kb_label))
 
     return event_source
 

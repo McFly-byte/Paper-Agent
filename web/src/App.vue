@@ -102,14 +102,16 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, nextTick, onBeforeUnmount, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import SelectKnowledgeModal from './components/SelectKnowledgeModal.vue'
 import { knowledgeApi } from './api/knowledge'
+import { reportsApi } from './api/reports'
 
 const router = useRouter()
+const route = useRoute()
 
 const userInput = ref('')
 const userReviewInput = ref('')
@@ -123,6 +125,23 @@ const selectedDatabase = ref(null)
 
 const currentActiveStep = ref(null); // 使用 ref 确保响应式
 const activeSubSteps = ref(new Map()); // 追踪writing步骤的活跃子块（key为section_id）
+
+watch(
+  () => route.query.reportId,
+  async (reportId) => {
+    if (!reportId || typeof reportId !== 'string') return
+    try {
+      const { data } = await reportsApi.getById(reportId)
+      reportContent.value = data.content || ''
+      steps.value = []
+      if (data.query) userInput.value = data.query
+    } catch (e) {
+      console.error(e)
+      alert('加载历史报告失败')
+    }
+  },
+  { immediate: true }
+)
 
 // Markdown解析方法，增加安全过滤
 const parseMarkdown = (content) => {
@@ -141,8 +160,7 @@ const submitReviewInput = async () => {
     return;
   }
   try {
-    // const res = await fetch("/send_input", {
-    const res = await fetch("http://localhost:8000/send_input", {
+    const res = await fetch("/send_input", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ input: userReviewInput.value }),
@@ -165,21 +183,15 @@ const submitReviewInput = async () => {
 const submitRequest = () => {
   if (!userInput.value.trim()) return
 
-  const dbId = selectedDatabase.value ? selectedDatabase.value.id : ''
-
   isSubmitting.value = true
   steps.value = []
   reportContent.value = ''
-  
-  // 初始化SSE连接
-  eventSource.value = new EventSource(`/api/research?query=${encodeURIComponent(userInput.value)}`)
 
-  //   let apiUrl = `/api/research?query=${encodeURIComponent(userInput.value)}`
-  // if (dbId) {
-  //   apiUrl += `&db_id=${encodeURIComponent(dbId)}`
-  // }
-  
-  // eventSource.value = new EventSource(apiUrl)
+  let researchUrl = `/api/research?query=${encodeURIComponent(userInput.value)}`
+  if (selectedDatabase.value?.name) {
+    researchUrl += `&kb_label=${encodeURIComponent(selectedDatabase.value.name)}`
+  }
+  eventSource.value = new EventSource(researchUrl)
 
   eventSource.value.onmessage = (event) => {
     try {
