@@ -1,7 +1,6 @@
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.messages import TextMessage
 from autogen_core import CancellationToken
-from src.agents.userproxy_agent import WebUserProxyAgent,userProxyAgent
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 import re
@@ -9,9 +8,12 @@ import ast
 
 from src.utils.log_utils import setup_logger
 from src.tasks.paper_search import PaperSearcher
-from src.core.state_models import State,ExecutionState
+from langgraph.runtime import Runtime
+
+from src.core.state_models import State, ExecutionState, PaperRunContext
 from src.core.prompts import search_agent_prompt
 from src.core.state_models import BackToFrontData
+from src.services.run_tmp_state_store import ensure_run_tmp_kb, put_json, KEY_SEARCH_RESULTS
 
 from src.core.model_client import create_search_model_client
 
@@ -117,11 +119,10 @@ def parse_search_query(s: str) -> SearchQuery:
 
     return SearchQuery(querys=querys, start_date=start_date, end_date=end_date)
 
-async def search_node(state: State) -> State:
+async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
     """搜索论文节点"""
-    state_queue = None
     try:
-        state_queue = state["state_queue"] 
+        state_queue = runtime.context.state_queue
         current_state = state["value"]
         current_state.current_step = ExecutionState.SEARCHING
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="initializing",data=None)) # 将初始状态推送到队列
@@ -138,7 +139,8 @@ async def search_node(state: State) -> State:
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="user_review",data=f"{search_query}"))
         logger.info("[工作流·检索] 已推送查询条件到前端，等待人工确认/修改（未确认前会停在这里）…")
         # 等待前端人工审核
-        result = await userProxyAgent.on_messages(
+        user_proxy = runtime.context.user_proxy
+        result = await user_proxy.on_messages(
             [TextMessage(content="请人工审核：查询条件是否符合？", source="AI")],
             cancellation_token=CancellationToken()
         )
@@ -157,6 +159,9 @@ async def search_node(state: State) -> State:
         )
         current_state.search_results = results
         if len(results) > 0:
+            await ensure_run_tmp_kb(current_state)
+            await put_json(current_state, KEY_SEARCH_RESULTS, results)
+            current_state.search_results = []
             # 将搜索结果推送到队列
             await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="completed",data=f"论文搜索完成，共找到 {len(results)} 篇论文"))
         else:
@@ -169,4 +174,4 @@ async def search_node(state: State) -> State:
         err_msg = f"Search failed: {str(e)}"
         state["value"].error.search_node_error = err_msg
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="error",data=err_msg))
-        return state
+        return {"value": state["value"]}

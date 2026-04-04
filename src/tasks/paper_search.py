@@ -1,19 +1,51 @@
 import asyncio
 import logging
+import threading
 import time
 import arxiv
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Tuple, Any
 from datetime import datetime, timedelta
 
 from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-# arXiv API 要求「约每 3 秒至多一次请求」；略放大间隔并避免 429 时快速连打
-_ARXIV_DELAY_SECONDS = 5.0
-_ARXIV_CLIENT_RETRIES = 1  # 库内重试间隔过短，429 改由本模块长退避处理
-# 429 限流与 503 服务不可用：长退避后整段重试（arxiv 官方建议控制频率）
-_ARXIV_RETRY_BACKOFF_SECS = (35, 70, 120)
+# --- 进程级 arXiv 频率上限（根本措施）---
+# arXiv ToU：同一 IP 约每 3 秒至多一次 API 请求。arxiv.Client 的 delay_seconds 只作用于**单个实例**，
+# 多 run / 多标签页会创建多个 Client → 各实例互不感知 → 同一时刻多发请求 → 429。
+# 做法：在 requests.Session.get 外包一层，全进程共享「下一次允许发起请求」的时间戳；
+# 只在极短临界区里 sleep/改时间戳，**不**在持锁期间跑完整次检索或长退避（避免此前全局锁卡死）。
+_ARXIV_GLOBAL_MIN_INTERVAL = 3.6
+_arxiv_http_lock = threading.Lock()
+_arxiv_next_request_monotonic = 0.0
+
+
+def _install_arxiv_global_rate_limit(session: Any) -> None:
+    """对 arxiv 使用的 Session 打补丁：任意 Client、任意协程/线程，两次 GET 起始间隔 ≥ _ARXIV_GLOBAL_MIN_INTERVAL。"""
+    if getattr(session, "_paper_agent_arxiv_gated", False):
+        return
+    raw_get = session.get
+
+    def gated_get(url: str, **kwargs: Any):
+        global _arxiv_next_request_monotonic
+        with _arxiv_http_lock:
+            now = time.monotonic()
+            wait = _arxiv_next_request_monotonic - now
+            if wait > 0:
+                time.sleep(wait)
+            _arxiv_next_request_monotonic = time.monotonic() + _ARXIV_GLOBAL_MIN_INTERVAL
+        return raw_get(url, **kwargs)
+
+    session.get = gated_get  # type: ignore[method-assign]
+    session._paper_agent_arxiv_gated = True
+
+
+# Client 内部 delay 关闭，避免与全局间隔叠加成「每页多等一倍」
+_ARXIV_CLIENT_DELAY_SECONDS = 0.0
+_ARXIV_CLIENT_RETRIES = 2
+# 全局节流下应极少 429；保留短退避作保险
+_ARXIV_RETRY_BACKOFF_SECS = (12, 30, 60)
+_ARXIV_REQUEST_TIMEOUT: Tuple[float, float] = (15.0, 180.0)
 _ARXIV_USER_AGENT = (
     "Paper-Agent/1.0 (compatible; +https://arxiv.org/help/api/tou; academic research tool)"
 )
@@ -58,16 +90,18 @@ class PaperSearcher:
         return search_query
 
     def _fetch_with_retry_backoff(self, search: arxiv.Search, max_results: int) -> List[Dict]:
-        """执行检索；遇 HTTP 429/503 时长等待后整段重试（库内重试间隔过短易持续失败）。"""
+        """执行检索；遇 HTTP 429/503 时当前检索长退避后整段重试（不持全局锁，避免拖死其它 run）。"""
         page_size = max(1, min(50, max_results))
         n_backoffs = len(_ARXIV_RETRY_BACKOFF_SECS)
         for attempt in range(n_backoffs + 1):
             client = arxiv.Client(
                 page_size=page_size,
-                delay_seconds=_ARXIV_DELAY_SECONDS,
+                delay_seconds=_ARXIV_CLIENT_DELAY_SECONDS,
                 num_retries=_ARXIV_CLIENT_RETRIES,
             )
             client._session.headers.update({"User-Agent": _ARXIV_USER_AGENT})
+            client._session.timeout = _ARXIV_REQUEST_TIMEOUT
+            _install_arxiv_global_rate_limit(client._session)
             try:
                 return self.format_papers_list(client.results(search))
             except arxiv.HTTPError as e:
@@ -77,7 +111,7 @@ class PaperSearcher:
                 if attempt >= n_backoffs:
                     raise
                 wait = _ARXIV_RETRY_BACKOFF_SECS[attempt]
-                reason = "请求过频" if status == 429 else "服务暂时不可用"
+                reason = "请求过频(429)" if status == 429 else "服务暂时不可用(503)"
                 logger.warning(
                     "arXiv 返回 HTTP %s（%s），等待 %s 秒后重试 (%s/%s)",
                     status,

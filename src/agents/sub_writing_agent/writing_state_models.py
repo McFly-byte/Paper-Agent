@@ -1,9 +1,17 @@
+from dataclasses import dataclass
 from enum import Enum, auto
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any, TypedDict
 from typing_extensions import Annotated
 from langgraph.graph.message import add_messages
 from asyncio import Queue
+
+
+@dataclass
+class WritingRunContext:
+    """写作子图运行时依赖（SSE 队列），不参与 checkpoint。"""
+
+    state_queue: Queue
 
 
 class WritingStage(Enum):
@@ -20,12 +28,11 @@ class SectionState(BaseModel):
     # research_materials: List[Dict[str, Any]] = []
     completed: bool = False
 
-class WritingState(TypedDict):
-    state_queue: Queue
-    user_request: str # 用户需求
-    global_analysis: Optional[str] = None     # 全局分析结果
-    sections: Optional[List[str]] = [] # 写作任务列表
-    writted_sections: Optional[List[SectionState]] = [] # 已写章节内容
-    current_section_index: int = 0 # 当前正在处理的小节索引
-    retrieved_docs: List[Dict[str, Any]] = [] # 检索到的相关资料
+class WritingState(TypedDict, total=False):
+    user_request: str
+    global_analysis: Optional[str]
+    sections: List[str]
+    writted_sections: List[SectionState]
+    current_section_index: int
+    retrieved_docs: List[Dict[str, Any]]
 

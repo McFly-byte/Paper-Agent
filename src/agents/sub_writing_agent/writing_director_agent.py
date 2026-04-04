@@ -1,6 +1,8 @@
 from autogen_agentchat.agents import AssistantAgent
 from src.core.prompts import writing_director_agent_prompt
-from src.agents.sub_writing_agent.writing_state_models import WritingState
+from langgraph.runtime import Runtime
+
+from src.agents.sub_writing_agent.writing_state_models import WritingState, WritingRunContext
 from src.core.state_models import BackToFrontData
 from src.core.state_models import ExecutionState
 
@@ -27,32 +29,45 @@ writing_director_agent = AssistantAgent(
 
 def parse_outline(outline_str: str) -> List[str]:
     """
-    解析大纲字符串，提取每个带编号的小节
-    
-    Args:
-        outline_str: 包含编号小节的字符串，每个小节以编号开头（如1.1, 2.3等）
-        
-    Returns:
-        小节列表，每个元素是一个小节的完整内容
+    解析大纲字符串，提取每个带编号的小节。
+
+    支持常见编号形式：1. / 2. / 1.1 / 2.3.1 等（行首，可带 markdown 标题或列表符）。
+    旧实现仅用 (\\d+\\.\\d+|\\d+)\\s，无法匹配「1. 标题」(\\d+ 后紧跟的是点而非空格)，会导致
+    sections 为空、并行写作不执行、最终报告只有「无章节内容提供」骨架。
     """
-    from typing import List
     import re
-    
-    # 使用正则表达式匹配小节编号（如1., 1.1, 2.3等）
-    # 分割字符串并保留分隔符
-    sections = re.split(r'(\d+\.\d+|\d+)\s', outline_str.strip())
-    
-    # 处理分割结果，组合成完整的小节
-    result = []
-    for i in range(1, len(sections), 2):
-        # 组合编号和内容
-        section = f"{sections[i].strip()} {sections[i+1].strip()}"
-        result.append(section)
-    
+
+    text = outline_str.strip()
+    if not text:
+        return []
+
+    # 行首小节编号，捕获组 1 为编号本体
+    pattern = re.compile(
+        r"(?:^|\n)\s*(?:[-*]\s*)?(?:#{1,6}\s+)?(\d+(?:\.\d+)*\.?)\s+",
+        re.MULTILINE,
+    )
+    matches = list(pattern.finditer(text))
+    if not matches:
+        # 无编号时保留整段，避免子图空跑、报告无正文
+        logger.warning(
+            "[工作流·写作] 大纲中未识别到编号小节，将整段作为单节任务；"
+            "请检查模型是否按提示返回 1.1 / 1. 等格式。"
+        )
+        return [text]
+
+    result: List[str] = []
+    for i, m in enumerate(matches):
+        start = m.start(1)
+        end = matches[i + 1].start(1) if i + 1 < len(matches) else len(text)
+        chunk = text[start:end].strip()
+        if chunk:
+            result.append(chunk)
     return result
 
-async def writing_director_node(state: WritingState) -> Dict[str, Any]:
-    state_queue = state["state_queue"]
+async def writing_director_node(
+    state: WritingState, runtime: Runtime[WritingRunContext]
+) -> Dict[str, Any]:
+    state_queue = runtime.context.state_queue
     await state_queue.put(BackToFrontData(step=ExecutionState.WRITING_DIRECTOR,state="initializing",data=None))
     try: 
         logger.info("开始执行写作主管节点")

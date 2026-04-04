@@ -1,5 +1,6 @@
 from asyncio import Queue
-from typing import List, Dict, Any, Optional,TypedDict
+from dataclasses import dataclass
+from typing import List, Dict, Any, Optional, TypedDict
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -66,6 +67,8 @@ class NodeError(BaseModel):
 
 class PaperAgentState(BaseModel):
     """LangGraph工作流的全局状态对象"""
+    run_id: str = Field(description="本次调研执行 ID，与 SSE / HITL / 日志对齐")
+    user_id: Optional[str] = Field(default=None, description="可选：调用方用户标识")
     # 用户输入
     frontend_data: Optional[BackToFrontData] = Field(default=None, description="前端展示数据")
     agent_logs: Dict[str, str] = Field(default_factory=dict, description="各智能体执行日志，key为智能体名称")
@@ -78,24 +81,27 @@ class PaperAgentState(BaseModel):
     
     # 数据流
     # search_results: List[PaperMetadata] = Field(default_factory=list, description="检索到的论文元数据列表")
-    search_results: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="检索到的论文元数据列表")
-    paper_contents: Optional[Dict[str, str]] = Field(default_factory=dict, description="解析后的论文全文字典, key: paper_id, value: 文本内容")
-    extracted_data: Optional[ExtractedPapersData] = Field(default_factory=list, description="提取后的结构化信息列表")
-    analyse_results: Optional[str] = Field(default=None, description="分析洞察结果")
+    search_results: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="检索结果；节点间可清空，完整列表在临时向量库 workflow_search_results")
+    paper_contents: Optional[Dict[str, str]] = Field(default_factory=dict, description="解析后的论文全文字典（大字段可外置向量库，勿在 state 长期堆积全文）")
+    extracted_data: Optional[ExtractedPapersData] = Field(default=None, description="结构化抽取；阅读节点后可清空，完整数据在 workflow_extracted_data")
+    analyse_results: Optional[str] = Field(default=None, description="分析结果 JSON 字符串；分析节点后可清空，正文在 workflow_analyse_results")
     outline: Optional[str] = Field(default=None, description="报告大纲")
-    writted_sections: Optional[List[str]] = Field(default=None, description="已写章节内容")
+    writted_sections: Optional[List[str]] = Field(default=None, description="已写章节；写作节点后可清空，列表在 workflow_writted_sections")
     report_markdown: Optional[str] = Field(default=None, description="最终生成的Markdown报告内容")
     
     # 配置与上下文
     llm_provider: Any = Field(default=None, description="LLM提供者实例", exclude=True)  # 排除序列化
     config: Dict[str, Any] = Field(default_factory=dict, description="运行时配置")
 
-class State(TypedDict):
-    """LangGraph兼容的状态定义"""
-    state_queue: Queue # 全局队列，用于存储状态
-    value: PaperAgentState # 全局状态对象
+@dataclass
+class PaperRunContext:
+    """每 run 注入的运行时依赖（SSE 队列、HITL 代理），不参与 LangGraph checkpoint 序列化。"""
 
-class ConfigSchema(TypedDict):
-    """LangGraph兼容的配置定义"""
     state_queue: Queue
-    value: Dict[str, Any]
+    user_proxy: Any
+
+
+class State(TypedDict):
+    """LangGraph 可 checkpoint 的状态：仅持久化业务快照；队列与代理见 PaperRunContext。"""
+
+    value: PaperAgentState

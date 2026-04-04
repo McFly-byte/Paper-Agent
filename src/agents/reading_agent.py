@@ -6,10 +6,19 @@ from src.utils.log_utils import setup_logger
 from src.core.prompts import reading_agent_prompt
 from src.core.model_client import create_default_client, create_reading_model_client
 from src.core.state_models import BackToFrontData
-from src.core.state_models import State,ExecutionState
+from langgraph.runtime import Runtime
+
+from src.core.state_models import State, ExecutionState, PaperAgentState, PaperRunContext
 from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
+from src.services.run_tmp_state_store import (
+    ensure_run_tmp_kb,
+    get_json,
+    put_json,
+    KEY_SEARCH_RESULTS,
+    KEY_EXTRACTED_DATA,
+)
 from openai import RateLimitError
 from httpx import ReadTimeout
 from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt, before_sleep_log
@@ -82,27 +91,14 @@ def sanitize_metadata(paper: Dict[str, Any]) -> Dict[str, Any]:
     return new_meta
 
 
-async def add_papers_to_kb(papers:Optional[List[Dict[str, Any]]], extracted_papers: ExtractedPapersData):
-    """将提取的论文数据添加到知识库"""
-    embedding_dic = config.get("embedding-model")
-    embedding_provider = embedding_dic.get("model-provider")
-    provider_dic = config.get(embedding_provider)
-    
-    embed_info = {
-        "name": embedding_dic.get("model"),
-        "dimension": embedding_dic.get("dimension"),
-        "base_url": provider_dic.get("base_url"),
-        "api_key": provider_dic.get("api_key"),
-    }
-    kb_type = config.get("KB_TYPE")
-    
-    # 创建临时库
-    database_info = await knowledge_base.create_database(
-        "临时知识库", "用于存储临时提取的论文数据，仅用于本次报告的生成，用完即删", kb_type=kb_type, embed_info=embed_info, llm_info=None,
-    )
-    db_id = database_info["db_id"]
-    config.set("tmp_db_id", db_id) # 记录临时知识库的db_id，后面retrieval_agent中使用
-    
+async def add_papers_to_kb(
+    papers: Optional[List[Dict[str, Any]]],
+    extracted_papers: ExtractedPapersData,
+    current_state: PaperAgentState,
+) -> None:
+    """将提取的论文数据添加到知识库；依赖 ensure_run_tmp_kb 已写入的 tmp_db_id。"""
+    await ensure_run_tmp_kb(current_state)
+
     # 把论文数据转成JSON字符串
     documents=[json.dumps(paper.model_dump(),ensure_ascii=False) for paper in extracted_papers.papers]
     # 把论文数据转成适合存入Chroma的结构
@@ -127,17 +123,25 @@ async def add_papers_to_kb(papers:Optional[List[Dict[str, Any]]], extracted_pape
         "ids": ids,
     }
 
-    # 写入向量库
+    db_id = (current_state.config or {}).get("tmp_db_id")
+    if not db_id:
+        raise ValueError("add_papers_to_kb: 缺少 tmp_db_id")
     await knowledge_base.add_processed_content(db_id, data)
 
 
-async def reading_node(state: State) -> State:
+async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
     """阅读论文节点"""
-    state_queue = state["state_queue"]
+    state_queue = runtime.context.state_queue
     current_state = state["value"]
     current_state.current_step = ExecutionState.READING
     # 将初始状态推送到队列
     await state_queue.put(BackToFrontData(step=ExecutionState.READING,state="initializing",data=None))
+
+    await ensure_run_tmp_kb(current_state)
+    if not current_state.search_results:
+        loaded = await get_json(current_state, KEY_SEARCH_RESULTS)
+        if loaded is not None:
+            current_state.search_results = loaded
 
     papers = list(current_state.search_results or [])
 
@@ -253,10 +257,12 @@ async def reading_node(state: State) -> State:
         "[工作流·阅读] 将 %s 篇成功提取的论文写入临时向量库…",
         len(extracted_papers.papers),
     )
-    await add_papers_to_kb(successful_papers,extracted_papers)
-        
-    current_state.extracted_data = extracted_papers
+    await add_papers_to_kb(successful_papers, extracted_papers, current_state)
+
+    await put_json(current_state, KEY_EXTRACTED_DATA, extracted_papers.model_dump())
+    current_state.extracted_data = ExtractedPapersData(papers=[])
     await state_queue.put(BackToFrontData(step=ExecutionState.READING,state="completed",data=f"论文阅读完成，共阅读 {len(extracted_papers.papers)} 篇论文"))
+    current_state.search_results = []
     return {"value": current_state}
 
 

@@ -30,8 +30,11 @@ from tenacity import retry, retry_if_exception_type, wait_exponential, stop_afte
 import json
 import logging
 
-from src.core.state_models import State,ExecutionState
+from langgraph.runtime import Runtime
+
+from src.core.state_models import State, ExecutionState, PaperRunContext
 from autogen_core import message_handler
+from src.services.run_tmp_state_store import get_json, put_text, KEY_EXTRACTED_DATA, KEY_ANALYSE_RESULTS
 
 logger = setup_logger(__name__)
 # BaseChatAgent
@@ -199,14 +202,20 @@ class AnalyseAgent(BaseChatAgent):
     async def on_reset(self, cancellation_token: CancellationToken) -> None:
         pass
 
-async def analyse_node(state: State) -> State:
+async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
     """搜索论文节点"""
     try:
-        state_queue = state["state_queue"]
+        state_queue = runtime.context.state_queue
         current_state = state["value"]
         current_state.current_step = ExecutionState.ANALYZING
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="initializing",data=None))
         extracted_papers = current_state.extracted_data
+        if extracted_papers is None or not extracted_papers.papers:
+            raw = await get_json(current_state, KEY_EXTRACTED_DATA)
+            if raw is not None:
+                extracted_papers = ExtractedPapersData.model_validate(raw)
+            elif extracted_papers is None:
+                extracted_papers = ExtractedPapersData(papers=[])
         n_papers = len(extracted_papers.papers) if extracted_papers and extracted_papers.papers else 0
         logger.info("[工作流·分析] 启动分析子流程，输入论文数：%s", n_papers)
 
@@ -217,8 +226,9 @@ async def analyse_node(state: State) -> State:
 
         analyse_results = response.messages[-1].content
         
-        current_state.analyse_results = analyse_results
-        
+        await put_text(current_state, KEY_ANALYSE_RESULTS, analyse_results)
+        current_state.analyse_results = None
+
         # 尝试解析 JSON 并只提取 global_analyse 字段发送给前端，避免显示杂乱的 JSON 数据
         display_content = analyse_results
         try:
@@ -238,7 +248,7 @@ async def analyse_node(state: State) -> State:
         err_msg = f"Analyse failed: {str(e)}" 
         state["value"].error.analyse_node_error = err_msg # 把错误写回状态对象
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="error",data=err_msg))
-        return state
+        return {"value": state["value"]}
 
 def main():
     """主函数"""

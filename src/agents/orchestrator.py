@@ -9,8 +9,11 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from typing import TypedDict, Annotated, Sequence
-from langgraph.graph import StateGraph, END, START  
-from src.core.state_models import PaperAgentState, ExecutionState, NodeError
+from langgraph.graph import StateGraph, END, START
+from langgraph.checkpoint.memory import InMemorySaver
+
+from src.core.state_models import PaperAgentState, ExecutionState, NodeError, PaperRunContext
+from src.agents.userproxy_agent import WebUserProxyAgent
 from src.agents.search_agent import search_node
 from src.agents.reading_agent import reading_node
 from src.agents.analyse_agent import analyse_node
@@ -18,7 +21,7 @@ from src.agents.writing_agent import writing_node
 from src.agents.report_agent import report_node
 from typing import Dict, Any
 from src.core.state_models import BackToFrontData
-from src.core.state_models import State, ConfigSchema
+from src.core.state_models import State
 from src.utils.log_utils import setup_logger
 
 import asyncio
@@ -32,12 +35,14 @@ class PaperAgentOrchestrator:
     def __init__(self, state_queue: asyncio.Queue):
         # 与 main.py 里创建的 asyncio.Queue 是同一个：各节点往这里 put BackToFrontData，前端 SSE 从该 queue 取并推送
         self.state_queue = state_queue
+        # 进程内内存 checkpoint：每节点完成后写入，便于调试与后续扩展断点恢复（重启即失效）
+        self._checkpointer = InMemorySaver()
         # 在构造时一次性构建并编译图，后续 run() 只做 ainvoke，避免重复建图
         self.graph = self._build_graph()
 
     async def handle_error_node(self, state: State):
         """错误处理节点：当某业务节点置位了 error 时，条件边会路由到这里。标记为 FAILED 并结束，不抛异常。"""
-        # state 即当前图状态，["value"] 是 PaperAgentState，["state_queue"] 是 asyncio.Queue
+        # state 即当前图状态，["value"] 是 PaperAgentState；队列与 user_proxy 在 PaperRunContext 中
         current_state = state["value"]
         current_state.current_step = ExecutionState.FAILED
         print(f"Workflow failed at {current_state.current_step}: {current_state.error}")
@@ -65,7 +70,7 @@ class PaperAgentOrchestrator:
 
     def _build_graph(self):
         """构建并编译 LangGraph 工作流：声明状态/配置类型、添加 6 个节点、设置入口与条件边/终点边。"""
-        builder = StateGraph(State, context_schema=ConfigSchema) 
+        builder = StateGraph(State, context_schema=PaperRunContext)
 
         builder.add_node("search_node", search_node)
         builder.add_node("reading_node", reading_node)
@@ -84,32 +89,44 @@ class PaperAgentOrchestrator:
         builder.add_conditional_edges("report_node", self.condition_handler)
         builder.add_edge("handle_error_node", END)
 
-        return builder.compile()
+        return builder.compile(checkpointer=self._checkpointer)
     
 
     
     async def run(
         self,
         user_request: str,
+        *,
+        run_id: str,
+        user_proxy: WebUserProxyAgent,
         max_papers: int = 50,
         knowledge_base_label: str | None = None,
+        user_id: str | None = None,
     ):
         """执行完整工作流：构造初始 PaperAgentState，通过 ainvoke 把 state_queue 与初始状态传入图并异步执行，结束时向 queue 放入 FINISHED。"""
-        logger.info("[工作流] 开始执行：检索 → 阅读 → 分析 → 写作 → 报告（max_papers=%s）", max_papers)
-        # 初始状态：只有用户输入、数量上限、空错误；各节点会按顺序填充 search_results、paper_contents、extracted_data、analyse_results、writted_sections、report_markdown
+        logger.info(
+            "[工作流][run_id=%s] 开始执行：检索 → 阅读 → 分析 → 写作 → 报告（max_papers=%s）",
+            run_id,
+            max_papers,
+        )
         cfg: dict = {}
         if knowledge_base_label:
             cfg["knowledge_base_label"] = knowledge_base_label
         initial_state = PaperAgentState(
+            run_id=run_id,
+            user_id=user_id,
             user_request=user_request,
             max_papers=max_papers,
             error=NodeError(),
             config=cfg,
         )
 
-        # 运行图：传入的 dict 会作为初始 state。ainvoke 会按边与条件依次执行节点，直到 END 或 handle_error_node → END
-        logger.info("[工作流] 进入 LangGraph，当前从检索节点启动…")
-        await self.graph.ainvoke({"state_queue": self.state_queue, "value": initial_state})
+        logger.info("[工作流][run_id=%s] 进入 LangGraph，当前从检索节点启动…", run_id)
+        await self.graph.ainvoke(
+            {"value": initial_state},
+            context=PaperRunContext(state_queue=self.state_queue, user_proxy=user_proxy),
+            config={"configurable": {"thread_id": run_id}},
+        )
         # 通知前端流程已完全结束（成功或已在 handle_error_node 里标记 FAILED），前端可关闭 SSE 或展示最终状态
         await self.state_queue.put(BackToFrontData(step=ExecutionState.FINISHED, state="finished", data=None))
 
@@ -117,7 +134,15 @@ class PaperAgentOrchestrator:
 # 本地调试
 if __name__ == "__main__":
     q = asyncio.Queue()
+    _rid = "local-debug-run"
+    _proxy = WebUserProxyAgent(f"user_proxy_{_rid}")
     orchestrator = PaperAgentOrchestrator(state_queue=q)
-    asyncio.run(orchestrator.run("帮我写一篇有关 llm 在无人驾驶方面的调研报告。"))
+    asyncio.run(
+        orchestrator.run(
+            "帮我写一篇有关 llm 在无人驾驶方面的调研报告。",
+            run_id=_rid,
+            user_proxy=_proxy,
+        )
+    )
 
     

@@ -304,6 +304,85 @@ class ChromaKB(KnowledgeBase):
 
         return chunks
 
+    # 工作流大字段外置：与 RAG 共用同一临时集合，靠 metadata 标记并在检索侧过滤
+    _STATE_BLOB_MARK = "state_blob"
+    _BLOB_KEY_META = "blob_key"
+    _CHUNK_IDX_META = "chunk_idx"
+    _CHUNK_TOTAL_META = "chunk_total"
+    _STATE_BLOB_MAX_CHARS = 8000
+
+    async def put_state_blob(self, db_id: str, blob_key: str, payload: str) -> None:
+        """将任意大字符串分块写入集合，供工作流卸载内存；不参与语义检索（检索侧需过滤）。"""
+        if db_id not in self.databases_meta:
+            raise ValueError(f"Database {db_id} not found")
+        collection = await self._get_chroma_collection(db_id)
+        if not collection:
+            raise ValueError(f"Failed to get ChromaDB collection for {db_id}")
+        text = payload or ""
+        await asyncio.to_thread(
+            collection.delete,
+            where={
+                "$and": [
+                    {self._STATE_BLOB_MARK: "1"},
+                    {self._BLOB_KEY_META: blob_key},
+                ]
+            },
+        )
+        if not text:
+            return
+        n = self._STATE_BLOB_MAX_CHARS
+        chunks = [text[i : i + n] for i in range(0, len(text), n)]
+        total = len(chunks)
+        ids = [f"__wf_sb__{blob_key}__{i}" for i in range(total)]
+        metadatas = [
+            {
+                self._STATE_BLOB_MARK: "1",
+                self._BLOB_KEY_META: blob_key,
+                self._CHUNK_IDX_META: i,
+                self._CHUNK_TOTAL_META: total,
+            }
+            for i in range(total)
+        ]
+        await asyncio.to_thread(
+            collection.add,
+            ids=ids,
+            documents=chunks,
+            metadatas=metadatas,
+        )
+        logger.info("state_blob 已写入 %s：key=%s chunks=%s", db_id, blob_key, total)
+
+    async def get_state_blob(self, db_id: str, blob_key: str) -> str | None:
+        """按 blob_key 读取并拼接分块；无记录时返回 None。"""
+        if db_id not in self.databases_meta:
+            raise ValueError(f"Database {db_id} not found")
+        collection = await self._get_chroma_collection(db_id)
+        if not collection:
+            raise ValueError(f"Failed to get ChromaDB collection for {db_id}")
+        res = await asyncio.to_thread(
+            collection.get,
+            where={
+                "$and": [
+                    {self._STATE_BLOB_MARK: "1"},
+                    {self._BLOB_KEY_META: blob_key},
+                ]
+            },
+            include=["documents", "metadatas"],
+        )
+        docs = res.get("documents") or []
+        metas = res.get("metadatas") or []
+        if not docs:
+            return None
+        pairs = []
+        for doc, meta in zip(docs, metas):
+            if meta is None:
+                continue
+            idx = meta.get(self._CHUNK_IDX_META)
+            if idx is None:
+                continue
+            pairs.append((int(idx), doc or ""))
+        pairs.sort(key=lambda x: x[0])
+        return "".join(p[1] for p in pairs)
+
     async def add_processed_content(self, db_id: str, data: dict | None = None) -> list[dict]:
         if db_id not in self.databases_meta:
             raise ValueError(f"Database {db_id} not found")

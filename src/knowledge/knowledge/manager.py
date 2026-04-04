@@ -225,6 +225,23 @@ class KnowledgeBaseManager:
         kb_instance = self._get_kb_for_database(db_id)
         return await kb_instance.add_processed_content(db_id, data)
 
+    async def put_state_blob(self, db_id: str, blob_key: str, payload: str) -> None:
+        """工作流大字段写入临时向量库（仅 Chroma 实现）。"""
+        kb_instance = self._get_kb_for_database(db_id)
+        put = getattr(kb_instance, "put_state_blob", None)
+        if put is None:
+            logger.warning("当前知识库类型不支持 put_state_blob，已跳过: db_id=%s", db_id)
+            return
+        await put(db_id, blob_key, payload)
+
+    async def get_state_blob(self, db_id: str, blob_key: str) -> str | None:
+        """从临时向量库读取工作流大字段。"""
+        kb_instance = self._get_kb_for_database(db_id)
+        get = getattr(kb_instance, "get_state_blob", None)
+        if get is None:
+            return None
+        return await get(db_id, blob_key)
+
     async def add_image_embeddings(self, db_id: str, items: list[str], params: dict | None = None) -> list[dict]:
         """添加图片嵌入"""
         kb_instance = self._get_kb_for_database(db_id)

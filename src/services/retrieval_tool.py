@@ -1,10 +1,10 @@
 from typing import List, Dict, Any
-from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.utils.log_utils import setup_logger
 import traceback
 import json
 from src.core.config import config
+from src.core.run_context import tmp_db_id_var
 
 logger = setup_logger(__name__)
 
@@ -18,24 +18,46 @@ async def retrieval_tool(querys: List[str]) -> List[List[Dict[str, Any]]]:
     retrieval_results = []
 
     try:
-        # 从临时知识库中检索文档
-        tmp_db_id = config.get("tmp_db_id")
-        tmpdb_results = await knowledge_base.aquery(querys, db_id=tmp_db_id, top_k=config.get_int("tmpdb_top_k"),similarity_threshold=config.get_float("tmpdb_similarity_threshold"))
-        # 提取documents列表
-        if tmpdb_results and 'metadatas' in tmpdb_results:
-            for result in tmpdb_results['metadatas']:
-                retrieval_results.append(json.dumps(result, indent=4, ensure_ascii=False))
+        # 从临时知识库中检索文档（优先当前 run 的 ContextVar，兼容旧脚本回退到 config）
+        tmp_db_id = tmp_db_id_var.get() or config.get("tmp_db_id")
+        if tmp_db_id:
+            tmpdb_results = await knowledge_base.aquery(
+                querys,
+                db_id=tmp_db_id,
+                top_k=config.get_int("tmpdb_top_k"),
+                similarity_threshold=config.get_float("tmpdb_similarity_threshold"),
+            )
+            if isinstance(tmpdb_results, list):
+                for item in tmpdb_results:
+                    md = item.get("metadata") or {}
+                    if md.get("state_blob") == "1":
+                        continue
+                    retrieval_results.append(
+                        json.dumps(
+                            {"content": item.get("content", ""), "metadata": md},
+                            ensure_ascii=False,
+                            indent=2,
+                        )
+                    )
 
-        # 从用户创建的知识库中检索文档
-        db_id = config.get("current_db_id",default=None)
+        db_id = config.get("current_db_id", default=None)
         if db_id is None:
             return retrieval_results
-            
-        db_results = await knowledge_base.aquery(querys, db_id=db_id, top_k=config.get_int("top_k"),similarity_threshold=config.get_float("similarity_threshold"))
-        if db_results and 'documents' in db_results:
-            for result, index in enumerate(db_results['documents']):
-                result = result + " \n来源文件：" + db_results['metadatas'][index]['source']
-                retrieval_results.append(result)
+
+        db_results = await knowledge_base.aquery(
+            querys,
+            db_id=db_id,
+            top_k=config.get_int("top_k"),
+            similarity_threshold=config.get_float("similarity_threshold"),
+        )
+        if isinstance(db_results, list):
+            for item in db_results:
+                md = item.get("metadata") or {}
+                if md.get("state_blob") == "1":
+                    continue
+                doc = item.get("content") or ""
+                src = md.get("source", "")
+                retrieval_results.append(doc + (" \n来源文件：" + str(src) if src else ""))
 
         return retrieval_results
     except Exception as e:

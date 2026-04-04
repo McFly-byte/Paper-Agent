@@ -19,9 +19,12 @@ class WebUserProxyAgent(UserProxyAgent):
         # 收到输入后返回给AutoGen 
         return TextMessage(content=user_input, source="human")
 
-    def set_user_input(self, user_input: str):
-        """外部接口：被前端调用时唤醒等待"""
-        if self.waiting_future and not self.waiting_future.done():
-            self.waiting_future.set_result(user_input) # 被唤醒，Futrue保存此次user_input
-
-userProxyAgent = WebUserProxyAgent("user_proxy")
+    def set_user_input(self, user_input: str | None) -> str:
+        """唤醒当前 HITL 等待。返回 ok | no_pending_hitl | already_resolved。"""
+        fut = self.waiting_future
+        if fut is None:
+            return "no_pending_hitl"
+        if fut.done():
+            return "already_resolved"
+        fut.set_result(user_input if user_input is not None else "")
+        return "ok"

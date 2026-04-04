@@ -1,4 +1,10 @@
-from src.agents.sub_writing_agent.writing_state_models import WritingState, SectionState
+from langgraph.runtime import Runtime
+
+from src.agents.sub_writing_agent.writing_state_models import (
+    WritingState,
+    SectionState,
+    WritingRunContext,
+)
 from typing import Dict, Any
 from src.agents.sub_writing_agent.writing_chatGroup import create_writing_group
 from autogen_agentchat.messages import BaseAgentEvent, BaseChatMessage, TextMessage,StructuredMessage,ModelClientStreamingChunkEvent,ThoughtEvent,ToolCallSummaryMessage,ToolCallExecutionEvent
@@ -12,10 +18,12 @@ import asyncio
 logger = setup_logger(__name__)
 
 
-async def parallel_writing_node(state: WritingState) -> Dict[str, Any]:
+async def parallel_writing_node(
+    state: WritingState, runtime: Runtime[WritingRunContext]
+) -> Dict[str, Any]:
     """并行执行所有子任务"""
 
-    state_queue = state["state_queue"]
+    state_queue = runtime.context.state_queue
     global_analyse = state["global_analysis"]
     user_request = state["user_request"]
     sections = state["sections"]

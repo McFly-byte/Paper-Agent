@@ -2,13 +2,16 @@ from autogen_agentchat.agents import AssistantAgent
 
 from src.utils.log_utils import setup_logger
 from src.utils.tool_utils import handlerChunk
-from src.core.state_models import State,ExecutionState
+from langgraph.runtime import Runtime
+
+from src.core.state_models import State, ExecutionState, PaperRunContext
 from src.core.prompts import report_agent_prompt
 from src.core.state_models import BackToFrontData
 from autogen_agentchat.base import TaskResult
 
 from src.core.model_client import create_report_model_client
 from src.services.report_history_store import append_completed
+from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS
 
 logger = setup_logger(__name__)
 
@@ -23,14 +26,18 @@ report_agent = AssistantAgent(
     model_client_stream=True
 )
 
-async def report_node(state: State) -> State:
+async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
     """报告生成节点"""
-    state_queue = state["state_queue"]
+    state_queue = runtime.context.state_queue
     try:
         current_state = state["value"]
         current_state.current_step = ExecutionState.REPORTING
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="initializing",data=None))
         sections = current_state.writted_sections
+        if not sections:
+            loaded = await get_json(current_state, KEY_WRITTED_SECTIONS)
+            if isinstance(loaded, list):
+                sections = loaded
         sections_text = "\n".join(sections) if sections else "无章节内容提供"
     
         prompt = f"""
@@ -88,4 +95,4 @@ async def report_node(state: State) -> State:
         err_msg = f"Report failed: {str(e)}"
         state["value"].error.report_node_error = err_msg
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="error",data=err_msg))
-        return state
+        return {"value": state["value"]}

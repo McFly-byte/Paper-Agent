@@ -119,6 +119,7 @@ const isSubmitting = ref(false)
 const steps = ref([])
 const reportContent = ref('')
 const eventSource = ref(null)
+const currentRunId = ref(null)
 const isReviewing = ref(false)
 const showSelectModal = ref(false)
 const selectedDatabase = ref(null)
@@ -160,11 +161,18 @@ const submitReviewInput = async () => {
     return;
   }
   try {
-    const res = await fetch("/send_input", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: userReviewInput.value }),
-    });
+    if (!currentRunId.value) {
+      alert("缺少 run_id，请重新发起调研");
+      return;
+    }
+    const res = await fetch(
+      `/api/research/runs/${encodeURIComponent(currentRunId.value)}/input`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: userReviewInput.value }),
+      }
+    );
     console.log("提交审核输出:", res.status);
     if (res.status != 200) {
       alert( "提交失败");
@@ -179,19 +187,71 @@ const submitReviewInput = async () => {
   return;
 };
 
-// deepseek修改后
-const submitRequest = () => {
+const submitRequest = async () => {
   if (!userInput.value.trim()) return
+
+  const finishProcessing = () => {
+    isSubmitting.value = false
+    eventSource.value?.close()
+    activeSubSteps.value.clear()
+  }
+
+  const addStep = (title, content, isError = false) => {
+    const stepElement = {
+      step: 'error',
+      title,
+      content: content || '',
+      thinking: '',
+      isProcessing: false,
+      isError: !!isError,
+      timestamp: new Date().toISOString(),
+      show: false,
+      showThinking: false,
+    }
+    steps.value.push(stepElement)
+    nextTick(() => {
+      stepElement.show = true
+      const container = document.getElementById('steps-container')
+      if (container) container.scrollTop = container.scrollHeight
+    })
+  }
 
   isSubmitting.value = true
   steps.value = []
   reportContent.value = ''
+  currentRunId.value = null
+  eventSource.value?.close()
 
-  let researchUrl = `/api/research?query=${encodeURIComponent(userInput.value)}`
+  const body = { query: userInput.value.trim() }
   if (selectedDatabase.value?.name) {
-    researchUrl += `&kb_label=${encodeURIComponent(selectedDatabase.value.name)}`
+    body.kb_label = selectedDatabase.value.name
   }
-  eventSource.value = new EventSource(researchUrl)
+
+  let runId
+  try {
+    const res = await fetch("/api/research/runs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      addStep("错误", `创建调研任务失败: ${res.status} ${t}`, true)
+      finishProcessing()
+      return
+    }
+    const data = await res.json()
+    runId = data.run_id
+    currentRunId.value = runId
+  } catch (err) {
+    console.error(err)
+    addStep("错误", "创建调研任务失败，请检查网络", true)
+    finishProcessing()
+    return
+  }
+
+  const streamUrl = `/api/research/runs/${encodeURIComponent(runId)}/stream`
+  eventSource.value = new EventSource(streamUrl)
 
   eventSource.value.onmessage = (event) => {
     try {
@@ -390,13 +450,6 @@ const submitRequest = () => {
       stepNames[step] = "撰写第" + partNum + "部分";
     }
     return stepNames[step] || step;
-  };
-
-  // 结束流程
-  const finishProcessing = () => {
-    isSubmitting.value = false;
-    eventSource.value?.close();
-    activeSubSteps.value.clear(); // 清理活跃子块Map
   };
 
   // 自动滚动到最新步骤
