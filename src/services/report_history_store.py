@@ -98,6 +98,9 @@ async def append_completed(
         "status": "completed",
         "createdAt": created,
         "knowledgeBase": knowledge_base,
+        # LangSmith 评估结果将在这里持久化，便于前端展示和历史对比
+        "evaluation": {},  # 后续由 orchestrator 填充 overall_score, summary 等
+        "langsmith_trace_id": None,  # 可关联到 LangSmith trace URL
     }
     try:
         ensure_dir(root)

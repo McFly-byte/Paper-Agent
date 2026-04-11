@@ -56,8 +56,17 @@ security:
   enable_cors: true
   allowed_origins: "*"
 
-# LangSmith（可选）：LangGraph/LangChain 链路在 LangSmith 中的可观测性；需在 .env 设置 LANGCHAIN_API_KEY
+# LangSmith（必看）：LangGraph tracing + 丰富评估 (LLM-as-Judge, datasets, evaluation)
+# 参考官网教程：https://langsmith.langchain.ac.cn/observability/how_to_guides/trace_with_langgraph
+# 功能包括：
+# - 完整工作流 traceable 追踪 (PaperAgent Full Workflow)
+# - 分析质量、写作质量、报告完整性、RAG 检索 4 大维度 LLM Judge 评估
+# - 自动生成 evaluation dataset，支持批量 offline eval
+# - 在 LangSmith UI 可查看详细 trace tree、评分、反馈、趋势图
 observability:
   langsmith:
     tracing: true
     project: "paper-agent"
+    # 评估相关配置 (未来可扩展)
+    enable_evaluation: true
+    eval_dataset: "paper-agent-eval-dataset"

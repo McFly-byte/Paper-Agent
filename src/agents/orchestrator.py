@@ -23,6 +23,8 @@ from typing import Dict, Any
 from src.core.state_models import BackToFrontData
 from src.core.state_models import State
 from src.utils.log_utils import setup_logger
+from src.evaluation.evaluators import run_evaluation
+from langsmith import traceable
 
 import asyncio
 
@@ -93,6 +95,11 @@ class PaperAgentOrchestrator:
     
 
     
+    @traceable(
+        run_type="chain",
+        name="PaperAgent Full Workflow",
+        tags=["paper-agent", "langgraph", "evaluation"]
+    )
     async def run(
         self,
         user_request: str,
@@ -103,7 +110,9 @@ class PaperAgentOrchestrator:
         knowledge_base_label: str | None = None,
         user_id: str | None = None,
     ):
-        """执行完整工作流：构造初始 PaperAgentState，通过 ainvoke 把 state_queue 与初始状态传入图并异步执行，结束时向 queue 放入 FINISHED。"""
+        """执行完整工作流：构造初始 PaperAgentState，通过 ainvoke 把 state_queue 与初始状态传入图并异步执行。
+        集成 LangSmith traceable 追踪，并在结束时执行丰富评估 (analysis/writing/report/rag)。
+        """
         logger.info(
             "[工作流][run_id=%s] 开始执行：检索 → 阅读 → 分析 → 写作 → 报告（max_papers=%s）",
             run_id,
@@ -122,13 +131,63 @@ class PaperAgentOrchestrator:
         )
 
         logger.info("[工作流][run_id=%s] 进入 LangGraph，当前从检索节点启动…", run_id)
-        await self.graph.ainvoke(
+        
+        # 执行 LangGraph 工作流 (已通过 config 启用 LangSmith tracing)
+        final_state = await self.graph.ainvoke(
             {"value": initial_state},
             context=PaperRunContext(state_queue=self.state_queue, user_proxy=user_proxy),
-            config={"configurable": {"thread_id": run_id}},
+            config={
+                "configurable": {"thread_id": run_id},
+                # LangSmith 会自动追踪此 run，包含所有子节点和 traceable 函数
+            },
         )
+        
+        # ==================== 丰富评估阶段 (基于 LangSmith 官网教程) ====================
+        try:
+            current_value = final_state.get("value", initial_state)
+            outputs = {
+                "report_markdown": getattr(current_value, 'report_markdown', None),
+                "analyse_results": getattr(current_value, 'analyse_results', None),
+                "global_analysis": current_value.analyse_results if hasattr(current_value, 'analyse_results') else None,
+                "sections": getattr(current_value, 'writted_sections', None),
+            }
+            
+            eval_results = await run_evaluation(
+                run_id=run_id,
+                state=current_value,
+                outputs=outputs,
+            )
+            
+            # 将评估结果写回 state 和前端反馈
+            if hasattr(current_value, 'config'):
+                current_value.config["evaluation"] = eval_results
+                current_value.config["overall_score"] = eval_results.get("overall_score", 0.0)
+            
+            # 通过 SSE 推送评估结果给前端
+            await self.state_queue.put(
+                BackToFrontData(
+                    step=ExecutionState.COMPLETED,
+                    state="evaluation_complete",
+                    data={
+                        "evaluation": eval_results,
+                        "overall_score": eval_results.get("overall_score"),
+                        "summary": eval_results.get("summary", "评估完成")
+                    }
+                )
+            )
+            
+            logger.info(
+                "[工作流][run_id=%s] LangSmith 评估完成，整体得分: %.2f", 
+                run_id, 
+                eval_results.get("overall_score", 0.0)
+            )
+        except Exception as eval_err:
+            logger.warning(f"[工作流][run_id={run_id}] 评估阶段异常 (不影响主流程): {eval_err}")
+        
         # 通知前端流程已完全结束（成功或已在 handle_error_node 里标记 FAILED），前端可关闭 SSE 或展示最终状态
         await self.state_queue.put(BackToFrontData(step=ExecutionState.FINISHED, state="finished", data=None))
+        
+        return final_state
 
     
 # 本地调试

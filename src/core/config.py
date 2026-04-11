@@ -108,8 +108,11 @@ class Config:
         self._resolve_relative_paths()
     
     def _apply_langsmith_tracing(self) -> None:
-        """按 system_params 与 .env 启用 LangSmith（LangGraph 使用 LANGCHAIN_* 环境变量）。"""
+        """按 system_params 与 .env 启用 LangSmith（LangGraph 使用 LANGCHAIN_* 环境变量）。
+        同时支持 evaluation 功能 (LLM-as-Judge, datasets, traceable decorators)。
+        """
         if not self.get_bool("observability.langsmith.tracing", False):
+            logger.info("LangSmith tracing 已关闭。如需启用评估功能，请设置 observability.langsmith.tracing=true 和 LANGCHAIN_API_KEY。")
             return
         if not os.environ.get("LANGCHAIN_API_KEY"):
             logger.warning(
@@ -120,7 +123,18 @@ class Config:
         project = self.get("observability.langsmith.project")
         if project and not os.environ.get("LANGCHAIN_PROJECT"):
             os.environ["LANGCHAIN_PROJECT"] = str(project)
-        logger.info("LangSmith 链路追踪已启用（LANGCHAIN_TRACING_V2）。")
+        
+        # 启用 evaluation 相关环境变量（优化版）
+        os.environ.setdefault("LANGCHAIN_EVALUATION", "true")
+        os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
+        
+        logger.info(
+            "✅ LangSmith 链路追踪 + 评估功能已启用（本地 Ollama 兼容）！\n"
+            "   项目: %s\n"
+            "   评估函数已被 @traceable 装饰，LLM 调用将自动被 LangSmith 追踪。\n"
+            "   请在 https://smith.langchain.com/ 查看 paper-agent 项目下的 Traces 和 Datasets。",
+            project or "paper-agent"
+        )
 
     def _resolve_relative_paths(self) -> None:
         """将配置中的相对路径转换为绝对路径（相对于项目根目录）"""

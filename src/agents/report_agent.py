@@ -12,6 +12,7 @@ from autogen_agentchat.base import TaskResult
 from src.core.model_client import create_report_model_client
 from src.services.report_history_store import append_completed
 from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS
+from src.evaluation.evaluators import run_evaluation
 
 logger = setup_logger(__name__)
 
@@ -80,6 +81,27 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                 await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state=state,data=chunk.content))
 
         kb_label = current_state.config.get("knowledge_base_label")
+        
+        # 在报告生成完成后立即执行 LangSmith 评估（丰富评估）
+        eval_results = {}
+        try:
+            # 同时传入 state 和 outputs，让评估函数能从多个来源提取数据
+            eval_results = await run_evaluation(
+                run_id=current_state.run_id,
+                state=current_state,
+                outputs={
+                    "report_markdown": current_state.report_markdown,
+                    "sections": getattr(current_state, 'writted_sections', None),
+                },
+            )
+            if hasattr(current_state, 'config') and isinstance(current_state.config, dict):
+                current_state.config["evaluation"] = eval_results
+                current_state.config["overall_score"] = eval_results.get("overall_score", 0.0)
+            logger.info("[报告节点] LangSmith 评估完成，得分: %.2f", eval_results.get("overall_score", 0.0))
+        except Exception as e:
+            logger.warning("报告评估阶段轻微异常: %s", e)
+            eval_results = {"overall_score": 0.0, "summary": f"评估异常: {str(e)[:80]}"}
+
         saved_id = await append_completed(
             current_state.report_markdown or "",
             current_state.user_request,
@@ -87,8 +109,21 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         )
         if saved_id:
             current_state.config["last_saved_report_id"] = saved_id
+            # 更新历史记录中的评估信息
+            # (append_completed 内部可进一步增强，此处先简单记录)
 
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="completed",data=None))
+        
+        # 推送最终评估结果给前端
+        if eval_results:
+            await state_queue.put(
+                BackToFrontData(
+                    step=ExecutionState.COMPLETED,
+                    state="evaluation_complete",
+                    data={"evaluation": eval_results, "overall_score": eval_results.get("overall_score")}
+                )
+            )
+        
         return {"value": current_state}
 
     except Exception as e:
