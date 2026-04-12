@@ -24,6 +24,12 @@ from src.agents.sub_analyse_agent.cluster_agent import PaperClusterAgent
 from src.agents.sub_analyse_agent.deep_analyse_agent import DeepAnalyseAgent
 from src.agents.sub_analyse_agent.global_analyse_agent import GlobalanalyseAgent
 from src.core.model_client import create_default_client
+from src.core.config import config
+from src.utils.llm_api_throttle import (
+    coarse_token_estimate,
+    configured_token_cap,
+    get_remote_llm_throttler,
+)
 from src.core.state_models import BackToFrontData
 from openai import RateLimitError
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, before_sleep_log
@@ -102,11 +108,14 @@ class AnalyseAgent(BaseChatAgent):
         # 2. 深度分析每个聚类的论文
         deep_analysis_results = []
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文深度分析\n"))
+        sem_n = max(1, config.get_int("llm_remote_rate_limit.max_concurrent_llm_tasks", 2))
+        llm_throttle = get_remote_llm_throttler()
         logger.info(
-            "[工作流·分析] 深度分析 %s 个聚类（LLM，并发 2）…",
+            "[工作流·分析] 深度分析 %s 个聚类（LLM，并发 %s）…",
             len(cluster_results),
+            sem_n,
         )
-        semaphore = asyncio.Semaphore(2)
+        semaphore = asyncio.Semaphore(sem_n)
 
         @retry(
             retry=retry_if_exception_type(RateLimitError),
@@ -129,6 +138,20 @@ class AnalyseAgent(BaseChatAgent):
                     n_cluster,
                 )
                 try:
+                    if llm_throttle:
+                        try:
+                            blob = json.dumps(
+                                getattr(cluster, "papers", []), ensure_ascii=False
+                            )
+                        except (TypeError, ValueError):
+                            blob = str(cluster)
+                        oh = config.get_int(
+                            "llm_remote_rate_limit.deep_analyse_overhead_tokens", 4000
+                        )
+                        est = coarse_token_estimate(
+                            blob[:15000], overhead=oh, cap=configured_token_cap()
+                        )
+                        await llm_throttle.acquire(1, est)
                     out = await analyse_single(cluster)
                     logger.info("[工作流·分析] 深度分析完成：簇 %s/%s", idx + 1, n_cluster)
                     return out

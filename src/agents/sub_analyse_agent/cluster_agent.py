@@ -19,6 +19,10 @@ from openai import OpenAI
 from dataclasses import dataclass
 from src.utils.log_utils import setup_logger
 from src.core.config import config
+from src.utils.llm_api_throttle import (
+    configured_token_cap,
+    get_remote_llm_throttler,
+)
 
 # 配置日志
 logger = setup_logger(__name__)
@@ -47,6 +51,15 @@ class PaperClusterAgent:
 
 
     def get_embedding(self, text: Union[str, List[str]]) -> list[float]:
+        thr = get_remote_llm_throttler()
+        if thr:
+            chars = len(text) if isinstance(text, str) else sum(len(t) for t in text)
+            overhead = config.get_int(
+                "llm_remote_rate_limit.embedding_overhead_per_call", 500
+            )
+            cap = configured_token_cap()
+            est = int(min(max(chars // 4 + overhead, 200), cap))
+            thr.acquire_blocking(1, est)
         client = create_cluster_embedding_client()
         model_name = client.default_headers.get("X-Model")
         cluster_cfg = config.get("cluster-embedding-model", {})
@@ -281,6 +294,12 @@ class PaperClusterAgent:
                 主题描述：[主题描述]
                 关键词：[关键词1, 关键词2, 关键词3]
             """
+            thr = get_remote_llm_throttler()
+            if thr:
+                theme_est = config.get_int(
+                    "llm_remote_rate_limit.cluster_theme_estimated_tokens", 6000
+                )
+                await thr.acquire(1, theme_est)
             response = await self.clustering_agent.run(task=prompt)
             
             # 解析LLM响应

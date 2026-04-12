@@ -28,6 +28,7 @@ class Config:
         self._config: Dict[str, Any] = {}
         # 加载环境变量
         self._load_env()
+        self._sync_langsmith_env_aliases()
         # 加载YAML配置
         self._load_yaml_config()
         # 解析配置变量引用
@@ -107,6 +108,17 @@ class Config:
         # 解析相对路径为绝对路径（相对于项目根目录）
         self._resolve_relative_paths()
     
+    def _sync_langsmith_env_aliases(self) -> None:
+        """兼容官方文档中的 LANGSMITH_* 变量名与历史 LANGCHAIN_* 命名。"""
+        if os.environ.get("LANGSMITH_API_KEY") and not os.environ.get("LANGCHAIN_API_KEY"):
+            os.environ["LANGCHAIN_API_KEY"] = os.environ["LANGSMITH_API_KEY"]
+        if os.environ.get("LANGSMITH_ENDPOINT"):
+            os.environ.setdefault("LANGCHAIN_ENDPOINT", os.environ["LANGSMITH_ENDPOINT"])
+        if os.environ.get("LANGSMITH_PROJECT") and not os.environ.get("LANGCHAIN_PROJECT"):
+            os.environ["LANGCHAIN_PROJECT"] = os.environ["LANGSMITH_PROJECT"]
+        if os.environ.get("LANGSMITH_TRACING", "").lower() in ("true", "1"):
+            os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
+
     def _apply_langsmith_tracing(self) -> None:
         """按 system_params 与 .env 启用 LangSmith（LangGraph 使用 LANGCHAIN_* 环境变量）。
         同时支持 evaluation 功能 (LLM-as-Judge, datasets, traceable decorators)。
@@ -116,7 +128,7 @@ class Config:
             return
         if not os.environ.get("LANGCHAIN_API_KEY"):
             logger.warning(
-                "observability.langsmith.tracing 已开启但未设置 LANGCHAIN_API_KEY，跳过启用 LangSmith。"
+                "observability.langsmith.tracing 已开启但未设置 LANGCHAIN_API_KEY 或 LANGSMITH_API_KEY，跳过启用 LangSmith。"
             )
             return
         os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")

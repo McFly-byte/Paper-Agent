@@ -19,6 +19,26 @@ from src.utils.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
+def _per_row_markdown_tables(df) -> str:
+    """将 DataFrame 转为 Markdown：每行一张含表头的小表（与原 to_markdown 语义一致），不依赖 tabulate。"""
+    if df.empty:
+        return "_（空表）_"
+    cols = list(df.columns)
+    blocks: list[str] = []
+    for _, row in df.iterrows():
+        headers = [str(c).replace("|", "\\|").replace("\r", "").replace("\n", " ") for c in cols]
+        cells = [
+            str(row[c]).replace("|", "\\|").replace("\r", "").replace("\n", " ")
+            for c in cols
+        ]
+        blocks.append(
+            "| " + " | ".join(headers) + " |\n"
+            + "| " + " | ".join(["---"] * len(cols)) + " |\n"
+            + "| " + " | ".join(cells) + " |"
+        )
+    return "\n\n".join(blocks)
+
+
 SUPPORTED_FILE_EXTENSIONS: tuple[str, ...] = (
     ".txt",
     ".md",
@@ -324,20 +344,11 @@ async def process_file_to_markdown(file_path: str, params: dict | None = None) -
         return f"# {file_path_obj.name}\n\n{text}"
 
     elif file_ext == ".csv":
-        # 处理 CSV 文件
+        # 处理 CSV 文件（不使用 pandas.to_markdown，避免依赖可选包 tabulate）
         import pandas as pd
 
         df = pd.read_csv(file_path_obj)
-        # 将每一行数据与表头组合成独立的表格
-        markdown_content = f"# {file_path_obj.name}\n\n"
-
-        for index, row in df.iterrows():
-            # 创建包含表头和当前行的小表格
-            row_df = pd.DataFrame([row], columns=df.columns)
-            markdown_table = row_df.to_markdown(index=False)
-            markdown_content += f"{markdown_table}\n\n"
-
-        return markdown_content.strip()
+        return f"# {file_path_obj.name}\n\n{_per_row_markdown_tables(df)}"
 
     elif file_ext in [".xls", ".xlsx"]:
         # 处理 Excel 文件
@@ -350,13 +361,7 @@ async def process_file_to_markdown(file_path: str, params: dict | None = None) -
         for sheet_name in excel_file.sheet_names:
             df = pd.read_excel(file_path_obj, sheet_name=sheet_name)
             markdown_content += f"## {sheet_name}\n\n"
-
-            # 将每一行数据与表头组合成独立的表格
-            for index, row in df.iterrows():
-                # 创建包含表头和当前行的小表格
-                row_df = pd.DataFrame([row], columns=df.columns)
-                markdown_table = row_df.to_markdown(index=False)
-                markdown_content += f"{markdown_table}\n\n"
+            markdown_content += _per_row_markdown_tables(df) + "\n\n"
 
         return markdown_content.strip()
 

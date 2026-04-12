@@ -35,6 +35,39 @@ concurrency:
   max_workers: 4
   max_connections: 10
 
+# 远端 LLM（如硅基流动）RPM/TPM 限流：双令牌桶 + 可配置并发，降低 429
+# 默认按控制台常见额度：RPM=1000、TPM=40000；safety_factor 预留余量
+llm_remote_rate_limit:
+  enabled: true
+  apply_when_model_provider_in:
+    - siliconflow
+  requests_per_minute: 1000
+  tokens_per_minute: 40000
+  # TPM 桶最大「瞬时容量」，须 ≥ 单次阅读预扣 token（reading_per_call_token_estimate_cap）
+  token_bucket_max_burst_tokens: 120000
+  # 略收紧有效 TPM，抵消「粗估偏乐观」与平台瞬时统计
+  safety_factor: 0.75
+  # 阅读 / 深度分析等「单次大请求」并发；写作见 max_concurrent_writing_sections
+  max_concurrent_llm_tasks: 2
+  # 篇级阅读上下文极大，默认串行，显著降低 TPM 叠加（可改为 2 若配额更高）
+  max_concurrent_reading_tasks: 1
+  # SelectorGroupChat 单章多轮多智能体，TPM 易打满，默认略保守
+  max_concurrent_writing_sections: 2
+  per_call_token_estimate_cap: 32000
+  # 阅读：更高封顶 + 更保守的字符/token + 输出预留；仍 429 时可再降 max_concurrent_reading_tasks 或升 multiplier
+  reading_per_call_token_estimate_cap: 72000
+  reading_chars_per_token_divisor: 3
+  reading_output_reserve_tokens: 10000
+  reading_token_estimate_multiplier: 1.15
+  reading_retry_stop_attempts: 12
+  reading_retry_wait_max_seconds: 240
+  reading_overhead_tokens: 5000
+  deep_analyse_overhead_tokens: 4000
+  # 单章全流程（多轮）粗估总 token，偏保守可减少 429
+  writing_section_estimated_tokens: 50000
+  cluster_theme_estimated_tokens: 6000
+  embedding_overhead_per_call: 500
+
 # 文件路径配置
 paths:
   data_dir: data
@@ -70,3 +103,13 @@ observability:
     # 评估相关配置 (未来可扩展)
     enable_evaluation: true
     eval_dataset: "paper-agent-eval-dataset"
+    # LangSmith SDK 离线 RAG 数据集评估（scripts/run_langsmith_rag_eval.py）
+    # Dataset 仅有 Q/A；检索语料在本地 Chroma，请填 kb_xxx（见 data/knowledge_base_data/global_metadata.json）
+    rag_eval_dataset: "RAG_test_LLMAPP"
+    rag_eval_db_id: null
+    rag_eval_top_k: 5
+    rag_eval_similarity_threshold: 0.0
+    # 本机 LLM 判分（feedback key: correctness_local），绕开 LangSmith 数据集上托管 Correctness 的 210s 限制；为 true 时请在 LangSmith 上移除或忽略云端 Correctness
+    rag_eval_local_llm_correctness: false
+    rag_eval_judge_max_chars: 2400
+    rag_eval_judge_timeout: 180

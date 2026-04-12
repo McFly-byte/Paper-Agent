@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from autogen_core.models import ModelInfo
+from autogen_core.models import ModelInfo, UserMessage
 from .config import config
 from src.utils.log_utils import setup_logger
 from openai import OpenAI
@@ -181,6 +181,37 @@ def create_default_client() -> OpenAIChatCompletionClient:
         model=model,
         timeout=_resolve_request_timeout(provider, default_model_config),
     )
+
+
+async def chat_completion_text(
+    client: OpenAIChatCompletionClient,
+    user_prompt: str,
+    *,
+    temperature: float = 0.2,
+    source: str = "paper-agent",
+) -> str:
+    """使用 AutoGen ``OpenAIChatCompletionClient.create`` 发起单次用户消息，返回文本内容。
+
+    （兼容 SiliconFlow / Ollama 等 OpenAI 兼容端点；勿使用已不存在的 ``acomplete`` API。）
+    """
+    try:
+        result = await client.create(
+            [UserMessage(content=user_prompt, source=source)],
+            extra_create_args={"temperature": temperature},
+        )
+        content = getattr(result, "content", None)
+        if isinstance(content, str):
+            return content.strip()
+        if content is not None:
+            return str(content).strip()
+        return str(result).strip()
+    finally:
+        close = getattr(client, "close", None)
+        if close is not None:
+            try:
+                await close()
+            except Exception:
+                logger.debug("model client close() 忽略异常", exc_info=True)
 
 def create_default_embedding_client() -> OpenAI:
     """创建默认的OpenAIEmbeddingClient实例，使用配置中指定的默认模型"""

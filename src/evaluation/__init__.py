@@ -13,6 +13,13 @@ from .evaluators import (
     ReportCompletenessEval,
     RAGEval,
 )
+from .langsmith_rag_eval import (
+    arun_rag_dataset_experiment,
+    default_rag_evaluators,
+    local_llm_correctness,
+    make_async_rag_target,
+    run_rag_dataset_experiment,
+)
 
 __all__ = [
     "run_evaluation",
@@ -23,4 +30,9 @@ __all__ = [
     "WritingQualityEval",
     "ReportCompletenessEval",
     "RAGEval",
+    "make_async_rag_target",
+    "arun_rag_dataset_experiment",
+    "run_rag_dataset_experiment",
+    "default_rag_evaluators",
+    "local_llm_correctness",
 ]

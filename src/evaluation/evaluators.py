@@ -14,10 +14,80 @@ from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-from src.core.model_client import create_default_client
+from src.core.model_client import chat_completion_text, create_default_client
 from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
+
+
+def _to_jsonable(obj: Any) -> Any:
+    """将 Pydantic / 嵌套结构转为 LangSmith Output 可展示的纯 JSON。"""
+    if obj is None:
+        return None
+    if isinstance(obj, BaseModel):
+        return obj.model_dump()
+    if isinstance(obj, dict):
+        return {str(k): _to_jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_jsonable(v) for v in obj]
+    return obj
+
+
+def _push_evaluation_feedback(payload: dict[str, Any]) -> None:
+    """把关键分数挂到当前 trace 的 Feedback，便于在 LangSmith UI 的 Feedback/Scores 区域查看。
+
+    说明：自定义指标默认只出现在对应 span 的 **Output** JSON 里，不会自动出现在 Traces
+    列表的「分数列」；使用 create_feedback 后可在该 run 详情页看到结构化反馈。
+    """
+    if not (os.environ.get("LANGCHAIN_API_KEY") or os.environ.get("LANGSMITH_API_KEY")):
+        return
+    try:
+        from langsmith.run_helpers import get_current_run_tree
+    except ImportError:
+        logger.debug("langsmith.run_helpers.get_current_run_tree 不可用，跳过 Feedback")
+        return
+    try:
+        tree = get_current_run_tree()
+        if tree is None:
+            return
+        rid = getattr(tree, "id", None) or getattr(tree, "run_id", None)
+        if not rid:
+            return
+        from langsmith import Client
+
+        client = Client()
+        rid_str = str(rid)
+        overall = payload.get("overall_score")
+        if overall is not None:
+            client.create_feedback(
+                run_id=rid_str,
+                key="paper_agent_overall_score",
+                score=float(overall),
+                comment=str(payload.get("summary", ""))[:500],
+            )
+        analysis = payload.get("analysis")
+        if isinstance(analysis, dict) and analysis.get("overall_score") is not None:
+            client.create_feedback(
+                run_id=rid_str,
+                key="paper_agent_analysis_overall",
+                score=float(analysis["overall_score"]),
+            )
+        writing = payload.get("writing")
+        if isinstance(writing, dict) and writing.get("overall_score") is not None:
+            client.create_feedback(
+                run_id=rid_str,
+                key="paper_agent_writing_overall",
+                score=float(writing["overall_score"]),
+            )
+        report = payload.get("report")
+        if isinstance(report, dict) and report.get("overall_score") is not None:
+            client.create_feedback(
+                run_id=rid_str,
+                key="paper_agent_report_overall",
+                score=float(report["overall_score"]),
+            )
+    except Exception as e:
+        logger.debug("LangSmith create_feedback 跳过: %s", e)
 
 # LangSmith 追踪状态（由 config.py 根据 .env 和 system_params.yaml 控制）
 LANGsmith_ENABLED = os.environ.get("LANGCHAIN_TRACING_V2", "false").lower() == "true"
@@ -157,11 +227,9 @@ async def evaluate_analysis_quality(
         
         # 使用项目自有 model_client（兼容本地 Ollama / qwen3.5:9b 等）
         # LangSmith @traceable 装饰器会自动捕获调用（无需手动 wrap_openai）
-        response = await model_client.acomplete(
-            messages=[{"role": "user", "content": formatted_prompt}],
-            temperature=0.1
+        result_text = await chat_completion_text(
+            model_client, formatted_prompt, temperature=0.1, source="analysis_evaluator"
         )
-        result_text = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
         
         parsed = parser.parse(result_text)
         return parsed
@@ -222,11 +290,9 @@ RAG 检索记录:
         
         # 使用项目自有 model_client（兼容本地 Ollama）
         # LangSmith @traceable 会自动记录 LLM 调用
-        response = await model_client.acomplete(
-            messages=[{"role": "user", "content": formatted_prompt}],
-            temperature=0.1
+        result_text = await chat_completion_text(
+            model_client, formatted_prompt, temperature=0.1, source="writing_evaluator"
         )
-        result_text = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
         
         return parser.parse(result_text)
         
@@ -321,13 +387,16 @@ async def run_evaluation(
         eval_results["summary"] = f"整体评估得分: {eval_results['overall_score']:.2f}/1.0。分析与写作质量中等，RAG 利用有提升空间。"
         
         logger.info(f"[Evaluation][run_id={run_id}] 评估完成，整体得分: {eval_results['overall_score']:.3f}")
-        return eval_results
+        # LangSmith：纯 JSON 的 Output + Feedback，避免嵌套 Pydantic 在 UI 里不可见
+        serialized = _to_jsonable(eval_results)
+        _push_evaluation_feedback(serialized)
+        return serialized
         
     except Exception as e:
         logger.error(f"[Evaluation][run_id={run_id}] 评估异常: {e}", exc_info=True)
         eval_results["summary"] = f"评估执行失败: {str(e)[:80]}"
         eval_results["langsmith_traced"] = False
-        return eval_results
+        return _to_jsonable(eval_results)
 
 
 def create_evaluation_dataset():

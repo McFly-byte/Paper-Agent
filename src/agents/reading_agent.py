@@ -12,6 +12,7 @@ from src.core.state_models import State, ExecutionState, PaperAgentState, PaperR
 from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
+from src.utils.llm_api_throttle import get_remote_llm_throttler, reading_throttle_token_estimate
 from src.services.run_tmp_state_store import (
     ensure_run_tmp_kb,
     get_json,
@@ -145,16 +146,23 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
 
     papers = list(current_state.search_results or [])
 
-    # 创建信号量，限制并发数，避免被限流
-    semaphore = asyncio.Semaphore(2)
+    read_sem = config.get_int("llm_remote_rate_limit.max_concurrent_reading_tasks", 0)
+    if read_sem <= 0:
+        read_sem = config.get_int("llm_remote_rate_limit.max_concurrent_llm_tasks", 2)
+    sem_n = max(1, read_sem)
+    semaphore = asyncio.Semaphore(sem_n)
+    llm_throttle = get_remote_llm_throttler()
 
     def _retryable_llm_error(exc: BaseException) -> bool:
         return isinstance(exc, (RateLimitError, ReadTimeout))
 
+    _read_retry_max = max(60, config.get_int("llm_remote_rate_limit.reading_retry_wait_max_seconds", 240))
+    _read_retry_attempts = max(3, config.get_int("llm_remote_rate_limit.reading_retry_stop_attempts", 12))
+
     @retry(
         retry=retry_if_exception(_retryable_llm_error),
-        wait=wait_exponential(multiplier=2, min=5, max=120),
-        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=8, max=_read_retry_max),
+        stop=stop_after_attempt(_read_retry_attempts),
         before_sleep=before_sleep_log(logger, logging.WARNING),
         reraise=True,
     )
@@ -171,6 +179,9 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                 n,
             )
             try:
+                if llm_throttle:
+                    est = reading_throttle_token_estimate(str(paper))
+                    await llm_throttle.acquire(1, est)
                 result = await read_single_paper(paper)
                 logger.info("[工作流·阅读] 完成：第 %s/%s 篇", index + 1, n)
                 return result
@@ -179,8 +190,9 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                 raise
 
     logger.info(
-        "[工作流·阅读] 开始对 %s 篇论文做 LLM 结构化提取（并发上限 2，整体可能很慢）…",
+        "[工作流·阅读] 开始对 %s 篇论文做 LLM 结构化提取（并发上限 %s，整体可能很慢）…",
         n,
+        sem_n,
     )
     # 并行阅读多篇论文
     results = await asyncio.gather(
