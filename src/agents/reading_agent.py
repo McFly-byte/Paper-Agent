@@ -12,6 +12,8 @@ from src.core.state_models import State, ExecutionState, PaperAgentState, PaperR
 from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
+from src.rag.llamaindex.config import llamaindex_ingestion_enabled
+from src.rag.llamaindex.service import get_llamaindex_rag_service
 from src.utils.llm_api_throttle import get_remote_llm_throttler, reading_throttle_token_estimate
 from src.services.run_tmp_state_store import (
     ensure_run_tmp_kb,
@@ -270,6 +272,28 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         len(extracted_papers.papers),
     )
     await add_papers_to_kb(successful_papers, extracted_papers, current_state)
+
+    if llamaindex_ingestion_enabled():
+        try:
+            db_id = (current_state.config or {}).get("tmp_db_id")
+            if db_id and successful_papers:
+                extracted_dicts = [p.model_dump() for p in extracted_papers.papers]
+                n_nodes = await get_llamaindex_rag_service().ingest_extracted_papers(
+                    db_id=db_id,
+                    run_id=current_state.run_id,
+                    paper_meta_list=successful_papers,
+                    extracted_list=extracted_dicts,
+                )
+                logger.info(
+                    "[工作流·阅读] LlamaIndex 多节点入库完成 run_id=%s nodes=%s",
+                    current_state.run_id,
+                    n_nodes,
+                )
+        except Exception as li_exc:  # noqa: BLE001
+            logger.warning(
+                "[工作流·阅读] LlamaIndex 入库失败（已跳过，不影响 legacy）: %s",
+                li_exc,
+            )
 
     await put_json(current_state, KEY_EXTRACTED_DATA, extracted_papers.model_dump())
     current_state.extracted_data = ExtractedPapersData(papers=[])

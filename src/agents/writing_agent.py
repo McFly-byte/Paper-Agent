@@ -21,7 +21,7 @@ from src.core.state_models import ExecutionState
 # from src.core.state_models import BackToFrontData
 # from src.utils.tool_utils import handlerChunk
 from src.utils.log_utils import setup_logger
-from src.core.run_context import tmp_db_id_var
+from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
 from src.services.run_tmp_state_store import get_text, put_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
 
 logger = setup_logger(__name__)
@@ -72,6 +72,8 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         logger.info("[工作流·写作] 启动写作子图：大纲 → 多章节并行撰写（LLM 密集，耗时较长）…")
         tmp_id = (current_state.config or {}).get("tmp_db_id")
         tok = tmp_db_id_var.set(tmp_id) if tmp_id else None
+        rag_buf: list[dict] = []
+        tok_rag = rag_retrieval_logs_var.set(rag_buf)
         try:
             writing_state = await writingWorkFlow.workflow.ainvoke(
                 writing_state,
@@ -85,6 +87,8 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         finally:
             if tok is not None:
                 tmp_db_id_var.reset(tok)
+            rag_retrieval_logs_var.reset(tok_rag)
+            current_state.rag_retrieval_logs = list(rag_buf)
         logger.info(f"writing_state: {writing_state}")
         section_texts = [
             (section.content or "").strip()
