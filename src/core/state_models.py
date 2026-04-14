@@ -92,6 +92,10 @@ class PaperAgentState(BaseModel):
     # 配置与上下文
     llm_provider: Any = Field(default=None, description="LLM提供者实例", exclude=True)  # 排除序列化
     config: Dict[str, Any] = Field(default_factory=dict, description="运行时配置")
+    boundary_checks: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="五主节点确定性门禁结果（node_gates），与 LangSmith quality_eval 分层",
+    )
     rag_retrieval_logs: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="写作阶段 RAG 调用摘要，供 LangSmith 评估与 backend 对比",

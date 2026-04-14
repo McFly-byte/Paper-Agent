@@ -126,6 +126,8 @@ class KnowledgeBase(ABC):
         description: str,
         embed_info: dict | None = None,
         llm_info: dict | None = None,
+        *,
+        created_at: str | None = None,
         **kwargs,
     ) -> dict:
         """
@@ -135,6 +137,7 @@ class KnowledgeBase(ABC):
             database_name: 数据库名称
             description: 数据库描述
             embed_info: 嵌入模型信息
+            created_at: 可选的创建时间（ISO UTC），与全局元数据对齐时由管理器传入
             **kwargs: 其他配置参数
 
         Returns:
@@ -144,6 +147,9 @@ class KnowledgeBase(ABC):
 
         db_id = f"kb_{hashstr(database_name, with_salt=True)}"
 
+        ts = created_at or utc_isoformat()
+        normalized_ts = self._normalize_timestamp(ts) or ts
+
         # 创建数据库记录
         self.databases_meta[db_id] = {
             "name": database_name,
@@ -152,7 +158,7 @@ class KnowledgeBase(ABC):
             "embed_info": embed_info,
             "llm_info": llm_info,
             "metadata": kwargs,
-            "created_at": utc_isoformat(),
+            "created_at": normalized_ts,
         }
         self._save_metadata()
 

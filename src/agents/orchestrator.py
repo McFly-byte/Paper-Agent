@@ -24,6 +24,7 @@ from src.core.state_models import BackToFrontData
 from src.core.state_models import State
 from src.utils.log_utils import setup_logger
 from src.evaluation.evaluators import run_evaluation
+from src.services.run_tmp_state_store import get_text, get_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
 from langsmith import traceable
 
 import asyncio
@@ -145,11 +146,18 @@ class PaperAgentOrchestrator:
         # ==================== 丰富评估阶段 (基于 LangSmith 官网教程) ====================
         try:
             current_value = final_state.get("value", initial_state)
+            ar = getattr(current_value, "analyse_results", None)
+            if not ar:
+                ar = await get_text(current_value, KEY_ANALYSE_RESULTS)
+            sect = getattr(current_value, "writted_sections", None)
+            if not sect:
+                loaded = await get_json(current_value, KEY_WRITTED_SECTIONS)
+                sect = loaded if isinstance(loaded, list) else None
             outputs = {
-                "report_markdown": getattr(current_value, 'report_markdown', None),
-                "analyse_results": getattr(current_value, 'analyse_results', None),
-                "global_analysis": current_value.analyse_results if hasattr(current_value, 'analyse_results') else None,
-                "sections": getattr(current_value, 'writted_sections', None),
+                "report_markdown": getattr(current_value, "report_markdown", None),
+                "analyse_results": ar,
+                "global_analysis": ar,
+                "sections": sect,
             }
             
             eval_results = await run_evaluation(

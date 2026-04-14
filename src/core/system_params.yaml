@@ -80,6 +80,19 @@ llm_concurrency_pools:
   realtime_low_priority_max: 8
   batch_offline_max: 4
 
+# 主流程五节点确定性门禁（与 src/core/node_gates.py 对齐，可按环境调参）
+node_gates:
+  search_max_results: 500
+  reading_min_parse_ratio: 0.6
+  reading_min_field_fill_ratio: 0.25
+  analyse_global_min_chars: 400
+  analyse_global_min_module_hits: 4
+  writing_min_section_chars: 200
+  writing_min_section_match_ratio: 0.75
+  writing_min_review_pass_rate: 0.5
+  report_min_chars: 800
+  report_min_section_coverage: 0.35
+
 llm_remote_rate_limit:
   enabled: true
   apply_when_model_provider_in:

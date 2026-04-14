@@ -16,6 +16,7 @@ from src.core.state_models import BackToFrontData
 from src.services.run_tmp_state_store import ensure_run_tmp_kb, put_json, KEY_SEARCH_RESULTS
 
 from src.core.model_client import create_search_model_client
+from src.core.node_gates import gate_search, record_gate
 
 logger = setup_logger(__name__)
 
@@ -158,20 +159,48 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             end_date=search_query.end_date,
         )
         current_state.search_results = results
-        if len(results) > 0:
-            await ensure_run_tmp_kb(current_state)
-            await put_json(current_state, KEY_SEARCH_RESULTS, results)
-            current_state.search_results = []
-            # 将搜索结果推送到队列
-            await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="completed",data=f"论文搜索完成，共找到 {len(results)} 篇论文"))
-        else:
-            # 将错误信息推送到队列
-            await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="error",data="没有找到相关论文,请尝试其他查询条件"))
-            current_state.error.search_node_error = "没有找到相关论文,请尝试其他查询条件"
+        raw_n = len(results)
+        dedup_keys: list[str] = []
+        for i, p in enumerate(results):
+            pid = (p or {}).get("paper_id") or (p or {}).get("id") or f"row-{i}"
+            dedup_keys.append(str(pid))
+        dedup_n = len(set(dedup_keys)) if dedup_keys else 0
+        top_titles = [str((p or {}).get("title") or "")[:160] for p in results[:5]]
+        gate_ctx = {
+            "querys": safe_querys,
+            "start_date": search_query.start_date,
+            "end_date": search_query.end_date,
+            "raw_result_count": raw_n,
+            "dedup_count": dedup_n,
+            "top_titles": top_titles,
+        }
+        current_state.config["search_gate_context"] = gate_ctx
+        sg = gate_search(gate_ctx)
+        current_state.boundary_checks = record_gate(current_state.boundary_checks, "search", sg)
+        if not sg.passed:
+            detail = "；".join(sg.reasons) if sg.reasons else "检索门禁未通过"
+            if not current_state.error.search_node_error:
+                current_state.error.search_node_error = detail
+            await state_queue.put(
+                BackToFrontData(step=ExecutionState.SEARCHING, state="error", data=detail)
+            )
+            current_state.search_results = results
+            return {"value": current_state}
+
+        await ensure_run_tmp_kb(current_state)
+        await put_json(current_state, KEY_SEARCH_RESULTS, results)
+        current_state.search_results = []
+        await state_queue.put(
+            BackToFrontData(
+                step=ExecutionState.SEARCHING,
+                state="completed",
+                data=f"论文搜索完成，共找到 {len(results)} 篇论文",
+            )
+        )
         return {"value": current_state}
             
     except Exception as e:
-        err_msg = f"Search failed: {str(e)}"
+        err_msg = f"检索节点异常：{type(e).__name__}: {str(e)}"
         state["value"].error.search_node_error = err_msg
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="error",data=err_msg))
         return {"value": state["value"]}

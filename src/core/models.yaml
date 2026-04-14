@@ -9,7 +9,7 @@ model-provider:
 # ---------------------------------------------------------------------------
 # LLM 集中路由：当设置环境变量 DEFAULT_LLM_PROVIDER=bailian（或 dashscope）时，
 # 各 client_type 使用下方策略中的模型/thinking/batch；未设置时仍走各 ``*-model`` 的硅基配置。
-# 模型名可由 MODEL_COMPLEX_REASONING / MODEL_LIGHT_TASK 等环境变量覆盖（见 .env.example）。
+# 模型名可由 MODEL_COMPLEX_REASONING / MODEL_MEDIUM_TASK / MODEL_LIGHT_TASK 等覆盖（见 .env.example）。
 # ---------------------------------------------------------------------------
 llm-routing:
   client_policies:
@@ -27,11 +27,11 @@ llm-routing:
       rate_limit_bucket: bailian_qwen35flash
       degradable: true
     reading-model:
-      resolve_model_from_env_key: MODEL_LIGHT_TASK
-      model: qwen3.5-flash
+      resolve_model_from_env_key: MODEL_MEDIUM_TASK
+      model: qwen3.5-plus
       thinking_tier: light
       channel: realtime
-      rate_limit_bucket: bailian_qwen35flash
+      rate_limit_bucket: bailian_qwen36plus
     subanalyse-cluster-model:
       resolve_model_from_env_key: MODEL_LIGHT_TASK
       model: qwen3.5-flash
@@ -57,21 +57,27 @@ llm-routing:
       channel: realtime
       rate_limit_bucket: bailian_qwen36plus
     subwriting-writing-model:
-      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
-      model: qwen3.6-plus
+      resolve_model_from_env_key: MODEL_MEDIUM_TASK
+      model: qwen3.5-plus
       thinking_tier: light
       channel: realtime
       rate_limit_bucket: bailian_qwen36plus
     subwriting-retrieval-model:
-      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
-      model: qwen3.6-plus
-      thinking_tier: complex
+      resolve_model_from_env_key: MODEL_LIGHT_TASK
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen35flash
+    subwriting-review-model:
+      resolve_model_from_env_key: MODEL_MEDIUM_TASK
+      model: qwen3.5-plus
+      thinking_tier: light
       channel: realtime
       rate_limit_bucket: bailian_qwen36plus
     report-model:
-      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
-      model: qwen3.6-plus
-      thinking_tier: complex
+      resolve_model_from_env_key: MODEL_MEDIUM_TASK
+      model: qwen3.5-plus
+      thinking_tier: light
       channel: realtime
       rate_limit_bucket: bailian_qwen36plus
     rag-generation-model:
@@ -191,6 +197,13 @@ subwriting-writing-model:
   # model: qwen3.5:9b
 
 subwriting-retrieval-model:
+  model-provider: siliconflow
+  model: Qwen/Qwen3.5-7B-Instruct
+  # model-provider: ollama
+  # model: qwen3.5:9b
+
+# 写作审查（与 subwriting-writing-model 分路由；百炼时见 llm-routing.subwriting-review-model）
+subwriting-review-model:
   model-provider: siliconflow
   model: Qwen/Qwen3.5-35B-A3B
   # model-provider: ollama

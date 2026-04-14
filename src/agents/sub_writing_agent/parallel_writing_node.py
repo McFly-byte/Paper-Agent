@@ -1,11 +1,15 @@
+import json
+import re
+from typing import Any, Dict, Optional
+
 from langgraph.runtime import Runtime
 
 from src.agents.sub_writing_agent.writing_state_models import (
     WritingState,
     SectionState,
     WritingRunContext,
+    ReviewDecision,
 )
-from typing import Dict, Any
 from src.agents.sub_writing_agent.writing_chatGroup import create_writing_group
 from autogen_agentchat.messages import BaseAgentEvent, BaseChatMessage, TextMessage,StructuredMessage,ModelClientStreamingChunkEvent,ThoughtEvent,ToolCallSummaryMessage,ToolCallExecutionEvent
 from autogen_agentchat.base import TaskResult
@@ -18,6 +22,35 @@ from src.utils.llm_api_throttle import get_throttler_for_client_type
 import asyncio
 
 logger = setup_logger(__name__)
+
+
+def _capture_review_for_section(idx: int, content: Any, state: WritingState) -> None:
+    """将 review_agent 的结构化结论写入 SectionState，供 writing 门禁统计。"""
+    sec = state["writted_sections"][idx]
+    rd: Optional[ReviewDecision] = None
+    if isinstance(content, ReviewDecision):
+        rd = content
+    elif isinstance(content, dict):
+        try:
+            rd = ReviewDecision.model_validate(content)
+        except Exception:
+            rd = None
+    elif isinstance(content, str):
+        s = content.strip()
+        if s.startswith("```"):
+            s = re.sub(r"^```(?:json)?\s*", "", s)
+            s = re.sub(r"\s*```$", "", s)
+        try:
+            rd = ReviewDecision.model_validate_json(s)
+        except Exception:
+            try:
+                rd = ReviewDecision.model_validate(json.loads(s))
+            except Exception:
+                rd = None
+    if rd is None:
+        return
+    sec.review_verdict = rd.verdict
+    sec.review_summary = (rd.summary or "")[:2000]
 
 
 async def parallel_writing_node(
@@ -83,6 +116,9 @@ async def parallel_writing_node(
                         )
                 if chunk.type == "TextMessage" and chunk.source == "writing_agent":
                     state["writted_sections"][task["index"]].content = chunk.content
+                    continue
+                if chunk.type == "TextMessage" and chunk.source == "review_agent":
+                    _capture_review_for_section(task["index"], chunk.content, state)
                     continue
                 if chunk.type == "ModelClientStreamingChunkEvent":
                     if '<think>' in chunk.content:

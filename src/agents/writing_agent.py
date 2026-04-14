@@ -17,12 +17,12 @@ from src.agents.sub_writing_agent.writing_director_agent import writing_director
 from src.agents.sub_writing_agent.writing_agent import create_writing_agent
 # from src.agents.sub_writing_agent.retrieval_agent import retrieval_node
 from src.agents.sub_writing_agent.retrieval_agent import create_retrieval_agent
-from src.core.state_models import ExecutionState
-# from src.core.state_models import BackToFrontData
+from src.core.state_models import ExecutionState, BackToFrontData
 # from src.utils.tool_utils import handlerChunk
 from src.utils.log_utils import setup_logger
 from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
 from src.services.run_tmp_state_store import get_text, put_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
+from src.core.node_gates import gate_writing, record_gate
 
 logger = setup_logger(__name__)
 
@@ -90,6 +90,19 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             rag_retrieval_logs_var.reset(tok_rag)
             current_state.rag_retrieval_logs = list(rag_buf)
         logger.info(f"writing_state: {writing_state}")
+        wg = gate_writing(
+            planned_sections=writing_state.get("sections") or [],
+            writted_sections=writing_state.get("writted_sections") or [],
+        )
+        current_state.boundary_checks = record_gate(current_state.boundary_checks, "writing", wg)
+        if not wg.passed:
+            detail = "；".join(wg.reasons) if wg.reasons else "写作门禁未通过"
+            current_state.error.writing_node_error = detail
+            await state_queue.put(
+                BackToFrontData(step=ExecutionState.WRITING, state="error", data=detail)
+            )
+            return {"value": current_state}
+
         section_texts = [
             (section.content or "").strip()
             for section in writing_state["writted_sections"]

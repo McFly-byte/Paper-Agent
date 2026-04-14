@@ -79,6 +79,21 @@ class KnowledgeBaseManager:
                 except Exception as exc:  # noqa: BLE001
                     logger.warning(f"Failed to normalize database metadata timestamp {meta.get('created_at')!r}: {exc}")
 
+    @staticmethod
+    def _normalize_created_at(value) -> str | None:
+        """将任意可解析时间规范为 UTC ISO 字符串，供列表与详情接口返回。"""
+        if value is None:
+            return None
+        try:
+            dt_value = coerce_any_to_utc_datetime(value)
+            if dt_value:
+                return utc_isoformat(dt_value)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to normalize created_at %r: %s", value, exc)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return None
+
     def _initialize_existing_kbs(self):
         """初始化已存在的知识库实例"""
         kb_types_in_use = set()
@@ -155,9 +170,18 @@ class KnowledgeBaseManager:
         all_databases = []
 
         # 收集所有知识库的数据库信息
-        for kb_type, kb_instance in self.kb_instances.items():
+        for _kb_type, kb_instance in self.kb_instances.items():
             kb_databases = kb_instance.get_databases()["databases"]
-            all_databases.extend(kb_databases)
+            for db in kb_databases:
+                merged = dict(db)
+                db_id = merged.get("db_id")
+                preferred = None
+                if db_id and db_id in self.global_databases_meta:
+                    preferred = self.global_databases_meta[db_id].get("created_at")
+                normalized = self._normalize_created_at(preferred) or self._normalize_created_at(merged.get("created_at"))
+                if normalized:
+                    merged["created_at"] = normalized
+                all_databases.append(merged)
 
         return {"databases": all_databases}
 
@@ -183,7 +207,12 @@ class KnowledgeBaseManager:
 
         kb_instance = self._get_or_create_kb_instance(kb_type)
 
-        db_info = kb_instance.create_database(database_name, description, embed_info, **kwargs)
+        kwargs = dict(kwargs)
+        kwargs.pop("created_at", None)
+        created_at = utc_isoformat()
+        db_info = kb_instance.create_database(
+            database_name, description, embed_info, created_at=created_at, **kwargs
+        )
         db_id = db_info["db_id"]
 
         async with self._metadata_lock:
@@ -191,7 +220,7 @@ class KnowledgeBaseManager:
                 "name": database_name,
                 "description": description,
                 "kb_type": kb_type,
-                "created_at": utc_isoformat(),
+                "created_at": created_at,
                 "additional_params": kwargs.copy(),
             }
             self._save_global_metadata()
@@ -300,12 +329,17 @@ class KnowledgeBaseManager:
             kb_instance = self._get_kb_for_database(db_id)
             db_info = kb_instance.get_database_info(db_id)
 
-            # 添加全局元数据中的additional_params信息
+            # 添加全局元数据中的 additional_params、创建时间（与列表接口一致）
             if db_info and db_id in self.global_databases_meta:
                 global_meta = self.global_databases_meta[db_id]
                 additional_params = global_meta.get("additional_params", {})
                 if additional_params:
                     db_info["additional_params"] = additional_params
+                g_created = self._normalize_created_at(global_meta.get("created_at"))
+                if g_created:
+                    db_info["created_at"] = g_created
+                elif db_info.get("created_at"):
+                    db_info["created_at"] = self._normalize_created_at(db_info["created_at"]) or db_info["created_at"]
 
             return db_info
         except KBNotFoundError:

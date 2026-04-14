@@ -21,6 +21,7 @@ from src.services.run_tmp_state_store import (
     KEY_SEARCH_RESULTS,
     KEY_EXTRACTED_DATA,
 )
+from src.core.node_gates import gate_reading, record_gate
 from openai import RateLimitError
 from httpx import ReadTimeout
 from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt, before_sleep_log
@@ -150,6 +151,7 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             current_state.search_results = loaded
 
     papers = list(current_state.search_results or [])
+    input_paper_count = len(papers)
 
     read_sem = config.get_int("REALTIME_HIGH_PRIORITY_MAX_CONCURRENCY", 0)
     if read_sem <= 0:
@@ -307,7 +309,27 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
 
     await put_json(current_state, KEY_EXTRACTED_DATA, extracted_papers.model_dump())
     current_state.extracted_data = ExtractedPapersData(papers=[])
-    await state_queue.put(BackToFrontData(step=ExecutionState.READING,state="completed",data=f"论文阅读完成，共阅读 {len(extracted_papers.papers)} 篇论文"))
+
+    rg = gate_reading(
+        input_paper_count=input_paper_count,
+        papers_parsed=extracted_papers.papers,
+        kb_write_count=len(extracted_papers.papers),
+    )
+    current_state.boundary_checks = record_gate(current_state.boundary_checks, "reading", rg)
+    if not rg.passed:
+        detail = "；".join(rg.reasons) if rg.reasons else "阅读门禁未通过"
+        current_state.error.reading_node_error = detail
+        await state_queue.put(
+            BackToFrontData(step=ExecutionState.READING, state="error", data=detail)
+        )
+    else:
+        await state_queue.put(
+            BackToFrontData(
+                step=ExecutionState.READING,
+                state="completed",
+                data=f"论文阅读完成，共阅读 {len(extracted_papers.papers)} 篇论文",
+            )
+        )
     current_state.search_results = []
     return {"value": current_state}
 

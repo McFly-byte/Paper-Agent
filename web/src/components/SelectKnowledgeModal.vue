@@ -29,6 +29,9 @@
             <div class="database-info">
               <h4 class="database-name">{{ database.name }}</h4>
               <p class="database-description">{{ database.description || '暂无描述' }}</p>
+              <p v-if="formatCreatedAt(database.created_at)" class="database-created">
+                创建时间：{{ formatCreatedAt(database.created_at) }}
+              </p>
             </div>
             <div class="database-check">
               <div class="check-icon" v-if="isSelected(database.id)">✓</div>
@@ -139,6 +142,13 @@ const close = () => {
 
 const handleOverlayClick = () => {
   close()
+}
+
+const formatCreatedAt = (raw) => {
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return String(raw)
+  return d.toLocaleString('zh-CN', { dateStyle: 'medium', timeStyle: 'short' })
 }
 </script>
 
@@ -337,6 +347,12 @@ const handleOverlayClick = () => {
   margin: 0;
   font-size: 13px;
   color: #6c757d;
+}
+
+.database-created {
+  margin: 6px 0 0 0;
+  font-size: 12px;
+  color: #95a5a6;
 }
 
 .database-check {

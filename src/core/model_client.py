@@ -277,7 +277,13 @@ def create_subwriting_writing_model_client() -> OpenAIChatCompletionClient:
 
 def create_subwriting_retrieval_model_client() -> OpenAIChatCompletionClient:
     """创建用于检索的模型客户端实例"""
-    return create_model_client("subwriting-retrieval-model") 
+    return create_model_client("subwriting-retrieval-model")
+
+
+def create_subwriting_review_model_client() -> OpenAIChatCompletionClient:
+    """写作子流程审查专用（与 subwriting-writing-model 分离路由）。"""
+    return create_model_client("subwriting-review-model")
+
 
 def create_report_model_client() -> OpenAIChatCompletionClient:
     """创建用于写作报告的模型客户端实例"""

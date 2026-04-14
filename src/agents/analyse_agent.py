@@ -41,6 +41,7 @@ from langgraph.runtime import Runtime
 from src.core.state_models import State, ExecutionState, PaperRunContext
 from autogen_core import message_handler
 from src.services.run_tmp_state_store import get_json, put_text, KEY_EXTRACTED_DATA, KEY_ANALYSE_RESULTS
+from src.core.node_gates import gate_analyse, record_gate
 
 logger = setup_logger(__name__)
 # BaseChatAgent
@@ -251,6 +252,14 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         
         await put_text(current_state, KEY_ANALYSE_RESULTS, analyse_results)
         current_state.analyse_results = None
+
+        ag = gate_analyse(analyse_results)
+        current_state.boundary_checks = record_gate(current_state.boundary_checks, "analyse", ag)
+        if not ag.passed:
+            detail = "；".join(ag.reasons) if ag.reasons else "分析门禁未通过"
+            current_state.error.analyse_node_error = detail
+            await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING, state="error", data=detail))
+            return {"value": current_state}
 
         # 尝试解析 JSON 并只提取 global_analyse 字段发送给前端，避免显示杂乱的 JSON 数据
         display_content = analyse_results

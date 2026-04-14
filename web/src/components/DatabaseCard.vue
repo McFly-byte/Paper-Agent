@@ -33,6 +33,10 @@
           <span class="info-label">文档数:</span>
           <span class="info-value">{{ database.document_count }}</span>
         </div>
+        <div class="info-item">
+          <span class="info-label">创建时间:</span>
+          <span class="info-value">{{ formattedCreatedAt }}</span>
+        </div>
       </div>
     </div>
     
@@ -49,6 +53,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   database: {
     type: Object,
@@ -61,6 +67,14 @@ const props = defineProps({
 })
 
 defineEmits(['select', 'delete'])
+
+const formattedCreatedAt = computed(() => {
+  const raw = props.database.created_at
+  if (!raw) return '—'
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return String(raw)
+  return d.toLocaleString('zh-CN', { dateStyle: 'medium', timeStyle: 'short' })
+})
 
 console.log('DatabaseCard渲染:', {
   database: props.database,
