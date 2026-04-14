@@ -1,9 +1,12 @@
-from src.core.model_client import create_subwriting_writing_model_client
-from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.conditions import TextMentionTermination
-from src.agents.sub_writing_agent.writing_agent import create_writing_agent
+from autogen_agentchat.messages import StructuredMessage
+from autogen_agentchat.teams import SelectorGroupChat
+
 from src.agents.sub_writing_agent.retrieval_agent import create_retrieval_agent
 from src.agents.sub_writing_agent.review_agent import create_review_agent
+from src.agents.sub_writing_agent.writing_agent import create_writing_agent
+from src.agents.sub_writing_agent.writing_state_models import ReviewDecision
+from src.core.model_client import create_subwriting_writing_model_client
 from src.core.prompts import selector_prompt
 
 # SelectorGroupChat 每有一名参与者完成一轮响应，group manager 的 turn 计数 +1。
@@ -31,5 +34,8 @@ def create_writing_group():
         max_turns=WRITING_SELECTOR_GROUP_MAX_TURNS,
         selector_prompt=selector_prompt,
         allow_repeated_speaker=False,
+        # review_agent 使用 output_content_type=ReviewDecision，运行时消息类名为
+        # StructuredMessage[ReviewDecision]，必须在 MessageFactory 中单独注册。
+        custom_message_types=[StructuredMessage[ReviewDecision]],
     )
     return task_group

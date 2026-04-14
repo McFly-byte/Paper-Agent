@@ -8,7 +8,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from typing import TypedDict, Annotated, Sequence
+from typing import Any
+
 from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -19,9 +20,9 @@ from src.agents.reading_agent import reading_node
 from src.agents.analyse_agent import analyse_node
 from src.agents.writing_agent import writing_node
 from src.agents.report_agent import report_node
-from typing import Dict, Any
-from src.core.state_models import BackToFrontData
-from src.core.state_models import State
+from src.agents.workflow_recovery_node import workflow_recovery_node
+from src.core.state_models import BackToFrontData, State
+from src.core.workflow_recovery import should_abort_to_terminal_error
 from src.utils.log_utils import setup_logger
 from src.evaluation.evaluators import run_evaluation
 from src.services.run_tmp_state_store import get_text, get_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
@@ -30,6 +31,71 @@ from langsmith import traceable
 import asyncio
 
 logger = setup_logger(__name__)
+
+_ERR_ATTRS = (
+    "search_node_error",
+    "reading_node_error",
+    "analyse_node_error",
+    "writing_node_error",
+    "report_node_error",
+    "error",
+)
+
+
+def _nonempty_error_field(val: Any) -> bool:
+    return val is not None and str(val).strip() != ""
+
+
+def _format_node_errors_for_user(err: NodeError | None) -> str:
+    if err is None:
+        return "未知错误"
+    parts: list[str] = []
+    for name in _ERR_ATTRS:
+        raw = getattr(err, name, None)
+        if not _nonempty_error_field(raw):
+            continue
+        label = name.replace("_node_error", "").replace("_", " ")
+        parts.append(f"[{label}] {str(raw).strip()}")
+    return "；".join(parts) if parts else "未知错误"
+
+
+def _route_after_node(state: State, *, node_key: str, err_attr: str, ok_next: str) -> str:
+    """失败时：未用尽恢复次数 → recovery；否则 → handle_error。成功时 → ok_next。"""
+    val = state["value"]
+    err = val.error
+    if err is not None and _nonempty_error_field(getattr(err, err_attr, None)):
+        if should_abort_to_terminal_error(val, node_key):
+            return "handle_error_node"
+        return "workflow_recovery_node"
+    return ok_next
+
+
+def route_after_search(state: State) -> str:
+    return _route_after_node(state, node_key="search", err_attr="search_node_error", ok_next="reading_node")
+
+
+def route_after_reading(state: State) -> str:
+    return _route_after_node(state, node_key="reading", err_attr="reading_node_error", ok_next="analyse_node")
+
+
+def route_after_analyse(state: State) -> str:
+    return _route_after_node(state, node_key="analyse", err_attr="analyse_node_error", ok_next="writing_node")
+
+
+def route_after_writing(state: State) -> str:
+    return _route_after_node(state, node_key="writing", err_attr="writing_node_error", ok_next="report_node")
+
+
+def route_after_report(state: State) -> str:
+    return _route_after_node(state, node_key="report", err_attr="report_node_error", ok_next=END)
+
+
+def route_after_recovery(state: State) -> str:
+    nxt = (state["value"].config or {}).get("retry_next_node")
+    if isinstance(nxt, str) and nxt.strip():
+        return nxt.strip()
+    logger.warning("[工作流] recovery 后缺少 retry_next_node，转入 handle_error_node")
+    return "handle_error_node"
 
 
 class PaperAgentOrchestrator:
@@ -44,32 +110,28 @@ class PaperAgentOrchestrator:
         self.graph = self._build_graph()
 
     async def handle_error_node(self, state: State):
-        """错误处理节点：当某业务节点置位了 error 时，条件边会路由到这里。标记为 FAILED 并结束，不抛异常。"""
-        # state 即当前图状态，["value"] 是 PaperAgentState；队列与 user_proxy 在 PaperRunContext 中
-        current_state = state["value"]
-        current_state.current_step = ExecutionState.FAILED
-        print(f"Workflow failed at {current_state.current_step}: {current_state.error}")
-        # 返回对状态的「更新」：LangGraph 会合并到全局 state，这里只更新 value，保留 queue 等
-        return {"value": current_state}
-
-    def condition_handler(self, state: State) -> str:
-        """条件路由函数：根据当前步骤与各节点 error 是否为空，决定下一跳是下一个业务节点、END 还是 handle_error_node。"""
+        """错误处理节点：任意主节点已写入非空 error 时由条件边进入。置 FAILED、推送 SSE、终止后续 LangGraph 边。"""
         current_state = state["value"]
         err = current_state.error
-        current_step = current_state.current_step
-        if err.search_node_error is None and current_step == ExecutionState.SEARCHING:
-            return "reading_node"
-        elif err.reading_node_error is None and current_step == ExecutionState.READING:
-            return "analyse_node"
-        elif err.analyse_node_error is None and current_step == ExecutionState.ANALYZING:
-            return "writing_node"
-        elif err.writing_node_error is None and current_step == ExecutionState.WRITING:
-            return "report_node"
-        elif err.report_node_error is None and current_step == ExecutionState.REPORTING:
-            return END  
-        else:
-            return "handle_error_node"
-
+        failed_at_step = current_state.current_step
+        summary = _format_node_errors_for_user(err)
+        logger.error(
+            "[工作流] 已进入错误处理节点：失败前步骤=%s，详情=%s",
+            failed_at_step,
+            summary,
+        )
+        try:
+            await self.state_queue.put(
+                BackToFrontData(
+                    step=ExecutionState.FAILED,
+                    state="failed",
+                    data={"failed_at": str(failed_at_step), "message": summary},
+                )
+            )
+        except Exception as qe:  # noqa: BLE001
+            logger.warning("错误节点推送 SSE 失败（忽略）: %s", qe)
+        current_state.current_step = ExecutionState.FAILED
+        return {"value": current_state}
 
     def _build_graph(self):
         """构建并编译 LangGraph 工作流：声明状态/配置类型、添加 6 个节点、设置入口与条件边/终点边。"""
@@ -80,16 +142,18 @@ class PaperAgentOrchestrator:
         builder.add_node("analyse_node", analyse_node)
         builder.add_node("writing_node", writing_node)
         builder.add_node("report_node", report_node)
+        builder.add_node("workflow_recovery_node", workflow_recovery_node)
         builder.add_node("handle_error_node", self.handle_error_node)
 
         builder.set_entry_point("search_node")
 
         builder.add_edge(START, "search_node")
-        builder.add_conditional_edges("search_node", self.condition_handler)
-        builder.add_conditional_edges("reading_node", self.condition_handler)
-        builder.add_conditional_edges("analyse_node", self.condition_handler)
-        builder.add_conditional_edges("writing_node", self.condition_handler)
-        builder.add_conditional_edges("report_node", self.condition_handler)
+        builder.add_conditional_edges("search_node", route_after_search)
+        builder.add_conditional_edges("reading_node", route_after_reading)
+        builder.add_conditional_edges("analyse_node", route_after_analyse)
+        builder.add_conditional_edges("writing_node", route_after_writing)
+        builder.add_conditional_edges("report_node", route_after_report)
+        builder.add_conditional_edges("workflow_recovery_node", route_after_recovery)
         builder.add_edge("handle_error_node", END)
 
         return builder.compile(checkpointer=self._checkpointer)
@@ -142,10 +206,30 @@ class PaperAgentOrchestrator:
                 # LangSmith 会自动追踪此 run，包含所有子节点和 traceable 函数
             },
         )
-        
+
+        current_value = final_state.get("value", initial_state)
+        if getattr(current_value, "current_step", None) == ExecutionState.FAILED:
+            logger.error(
+                "[工作流][run_id=%s] 已失败终止，跳过 LangSmith 评估。%s",
+                run_id,
+                _format_node_errors_for_user(getattr(current_value, "error", None)),
+            )
+            await self.state_queue.put(
+                BackToFrontData(step=ExecutionState.FINISHED, state="finished", data=None)
+            )
+            if os.environ.get("PAPER_AGENT_EXIT_ON_WORKFLOW_ERROR", "").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+            ):
+                logger.critical(
+                    "[工作流] PAPER_AGENT_EXIT_ON_WORKFLOW_ERROR 已启用，进程退出码 1"
+                )
+                sys.exit(1)
+            return final_state
+
         # ==================== 丰富评估阶段 (基于 LangSmith 官网教程) ====================
         try:
-            current_value = final_state.get("value", initial_state)
             ar = getattr(current_value, "analyse_results", None)
             if not ar:
                 ar = await get_text(current_value, KEY_ANALYSE_RESULTS)

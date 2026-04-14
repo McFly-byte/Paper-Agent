@@ -23,6 +23,11 @@ from src.utils.log_utils import setup_logger
 from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
 from src.services.run_tmp_state_store import get_text, put_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
 from src.core.node_gates import gate_writing, record_gate
+from src.core.workflow_recovery import (
+    clear_recovery_feedback_for,
+    format_recovery_user_block,
+    set_recovery_target,
+)
 
 logger = setup_logger(__name__)
 
@@ -67,6 +72,9 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             "writted_sections": [],
             "current_section_index": -1,
             "retrieved_docs": [],
+            "recovery_feedback": format_recovery_user_block(
+                current_state.config or {}, "writing"
+            ),
         }
         writingWorkFlow = WritingWorkflow()
         logger.info("[工作流·写作] 启动写作子图：大纲 → 多章节并行撰写（LLM 密集，耗时较长）…")
@@ -98,6 +106,7 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         if not wg.passed:
             detail = "；".join(wg.reasons) if wg.reasons else "写作门禁未通过"
             current_state.error.writing_node_error = detail
+            set_recovery_target(current_state, "writing")
             await state_queue.put(
                 BackToFrontData(step=ExecutionState.WRITING, state="error", data=detail)
             )
@@ -109,13 +118,15 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         ]
         await put_json(current_state, KEY_WRITTED_SECTIONS, section_texts)
         current_state.writted_sections = []
+        clear_recovery_feedback_for(current_state, "writing")
         # await state_queue.put(BackToFrontData(step=ExecutionState.WRITING,state="completed",data=writing_state["writted_sections"]))
         return {"value": current_state}
         
     except Exception as e:
-        state["value"].error.writing_node_error = f"Writing failed: {str(e)}"
-        # await state_queue.put(BackToFrontData(step=ExecutionState.WRITING,state="error",data=str(e)))
-        return {"value": state["value"]}
+        vs = state["value"]
+        vs.error.writing_node_error = f"Writing failed: {str(e)}"
+        set_recovery_target(vs, "writing")
+        return {"value": vs}
 
 async def main():
     import asyncio as _asyncio

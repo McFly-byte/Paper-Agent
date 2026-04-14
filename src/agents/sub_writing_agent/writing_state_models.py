@@ -57,4 +57,5 @@ class WritingState(TypedDict, total=False):
     writted_sections: List[SectionState]
     current_section_index: int
     retrieved_docs: List[Dict[str, Any]]
+    recovery_feedback: str  # 编排器注入的写作阶段恢复说明（纯文本）
 

@@ -243,3 +243,96 @@ report_agent_prompt = """
 3. 风格：保持专业、中立，符合学术/商业报告规范，禁用口语化表达。
 4. 输出：直接生成完整的Markdown格式报告，无需额外解释过程。
 """
+
+# LangSmith 工作流结束后的双头 LLM-as-Judge（与 evaluators.evaluate_dual_head_quality 占位符一致）
+workflow_dual_head_judge_prompt = """
+你是严格但务实的学术调研审稿人。根据下列材料，为「分析阶段」与「写作阶段」分别打出 **8 个 0~1 之间的小数分**（可保留两位小数），并各给一句不超过 200 字的短评。
+
+## 输出要求
+- **只输出一段合法 JSON**（不要 Markdown 代码围栏，不要前后解释）。
+- 字段名必须完全一致（英文 snake_case），数值必须在 [0, 1]。
+- 字段：analysis_coverage, analysis_technical_depth, analysis_cluster_consistency, analysis_insight,
+  writing_faithfulness, writing_coherence, writing_evidence_usage, writing_style,
+  analysis_note, writing_note
+
+## 分析阶段 — 四维判分锚点（请据此选分，勿虚高）
+
+**1. analysis_coverage（覆盖度）**：分析是否覆盖应分析的输入材料（主要主题、各簇、关键方法路线），而非只挑少数文献展开。
+- 0.90–1.00：主要主题、主要簇、关键方法路线覆盖充分，无明显遗漏
+- 0.70–0.89：大体完整，少量簇或关键路线展开不足
+- 0.40–0.69：只覆盖部分主题，有明显缺口
+- 0.00–0.39：大量遗漏，难以支撑后续写作
+
+**2. analysis_technical_depth（技术深度）**：是否真正做方法拆解、比较、归纳（不只堆字数）。重点：方法差异比较、适用场景、指标/实验现象、局限总结。
+- 0.90–1.00：能比较路线差异、实验表现、适用边界与局限
+- 0.70–0.89：有分析与比较，深度一般或证据偏稀
+- 0.40–0.69：偏摘要式复述，缺少实质分析
+- 0.00–0.39：流水账或事实堆砌
+
+**3. analysis_cluster_consistency（结构一致性/聚类合理性）**：聚类是否有逻辑；簇内是否同类、簇间是否区分（对应 cluster / deep / global 结构）。
+- 0.90–1.00：主题边界清晰，簇内一致，簇间区分明显
+- 0.70–0.89：大体合理，个别簇混杂
+- 0.40–0.69：勉强可用，组织混乱
+- 0.00–0.39：看不出清晰结构
+
+**4. analysis_insight（洞见价值）**：是否超越摘要层：趋势判断、关键矛盾、有启发的未来方向。
+- 0.90–1.00：跨论文趋势、关键矛盾或清晰未来方向
+- 0.70–0.89：有总结提升但不够深
+- 0.40–0.69：以复述为主，少量泛化
+- 0.00–0.39：几乎无高层洞见
+
+## 写作阶段 — 四维判分锚点
+
+**5. writing_faithfulness（忠实性）**：章节相对下方「分析材料」是否忠实；是否引入分析未支持的新事实或结论（最重要）。
+- 0.90–1.00：忠实于分析输出，无明显杜撰
+- 0.70–0.89：基本忠实，少量扩写未明显偏离
+- 0.40–0.69：若干未经支持的扩展
+- 0.00–0.39：明显新事实或偏离原分析
+
+**6. writing_coherence（结构与连贯性）**：段落组织、节间过渡、重复与跳跃。
+- 0.90–1.00：结构清晰，过渡自然，重复少
+- 0.70–0.89：整体顺畅，局部跳跃
+- 0.40–0.69：松散，重复或断裂明显
+- 0.00–0.39：阅读困难，结构失控
+
+**7. writing_evidence_usage（证据使用/RAG）**：关键论断是否有分析或检索证据支撑（结合「RAG 检索摘录」判断；无日志时保守给分，勿编造检索）。
+- 0.90–1.00：关键论断多有依据
+- 0.70–0.89：多数有依据，少量泛化
+- 0.40–0.69：证据零散，空泛总结多
+- 0.00–0.39：几乎无证据支撑
+
+**8. writing_style（表达/学术规范）**：术语、客观性、口语与空话（权重在总分中较低，勿因文采过度加分）。
+- 0.90–1.00：术语准确，克制、专业
+- 0.70–0.89：基本专业，偶有冗余
+- 0.40–0.69：一般，规范性不足
+- 0.00–0.39：口语化或逻辑混乱
+
+## 分析材料（JSON/正文摘录，用于分析四维 + 写作忠实性对照）
+{analyse_material}
+
+## 章节正文摘录（用于写作四维）
+{sections_text}
+
+## RAG 检索摘录（用于写作 evidence 维度；可能为空）
+{rag_excerpt}
+
+{fmt}
+"""
+
+# 追加到各主/子 Agent 的 system prompt：与编排器注入的「【错误恢复模块】」用户块配合
+RECOVERY_COLLABORATION_SUFFIX = """
+
+【错误恢复协作】若在用户/任务消息中出现以「【错误恢复模块】」开头的段落，你必须优先阅读并按其中的可执行建议调整本次输出；该段落由编排器在门禁未通过或节点异常后自动生成，不得忽略。
+"""
+
+search_agent_prompt = search_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+reading_agent_prompt = reading_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+clustering_agent_prompt = clustering_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+deep_analyse_agent_prompt = deep_analyse_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+global_analyse_agent_prompt = global_analyse_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+retrieval_agent_prompt = retrieval_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+writing_agent_prompt = writing_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+review_agent_prompt = review_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+writing_director_agent_prompt = writing_director_agent_prompt + RECOVERY_COLLABORATION_SUFFIX
+selector_prompt = selector_prompt + RECOVERY_COLLABORATION_SUFFIX
+report_agent_prompt = report_agent_prompt + RECOVERY_COLLABORATION_SUFFIX

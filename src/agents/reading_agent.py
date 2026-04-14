@@ -22,6 +22,11 @@ from src.services.run_tmp_state_store import (
     KEY_EXTRACTED_DATA,
 )
 from src.core.node_gates import gate_reading, record_gate
+from src.core.workflow_recovery import (
+    clear_recovery_feedback_for,
+    format_recovery_user_block,
+    set_recovery_target,
+)
 from openai import RateLimitError
 from httpx import ReadTimeout
 from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt, before_sleep_log
@@ -152,6 +157,7 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
 
     papers = list(current_state.search_results or [])
     input_paper_count = len(papers)
+    _reading_recovery = format_recovery_user_block(current_state.config or {}, "reading")
 
     read_sem = config.get_int("REALTIME_HIGH_PRIORITY_MAX_CONCURRENCY", 0)
     if read_sem <= 0:
@@ -178,7 +184,10 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         reraise=True,
     )
     async def read_single_paper(paper):
-        return await read_agent.run(task=str(paper))
+        body = str(paper)
+        if _reading_recovery:
+            body = _reading_recovery + "\n\n" + body
+        return await read_agent.run(task=body)
 
     n = len(papers)
 
@@ -319,10 +328,12 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
     if not rg.passed:
         detail = "；".join(rg.reasons) if rg.reasons else "阅读门禁未通过"
         current_state.error.reading_node_error = detail
+        set_recovery_target(current_state, "reading")
         await state_queue.put(
             BackToFrontData(step=ExecutionState.READING, state="error", data=detail)
         )
     else:
+        clear_recovery_feedback_for(current_state, "reading")
         await state_queue.put(
             BackToFrontData(
                 step=ExecutionState.READING,

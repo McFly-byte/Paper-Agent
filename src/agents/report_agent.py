@@ -13,6 +13,11 @@ from src.core.model_client import create_report_model_client
 from src.services.report_history_store import append_completed
 from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS
 from src.core.node_gates import gate_report, record_gate
+from src.core.workflow_recovery import (
+    clear_recovery_feedback_for,
+    format_recovery_user_block,
+    set_recovery_target,
+)
 
 logger = setup_logger(__name__)
 
@@ -40,9 +45,11 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             if isinstance(loaded, list):
                 sections = loaded
         sections_text = "\n".join(sections) if sections else "无章节内容提供"
-    
+        _rep_rec = format_recovery_user_block(current_state.config or {}, "report")
+
         prompt = f"""
         请将以下提供的章节内容组装成一份完整的调研报告，并以Markdown格式输出。
+        {_rep_rec}
 
         【章节内容开始】
         {sections_text}
@@ -90,6 +97,7 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         if not repg.passed:
             detail = "；".join(repg.reasons) if repg.reasons else "报告门禁未通过"
             current_state.error.report_node_error = detail
+            set_recovery_target(current_state, "report")
             await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING, state="error", data=detail))
             return {"value": current_state}
 
@@ -103,12 +111,15 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             # 更新历史记录中的评估信息
             # (append_completed 内部可进一步增强，此处先简单记录)
 
+        clear_recovery_feedback_for(current_state, "report")
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="completed",data=None))
 
         return {"value": current_state}
 
     except Exception as e:
         err_msg = f"Report failed: {str(e)}"
-        state["value"].error.report_node_error = err_msg
+        vs = state["value"]
+        vs.error.report_node_error = err_msg
+        set_recovery_target(vs, "report")
         await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state="error",data=err_msg))
-        return {"value": state["value"]}
+        return {"value": vs}

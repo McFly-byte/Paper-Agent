@@ -8,7 +8,7 @@ src_parent_dir = os.path.dirname(os.path.dirname(current_dir))  # 向上两级�
 sys.path.append(src_parent_dir)
 
 
-from typing import Any, Dict, List, Optional, Union, AsyncGenerator, Sequence,get_type_hints,TypeAlias
+from typing import Any, Dict, List, Optional, Union, AsyncGenerator, Sequence, get_type_hints, TypeAlias
 from autogen_agentchat.agents import BaseChatAgent
 import asyncio
 
@@ -42,13 +42,24 @@ from src.core.state_models import State, ExecutionState, PaperRunContext
 from autogen_core import message_handler
 from src.services.run_tmp_state_store import get_json, put_text, KEY_EXTRACTED_DATA, KEY_ANALYSE_RESULTS
 from src.core.node_gates import gate_analyse, record_gate
+from src.core.workflow_recovery import (
+    clear_recovery_feedback_for,
+    format_recovery_user_block,
+    set_recovery_target,
+)
 
 logger = setup_logger(__name__)
 # BaseChatAgent
 class AnalyseAgent(BaseChatAgent):
     """基于AutoGen框架的论文分析智能体"""
     
-    def __init__(self, name: str = "analyse_agent", state_queue: asyncio.Queue = None):
+    def __init__(
+        self,
+        name: str = "analyse_agent",
+        state_queue: asyncio.Queue | None = None,
+        *,
+        analysis_recovery_hint: str = "",
+    ):
         super().__init__(name, "A simple agent that counts down.")
         """初始化论文分析系列智能体"""
         # 创建聚类智能体
@@ -57,9 +68,10 @@ class AnalyseAgent(BaseChatAgent):
         self.deep_analyse_agent = DeepAnalyseAgent()
         # 创建全局分析智能体
         self.global_analyse_agent = GlobalanalyseAgent()
-    
+
         self.model_client = create_default_client()
         self.state_queue = state_queue
+        self.analysis_recovery_hint = (analysis_recovery_hint or "").strip()
     
     @property
     def produced_message_types(self) -> Sequence[type[BaseChatMessage]]:
@@ -171,7 +183,10 @@ class AnalyseAgent(BaseChatAgent):
         global_analysis: dict | None = None
         is_thinking = None
         # 不在收到首个成功 Dict 后 break，以免提前关闭异步生成器链；全局侧已改为单次 yield + run() 完成后再产出
-        async for chunk in self.global_analyse_agent.run(deep_analysis_results):
+        async for chunk in self.global_analyse_agent.run(
+            deep_analysis_results,
+            recovery_hint=self.analysis_recovery_hint,
+        ):
             if isinstance(chunk, Dict):
                 if not chunk.get("isSuccess", False):
                     err_text = chunk.get("global_analyse", "Unknown error")
@@ -243,7 +258,11 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         n_papers = len(extracted_papers.papers) if extracted_papers and extracted_papers.papers else 0
         logger.info("[工作流·分析] 启动分析子流程，输入论文数：%s", n_papers)
 
-        analyse_agent = AnalyseAgent(state_queue=state_queue)
+        recovery_block = format_recovery_user_block(current_state.config or {}, "analyse")
+        analyse_agent = AnalyseAgent(
+            state_queue=state_queue,
+            analysis_recovery_hint=recovery_block,
+        )
         task = StructuredMessage(content=extracted_papers, source="User") # 把对象转成结构化消息
         # task = TextMessage(content=json.dumps(extracted_papers.model_dump(),ensure_ascii=False), source="User")
         response = await analyse_agent.run(task=task)
@@ -258,6 +277,7 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         if not ag.passed:
             detail = "；".join(ag.reasons) if ag.reasons else "分析门禁未通过"
             current_state.error.analyse_node_error = detail
+            set_recovery_target(current_state, "analyse")
             await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING, state="error", data=detail))
             return {"value": current_state}
 
@@ -274,13 +294,16 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="completed",data=analyse_results))
 
+        clear_recovery_feedback_for(current_state, "analyse")
         return {"value": current_state}
             
     except Exception as e:
-        err_msg = f"Analyse failed: {str(e)}" 
-        state["value"].error.analyse_node_error = err_msg # 把错误写回状态对象
+        err_msg = f"Analyse failed: {str(e)}"
+        vs = state["value"]
+        vs.error.analyse_node_error = err_msg
+        set_recovery_target(vs, "analyse")
         await state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="error",data=err_msg))
-        return {"value": state["value"]}
+        return {"value": vs}
 
 def main():
     """主函数"""

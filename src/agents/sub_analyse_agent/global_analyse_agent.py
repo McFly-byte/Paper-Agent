@@ -16,9 +16,16 @@ from src.utils.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 class GlobalanalyseAgent:
-    async def run(self, cluster_results: List[DeepAnalyseResult]):
+    async def run(
+        self,
+        cluster_results: List[DeepAnalyseResult],
+        *,
+        recovery_hint: str = "",
+    ):
         """统一接口方法"""
-        async for chunk in self.generate_global_analyse(cluster_results):
+        async for chunk in self.generate_global_analyse(
+            cluster_results, recovery_hint=recovery_hint
+        ):
             yield chunk
         
     def __init__(self, model_client=None):
@@ -33,7 +40,10 @@ class GlobalanalyseAgent:
         )
     
     async def generate_global_analyse(
-        self, analyse_results: List[DeepAnalyseResult]
+        self,
+        analyse_results: List[DeepAnalyseResult],
+        *,
+        recovery_hint: str = "",
     ) -> AsyncIterator[Dict[str, Any]]:
         """一次性处理所有的深入分析结果，生成全局分析草稿 - 汇总各主题分析结果（async 生成器）。"""
         try:
@@ -47,8 +57,11 @@ class GlobalanalyseAgent:
                     "paper_count": result.paper_count,
                     "analyse_summary": result.deep_analyse[:1000] + "..." if len(result.deep_analyse) > 10000 else result.deep_analyse
                 })
-            
-            prompt = f"""
+
+            rh = (recovery_hint or "").strip()
+            prefix = f"{rh}\n\n" if rh else ""
+
+            prompt = f"""{prefix}
 基于以下多主题聚类分析结果（见下方 JSON 数据），生成一份逻辑严谨、内容详实的全局分析草稿，需严格覆盖以下 6 大核心模块，且各模块内容需紧密关联主题数据，避免脱离分析基础：
 {json.dumps(cluster_summaries, ensure_ascii=False, indent=2)}
 

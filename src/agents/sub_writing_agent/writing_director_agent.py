@@ -74,11 +74,14 @@ async def writing_director_node(
         """写作主管节点：生成大纲，并将大纲拆分成子任务"""
         user_request = state["user_request"]
         global_analysis = state["global_analysis"]
+        rf = (state.get("recovery_feedback") or "").strip()
+        rf_block = f"\n{rf}\n" if rf else ""
         prompt = f"""
         用户的需求:
         {user_request}
         该领域的分析:
         {global_analysis}
+        {rf_block}
         请根据用户提供的需求和关于该领域的分析，生成结构清晰、逻辑连贯的写作子任务：
         """
         logger.info("[工作流·写作] 写作主管：调用 LLM 生成大纲（非流式，请稍候）…")

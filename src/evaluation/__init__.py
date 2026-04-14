@@ -4,6 +4,7 @@ from .evaluators import (
     run_evaluation,
     evaluate_dual_head_quality,
     create_evaluation_dataset,
+    DualHeadDimensionScores,
     DualHeadQualityEval,
 )
 from .langsmith_rag_eval import (
@@ -18,6 +19,7 @@ __all__ = [
     "run_evaluation",
     "evaluate_dual_head_quality",
     "create_evaluation_dataset",
+    "DualHeadDimensionScores",
     "DualHeadQualityEval",
     "make_async_rag_target",
     "arun_rag_dataset_experiment",

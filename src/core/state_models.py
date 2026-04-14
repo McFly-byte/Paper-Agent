@@ -23,6 +23,7 @@ class ExecutionState(str, Enum):
     SECTION_WRITING = "section_writing"
     WRITING = "writing"
     REPORTING = "reporting"
+    RECOVERING = "recovering"
     COMPLETED = "completed"
     FAILED = "failed"
     FINISHED = "finished"

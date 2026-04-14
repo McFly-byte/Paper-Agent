@@ -70,10 +70,12 @@ async def parallel_writing_node(
     async def run_single_subtask(task: Dict):
         nonlocal state
         sec_i = task["index"] + 1
+        _wf = task.get("writing_recovery") or ""
         task_prompt = f"""请根据以下内容完成写作任务：
                 用户的请求是：{task['user_request']}
                 当前写作子任务: {task['section']}
                 论文全局分析: {task['global_analyse']}
+                {_wf}
 
                 请开始写作：
             """
@@ -117,9 +119,13 @@ async def parallel_writing_node(
                 if chunk.type == "TextMessage" and chunk.source == "writing_agent":
                     state["writted_sections"][task["index"]].content = chunk.content
                     continue
-                if chunk.type == "TextMessage" and chunk.source == "review_agent":
-                    _capture_review_for_section(task["index"], chunk.content, state)
-                    continue
+                if chunk.source == "review_agent":
+                    if isinstance(chunk, StructuredMessage):
+                        _capture_review_for_section(task["index"], chunk.content, state)
+                        continue
+                    if chunk.type == "TextMessage":
+                        _capture_review_for_section(task["index"], chunk.content, state)
+                        continue
                 if chunk.type == "ModelClientStreamingChunkEvent":
                     if '<think>' in chunk.content:
                         is_thinking = True
@@ -137,6 +143,8 @@ async def parallel_writing_node(
         except Exception as e:
             await state_queue.put(BackToFrontData(step=ExecutionState.SECTION_WRITING+"_"+str(task["index"] + 1),state="error",data=f"Section writing failed: {str(e)}"))
 
+    _writing_recovery = (state.get("recovery_feedback") or "").strip()
+
     subtasks = []
     for i in range(len(sections)):
         await state_queue.put(BackToFrontData(step=ExecutionState.SECTION_WRITING+"_"+str(i+1),state="initializing",data=None))
@@ -144,7 +152,8 @@ async def parallel_writing_node(
             "user_request": user_request,
             "global_analyse": global_analyse,
             "section": sections[i],
-            "index": i
+            "index": i,
+            "writing_recovery": _writing_recovery,
         })
 
     sec_n = config.get_int(

@@ -17,6 +17,11 @@ from src.services.run_tmp_state_store import ensure_run_tmp_kb, put_json, KEY_SE
 
 from src.core.model_client import create_search_model_client
 from src.core.node_gates import gate_search, record_gate
+from src.core.workflow_recovery import (
+    clear_recovery_feedback_for,
+    format_recovery_user_block,
+    set_recovery_target,
+)
 
 logger = setup_logger(__name__)
 
@@ -128,9 +133,11 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         current_state.current_step = ExecutionState.SEARCHING
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="initializing",data=None)) # 将初始状态推送到队列
 
+        _rec = format_recovery_user_block(current_state.config or {}, "search")
         prompt = f"""
         请根据用户查询需求，生成检索查询条件；按系统说明输出 **json** 结构化结果（querys / start_date / end_date）。
         用户查询需求：{current_state.user_request}
+        {_rec}
         """
         logger.info("[工作流·检索] 调用 LLM 生成 arXiv 检索条件（可能需数十秒）…")
         # 调用search_agent生成查询条件
@@ -181,6 +188,7 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             detail = "；".join(sg.reasons) if sg.reasons else "检索门禁未通过"
             if not current_state.error.search_node_error:
                 current_state.error.search_node_error = detail
+            set_recovery_target(current_state, "search")
             await state_queue.put(
                 BackToFrontData(step=ExecutionState.SEARCHING, state="error", data=detail)
             )
@@ -190,6 +198,7 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         await ensure_run_tmp_kb(current_state)
         await put_json(current_state, KEY_SEARCH_RESULTS, results)
         current_state.search_results = []
+        clear_recovery_feedback_for(current_state, "search")
         await state_queue.put(
             BackToFrontData(
                 step=ExecutionState.SEARCHING,
@@ -201,6 +210,8 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             
     except Exception as e:
         err_msg = f"检索节点异常：{type(e).__name__}: {str(e)}"
-        state["value"].error.search_node_error = err_msg
+        vs = state["value"]
+        vs.error.search_node_error = err_msg
+        set_recovery_target(vs, "search")
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="error",data=err_msg))
-        return {"value": state["value"]}
+        return {"value": vs}
