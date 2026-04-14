@@ -86,12 +86,16 @@ class ModelClient:
             timeout = _resolve_request_timeout(provider, {})
 
         # 创建并返回客户端实例
+        try:
+            mr = int(config.get("MAX_RETRIES") or 5)
+        except (TypeError, ValueError):
+            mr = 5
         return OpenAIChatCompletionClient(
             model=model,
             api_key=api_key,
             base_url=base_url,
             model_info=model_info,
-            max_retries=5,
+            max_retries=mr,
             timeout=timeout,
         )
 
@@ -117,10 +121,14 @@ class ModelClient:
         if not base_url:
             raise ValueError(f"未指定API基础URL，请在参数中提供或在配置文件中设置{provider}.base_url")
 
+        try:
+            mr = int(config.get("MAX_RETRIES") or 5)
+        except (TypeError, ValueError):
+            mr = 5
         client = OpenAI(
                 api_key=api_key,
                 base_url=base_url,
-                max_retries=5,
+                max_retries=mr,
                 timeout=emb_timeout,
                 default_headers={
                     "X-Model": model
@@ -129,58 +137,60 @@ class ModelClient:
         return client
 
 
-def create_model_client(client_type: str) -> OpenAIChatCompletionClient:
-    try:
-        model_config = config.get(client_type, {})
-        provider = model_config.get("model-provider")
-        model = model_config.get("model")
+def _bare_chat_client_from_yaml(block_key: str) -> OpenAIChatCompletionClient:
+    """不经 llm-routing，仅按 yaml 块构造（兜底，避免递归）。"""
+    mc = config.get(block_key, {}) or {}
+    prov = mc.get("model-provider") or "siliconflow"
+    model = mc.get("model")
+    if not model:
+        raise ValueError(f"{block_key} 缺少 model")
+    return ModelClient.create_client(
+        provider=prov,
+        model=model,
+        timeout=_resolve_request_timeout(str(prov), mc),
+    )
 
-        # 检查是否配置了阅读模型
-        if not provider or not model:
-            logger.warning(f"警告：未配置{client_type}模型，使用默认模型代替")
-            return create_default_client()
-        
-        resolved = _resolve_request_timeout(provider, model_config)
-        return ModelClient.create_client(
-                provider=provider,
-                model=model,
-                timeout=resolved,
-        )
+
+def create_model_client(client_type: str) -> OpenAIChatCompletionClient:
+    """按 ``llm-routing`` + ``*-model`` 解析策略并创建客户端（保留原工厂函数名）。"""
+    from src.core.llm_infra.factory import create_openai_chat_client_from_policy
+    from src.core.llm_infra.routing import resolve_invocation_policy
+
+    try:
+        policy = resolve_invocation_policy(client_type)
+        if not policy.model:
+            logger.warning("警告：%s 未解析到 model，使用 default-model yaml 兜底", client_type)
+            return _bare_chat_client_from_yaml("default-model")
+        return create_openai_chat_client_from_policy(policy)
     except Exception as e:
-        print(f"创建阅读模型客户端失败: {e}，使用默认模型代替")
-        return create_default_client()
+        logger.warning("创建 %s 模型客户端失败: %s，使用 default-model yaml 兜底", client_type, e)
+        return _bare_chat_client_from_yaml("default-model")
+
 
 def create_embedding_client(client_type: str) -> OpenAI:
-    try:
-        model_config = config.get(client_type, {})
-        provider = model_config.get("model-provider")
-        model = model_config.get("model")
+    from src.core.llm_infra.routing import effective_embedding_provider
 
-        # 检查是否配置了阅读模型
-        if not provider or not model:
-            logger.warning(f"警告：未配置{client_type}模型，使用默认模型代替")
+    try:
+        model_config = config.get(client_type, {}) or {}
+        raw = model_config.get("model-provider")
+        provider = effective_embedding_provider(str(raw or "siliconflow"))
+        model = model_config.get("model")
+        if not model:
+            logger.warning("警告：未配置 %s 嵌入模型，使用默认嵌入模型", client_type)
             return create_default_embedding_client()
-        
         return ModelClient.create_embedding_client(
-                provider=provider,
-                model=model,
-                timeout=_resolve_request_timeout(provider, model_config),
+            provider=provider,
+            model=model,
+            timeout=_resolve_request_timeout(provider, model_config),
         )
     except Exception as e:
-        print(f"创建{client_type}模型客户端失败: {e}，使用默认模型代替")
+        logger.warning("创建 %s 嵌入客户端失败: %s，使用默认嵌入模型", client_type, e)
         return create_default_embedding_client()
 
+
 def create_default_client() -> OpenAIChatCompletionClient:
-    """创建默认的OpenAIChatCompletionClient实例，使用配置中指定的默认模型"""
-    default_model_config = config.get("default-model", {})
-    provider = default_model_config.get("model-provider", "siliconflow")
-    model = default_model_config.get("model", "Qwen/Qwen3-32B")
-    
-    return ModelClient.create_client(
-        provider=provider,
-        model=model,
-        timeout=_resolve_request_timeout(provider, default_model_config),
-    )
+    """默认 chat 客户端：等价于 ``default-model`` 的路由解析结果。"""
+    return create_model_client("default-model")
 
 
 async def chat_completion_text(
@@ -214,16 +224,28 @@ async def chat_completion_text(
                 logger.debug("model client close() 忽略异常", exc_info=True)
 
 def create_default_embedding_client() -> OpenAI:
-    """创建默认的OpenAIEmbeddingClient实例，使用配置中指定的默认模型"""
-    default_model_config = config.get("default-embedding-model", {})
-    provider = default_model_config.get("model-provider", "siliconflow")
+    """创建默认的 OpenAI 兼容 Embedding 客户端（支持 DEFAULT_EMBEDDING_PROVIDER 覆盖）。"""
+    from src.core.llm_infra.routing import effective_embedding_provider
+
+    default_model_config = config.get("default-embedding-model", {}) or {}
+    raw = default_model_config.get("model-provider")
+    provider = effective_embedding_provider(str(raw or "siliconflow"))
     model = default_model_config.get("model", "Qwen/Qwen3-Embedding-8B")
-    
     return ModelClient.create_embedding_client(
         provider=provider,
         model=model,
         timeout=_resolve_request_timeout(provider, default_model_config),
     )
+
+
+def create_rag_generation_model_client() -> OpenAIChatCompletionClient:
+    """RAG 轻量生成（HyDE 等）专用客户端。"""
+    return create_model_client("rag-generation-model")
+
+
+def create_langsmith_eval_model_client() -> OpenAIChatCompletionClient:
+    """工作流结束后 LangSmith 评估（evaluators）用客户端。"""
+    return create_model_client("langsmith-eval-model")
 
 def create_search_model_client() -> OpenAIChatCompletionClient:
     """创建用于搜索的模型客户端实例"""

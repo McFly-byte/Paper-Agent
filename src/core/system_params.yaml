@@ -49,10 +49,42 @@ concurrency:
 
 # 远端 LLM（如硅基流动）RPM/TPM 限流：双令牌桶 + 可配置并发，降低 429
 # 默认按控制台常见额度：RPM=1000、TPM=40000；safety_factor 预留余量
+# 百炼等：按桶名独立 RPM/TPM（与全局 llm_remote_rate_limit 并存；路由见 models.yaml llm-routing）
+llm_rate_limit_buckets:
+  enabled: true
+  buckets:
+    bailian_qwen36plus:
+      requests_per_minute: 30000
+      requests_per_minute_env: BAILIAN_QWEN36PLUS_RPM
+      tokens_per_minute: 5000000
+      tokens_per_minute_env: BAILIAN_QWEN36PLUS_TPM
+      safety_factor: 0.85
+    bailian_qwen35flash:
+      requests_per_minute: 30000
+      requests_per_minute_env: BAILIAN_QWEN35FLASH_RPM
+      tokens_per_minute: 5000000
+      tokens_per_minute_env: BAILIAN_QWEN35FLASH_TPM
+      safety_factor: 0.85
+    bailian_batch:
+      requests_per_minute: 600
+      tokens_per_minute: 2000000
+      safety_factor: 0.85
+
+# Batch Chat 默认最小等待超时（秒）；可被各 ``*-model.request_timeout`` 覆盖
+llm_batch_chat:
+  default_timeout_seconds: 1800
+
+# 可选并发池上限（未设置时仍用 llm_remote_rate_limit.max_concurrent_*）
+llm_concurrency_pools:
+  realtime_high_priority_max: 6
+  realtime_low_priority_max: 8
+  batch_offline_max: 4
+
 llm_remote_rate_limit:
   enabled: true
   apply_when_model_provider_in:
     - siliconflow
+    - dashscope
   requests_per_minute: 1000
   tokens_per_minute: 40000
   # TPM 桶最大「瞬时容量」，须 ≥ 单次阅读预扣 token（reading_per_call_token_estimate_cap）

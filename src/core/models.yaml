@@ -6,6 +6,99 @@ model-provider:
   - dashscope
   - ark
 
+# ---------------------------------------------------------------------------
+# LLM 集中路由：当设置环境变量 DEFAULT_LLM_PROVIDER=bailian（或 dashscope）时，
+# 各 client_type 使用下方策略中的模型/thinking/batch；未设置时仍走各 ``*-model`` 的硅基配置。
+# 模型名可由 MODEL_COMPLEX_REASONING / MODEL_LIGHT_TASK 等环境变量覆盖（见 .env.example）。
+# ---------------------------------------------------------------------------
+llm-routing:
+  client_policies:
+    default-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    search-model:
+      resolve_model_from_env_key: MODEL_LIGHT_TASK
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen35flash
+      degradable: true
+    reading-model:
+      resolve_model_from_env_key: MODEL_LIGHT_TASK
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen35flash
+    subanalyse-cluster-model:
+      resolve_model_from_env_key: MODEL_LIGHT_TASK
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: batch_chat
+      rate_limit_bucket: bailian_batch
+    subanalyse-deep-analyse-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    subanalyse-global-analyse-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    subwriting-writing-director-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    subwriting-writing-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    subwriting-retrieval-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    report-model:
+      resolve_model_from_env_key: MODEL_COMPLEX_REASONING
+      model: qwen3.6-plus
+      thinking_tier: complex
+      channel: realtime
+      rate_limit_bucket: bailian_qwen36plus
+    rag-generation-model:
+      resolve_model_from_env_key: MODEL_RAG_GENERATION
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen35flash
+    rag-eval-chat-model:
+      resolve_model_from_env_key: MODEL_LANGSMITH_EVAL
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: batch_chat
+      rate_limit_bucket: bailian_batch
+    rag-eval-judge-model:
+      resolve_model_from_env_key: MODEL_LANGSMITH_EVAL
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: batch_chat
+      rate_limit_bucket: bailian_batch
+    langsmith-eval-model:
+      resolve_model_from_env_key: MODEL_LANGSMITH_EVAL
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: batch_chat
+      rate_limit_bucket: bailian_batch
+
 # 项目默认使用的模型和嵌入模型配置（未单独配置的 create_default_client 等仍走此处）
 default-model:
   model-provider: siliconflow
@@ -16,12 +109,17 @@ default-model:
 # LangSmith RAG 离线评估（scripts/run_langsmith_rag_eval）的 target 生成：使用 LangChain ChatOpenAI 以便 LangSmith 统计 token。未配置时与 default-model 相同。
 rag-eval-chat-model:
   model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
+  model: Qwen/Qwen3.5-4B
 
 # LangSmith RAG 离线评估：本机 LLM-as-Judge（替代 LangSmith 云端 Correctness，避免 210s 超时）。宜用小模型。
 rag-eval-judge-model:
   model-provider: siliconflow
   model: Qwen/Qwen3.5-4B
+
+# 工作流结束后的 LLM-as-Judge（evaluators.py）；未设置 DEFAULT_LLM_PROVIDER 时与 default-model 同类硅基模型。
+langsmith-eval-model:
+  model-provider: siliconflow
+  model: Qwen/Qwen3.5-35B-A3B
 
 # 嵌入专用模型（与 chat 分离）
 # 当前：硅基流动 BAAI/bge-m3，稠密向量 1024 维（与 Chroma 配置一致）
@@ -41,6 +139,11 @@ embedding-model:
   # model-provider: ollama
   # model: bge-m3
   # dimension: 1024
+
+# RAG 轻量生成（HyDE 等）；默认硅基，百炼时由 llm-routing 切至 flash。
+rag-generation-model:
+  model-provider: siliconflow
+  model: Qwen/Qwen3.5-35B-A3B
 
 # 检索节点（自然语言转查询等）— 高调用/前置阶段
 search-model:
@@ -143,6 +246,8 @@ openai:
 dashscope:
   api_key: DASHSCOPE_API_KEY
   base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  # Batch Chat（OpenAI 兼容）：与实时不同 host，路径仍为 /chat/completions；可用环境变量 DASHSCOPE_BATCH_BASE_URL 覆盖
+  batch_base_url: https://batch.dashscope.aliyuncs.com/compatible-mode/v1
 
 ark:
   api_key: ARK_API_KEY

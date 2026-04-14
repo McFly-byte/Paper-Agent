@@ -9,9 +9,10 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 from src.core.config import config
+from src.core.llm_infra.routing import effective_chat_provider
 from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -107,10 +108,16 @@ def _providers_when_enabled() -> Set[str]:
     return {str(x).strip().lower() for x in raw if str(x).strip()}
 
 
+def _default_model_provider_for_throttle() -> str:
+    """考虑 DEFAULT_LLM_PROVIDER 强制走百炼时，限流仍应启用。"""
+    declared = (config.get("default-model") or {}).get("model-provider") or "siliconflow"
+    return effective_chat_provider(str(declared))
+
+
 def should_apply_remote_llm_throttle() -> bool:
     if not config.get_bool("llm_remote_rate_limit.enabled", True):
         return False
-    provider = (config.get("default-model") or {}).get("model-provider")
+    provider = _default_model_provider_for_throttle()
     if not provider or not isinstance(provider, str):
         return False
     return provider.strip().lower() in _providers_when_enabled()
@@ -138,6 +145,88 @@ def get_remote_llm_throttler() -> Optional[RemoteLLMThrottler]:
             sorted(_providers_when_enabled()),
         )
         return _throttler_instance
+
+
+_bucket_lock = threading.Lock()
+_bucket_registry: Dict[str, RemoteLLMThrottler] = {}
+
+
+def _int_for_bucket_field(bucket_cfg: dict, yaml_key: str, env_key: Optional[str], default: int) -> int:
+    if isinstance(env_key, str) and env_key.strip():
+        raw = config.get(env_key.strip())
+        if raw is not None:
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                pass
+    raw2 = bucket_cfg.get(yaml_key)
+    if raw2 is not None:
+        try:
+            return int(raw2)
+        except (TypeError, ValueError):
+            pass
+    return default
+
+
+def get_bucket_throttler(bucket_id: Optional[str]) -> Optional[RemoteLLMThrottler]:
+    """按 ``llm_rate_limit_buckets.<id>`` 返回独立双桶；未配置或禁用时返回 None。"""
+    if not bucket_id or not str(bucket_id).strip():
+        return None
+    if not config.get_bool("llm_rate_limit_buckets.enabled", True):
+        return None
+    bid = str(bucket_id).strip()
+    if bid in _bucket_registry:
+        return _bucket_registry[bid]
+    root = config.get("llm_rate_limit_buckets", {}) or {}
+    buckets = root.get("buckets", {}) or {}
+    bc = buckets.get(bid)
+    if not isinstance(bc, dict):
+        return None
+    with _bucket_lock:
+        if bid in _bucket_registry:
+            return _bucket_registry[bid]
+        rpm = _int_for_bucket_field(
+            bc,
+            "requests_per_minute",
+            str(bc.get("requests_per_minute_env") or "").strip() or None,
+            config.get_int("llm_remote_rate_limit.requests_per_minute", 1000),
+        )
+        tpm = _int_for_bucket_field(
+            bc,
+            "tokens_per_minute",
+            str(bc.get("tokens_per_minute_env") or "").strip() or None,
+            config.get_int("llm_remote_rate_limit.tokens_per_minute", 40000),
+        )
+        safety = config.get_float("llm_remote_rate_limit.safety_factor", 0.85)
+        if "safety_factor" in bc and bc["safety_factor"] is not None:
+            try:
+                safety = float(bc["safety_factor"])
+            except (TypeError, ValueError):
+                pass
+        thr = RemoteLLMThrottler(float(rpm), float(tpm), safety)
+        _bucket_registry[bid] = thr
+        logger.info(
+            "LLM 限流桶已创建 bucket=%s RPM=%s TPM=%s safety=%s",
+            bid,
+            rpm,
+            tpm,
+            safety,
+        )
+        return thr
+
+
+def get_throttler_for_client_type(client_type: str) -> Optional[RemoteLLMThrottler]:
+    """优先使用 ``llm-routing`` 解析出的 rate_limit_bucket；否则回退全局硅基限流。"""
+    try:
+        from src.core.llm_infra.routing import resolve_invocation_policy
+
+        pol = resolve_invocation_policy(client_type)
+        b = get_bucket_throttler(pol.rate_limit_bucket)
+        if b is not None:
+            return b
+    except Exception:
+        logger.debug("解析 client_type=%s 限流桶失败，回退全局 throttler", client_type, exc_info=True)
+    return get_remote_llm_throttler()
 
 
 def coarse_token_estimate(

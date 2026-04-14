@@ -21,7 +21,7 @@ from src.utils.log_utils import setup_logger
 from src.core.config import config
 from src.utils.llm_api_throttle import (
     configured_token_cap,
-    get_remote_llm_throttler,
+    get_throttler_for_client_type,
 )
 
 # 配置日志
@@ -51,7 +51,7 @@ class PaperClusterAgent:
 
 
     def get_embedding(self, text: Union[str, List[str]]) -> list[float]:
-        thr = get_remote_llm_throttler()
+        thr = get_throttler_for_client_type("cluster-embedding-model")
         if thr:
             chars = len(text) if isinstance(text, str) else sum(len(t) for t in text)
             overhead = config.get_int(
@@ -294,7 +294,7 @@ class PaperClusterAgent:
                 主题描述：[主题描述]
                 关键词：[关键词1, 关键词2, 关键词3]
             """
-            thr = get_remote_llm_throttler()
+            thr = get_throttler_for_client_type("subanalyse-cluster-model")
             if thr:
                 theme_est = config.get_int(
                     "llm_remote_rate_limit.cluster_theme_estimated_tokens", 6000

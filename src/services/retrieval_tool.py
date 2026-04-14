@@ -8,7 +8,6 @@ import json
 from src.core.config import config
 from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
 from src.rag.llamaindex.config import get_rag_backend, llamaindex_top_k
-from src.rag.llamaindex.service import get_llamaindex_rag_service
 
 logger = setup_logger(__name__)
 
@@ -38,6 +37,8 @@ async def retrieval_tool(querys: List[str]) -> List[Any]:
 
         if tmp_db_id and backend == "llamaindex":
             try:
+                from src.rag.llamaindex.service import get_llamaindex_rag_service
+
                 svc = get_llamaindex_rag_service()
                 pack = await svc.query_for_writing(
                     list(querys or []),

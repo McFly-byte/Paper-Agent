@@ -1,6 +1,6 @@
 from autogen_agentchat.agents import AssistantAgent
 # from pydantic import BaseModel, Field
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional,Dict,Any
 from src.utils.log_utils import setup_logger
 from src.core.prompts import reading_agent_prompt
@@ -13,8 +13,7 @@ from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
 from src.rag.llamaindex.config import llamaindex_ingestion_enabled
-from src.rag.llamaindex.service import get_llamaindex_rag_service
-from src.utils.llm_api_throttle import get_remote_llm_throttler, reading_throttle_token_estimate
+from src.utils.llm_api_throttle import get_throttler_for_client_type, reading_throttle_token_estimate
 from src.services.run_tmp_state_store import (
     ensure_run_tmp_kb,
     get_json,
@@ -38,6 +37,9 @@ class KeyMethodology(BaseModel):
 
 
 class ExtractedPaperData(BaseModel):
+    """单篇结构化抽取；忽略模型多带的 paper_id 等字段。"""
+    model_config = ConfigDict(extra="ignore")
+
     # paper_id: str = Field(default=None, description="论文ID")
     core_problem: str = Field(default=None, description="核心问题")
     key_methodology: KeyMethodology = Field(default=None, description="关键方法")
@@ -75,8 +77,9 @@ read_agent = AssistantAgent(
     name="read_agent",
     model_client=model_client,
     system_message=reading_agent_prompt,
-    output_content_type=ExtractedPaperData,
-    model_client_stream=True
+    # 不用 output_content_type：部分模型会返回根级 JSON 数组或 papers 包装，与单对象 schema
+    # 冲突会在 OpenAI 流式解析阶段直接抛错；改由下方 reading_node 统一解包 + model_validate。
+    model_client_stream=True,
 )
 
 def sanitize_metadata(paper: Dict[str, Any]) -> Dict[str, Any]:
@@ -148,12 +151,16 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
 
     papers = list(current_state.search_results or [])
 
-    read_sem = config.get_int("llm_remote_rate_limit.max_concurrent_reading_tasks", 0)
+    read_sem = config.get_int("REALTIME_HIGH_PRIORITY_MAX_CONCURRENCY", 0)
+    if read_sem <= 0:
+        read_sem = config.get_int("llm_concurrency_pools.realtime_high_priority_max", 0)
+    if read_sem <= 0:
+        read_sem = config.get_int("llm_remote_rate_limit.max_concurrent_reading_tasks", 0)
     if read_sem <= 0:
         read_sem = config.get_int("llm_remote_rate_limit.max_concurrent_llm_tasks", 2)
     sem_n = max(1, read_sem)
     semaphore = asyncio.Semaphore(sem_n)
-    llm_throttle = get_remote_llm_throttler()
+    llm_throttle = get_throttler_for_client_type("reading-model")
 
     def _retryable_llm_error(exc: BaseException) -> bool:
         return isinstance(exc, (RateLimitError, ReadTimeout))
@@ -275,6 +282,9 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
 
     if llamaindex_ingestion_enabled():
         try:
+            # 惰性导入：未安装 llama-index 时仅在关闭 LLAMAINDEX 时避免加载整个 LlamaIndex 栈
+            from src.rag.llamaindex.service import get_llamaindex_rag_service
+
             db_id = (current_state.config or {}).get("tmp_db_id")
             if db_id and successful_papers:
                 extracted_dicts = [p.model_dump() for p in extracted_papers.papers]

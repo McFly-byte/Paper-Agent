@@ -30,6 +30,7 @@ from langsmith import aevaluate, traceable
 from langsmith.schemas import Example, Run
 
 from src.core.config import config
+from src.core.llm_infra.langchain_chat import build_langchain_chat_openai
 from src.knowledge.knowledge import knowledge_base
 
 logger = logging.getLogger(__name__)
@@ -39,30 +40,8 @@ _lc_judge_chat: ChatOpenAI | None = None
 
 
 def _build_lc_rag_eval_chat() -> ChatOpenAI:
-    """从 models.yaml 构建 OpenAI 兼容 Chat 客户端（硅基 / Ollama 等），供 LangSmith 采集 usage。"""
-    block = config.get("rag-eval-chat-model")
-    if not isinstance(block, dict) or not block.get("model"):
-        block = config.get("default-model") or {}
-    provider = block.get("model-provider") or "siliconflow"
-    model = block.get("model")
-    if not model:
-        raise ValueError("rag-eval-chat-model / default-model 缺少 model")
-    pcfg = config.get(provider) or {}
-    api_key = pcfg.get("api_key")
-    base_url = (pcfg.get("base_url") or "").strip().rstrip("/")
-    if not api_key:
-        raise ValueError(f"RAG 评估：{provider} 未配置 api_key（请检查 .env 与 models.yaml）")
-    if not base_url:
-        raise ValueError(f"RAG 评估：{provider} 未配置 base_url")
-    timeout = float(pcfg.get("request_timeout", 600))
-    return ChatOpenAI(
-        model=model,
-        api_key=api_key,
-        base_url=base_url,
-        temperature=0.2,
-        timeout=timeout,
-        max_retries=3,
-    )
+    """与 ``llm-routing`` 对齐的 OpenAI 兼容 Chat（含百炼 batch / thinking）。"""
+    return build_langchain_chat_openai("rag-eval-chat-model", node_name="langsmith_rag_eval_target", temperature=0.2, max_retries=3)
 
 
 def _get_lc_rag_eval_chat() -> ChatOpenAI:
@@ -73,30 +52,15 @@ def _get_lc_rag_eval_chat() -> ChatOpenAI:
 
 
 def _build_lc_judge_chat() -> ChatOpenAI:
-    """本机 Correctness 判分用小模型、低温度、较短超时。"""
-    block = config.get("rag-eval-judge-model")
-    if not isinstance(block, dict) or not block.get("model"):
-        block = config.get("rag-eval-chat-model") or config.get("default-model") or {}
-    provider = block.get("model-provider") or "siliconflow"
-    model = block.get("model")
-    if not model:
-        raise ValueError("rag-eval-judge-model 缺少 model")
-    pcfg = config.get(provider) or {}
-    api_key = pcfg.get("api_key")
-    base_url = (pcfg.get("base_url") or "").strip().rstrip("/")
-    if not api_key or not base_url:
-        raise ValueError(f"判分模型：{provider} 缺少 api_key 或 base_url")
-    judge_timeout = float(
-        config.get("observability.langsmith.rag_eval_judge_timeout", 180) or 180
-    )
-    return ChatOpenAI(
-        model=model,
-        api_key=api_key,
-        base_url=base_url,
+    """本机 Correctness 判分：路由 ``rag-eval-judge-model``，短超时由 LangSmith yaml 控制。"""
+    judge_timeout = float(config.get("observability.langsmith.rag_eval_judge_timeout", 180) or 180)
+    return build_langchain_chat_openai(
+        "rag-eval-judge-model",
+        node_name="langsmith_rag_eval_judge",
         temperature=0.0,
-        timeout=judge_timeout,
+        timeout_override=judge_timeout,
         max_retries=2,
-        model_kwargs={"max_tokens": 256},
+        max_tokens=256,
     )
 
 

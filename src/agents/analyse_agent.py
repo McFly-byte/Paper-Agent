@@ -28,7 +28,7 @@ from src.core.config import config
 from src.utils.llm_api_throttle import (
     coarse_token_estimate,
     configured_token_cap,
-    get_remote_llm_throttler,
+    get_throttler_for_client_type,
 )
 from src.core.state_models import BackToFrontData
 from openai import RateLimitError
@@ -109,7 +109,7 @@ class AnalyseAgent(BaseChatAgent):
         deep_analysis_results = []
         await self.state_queue.put(BackToFrontData(step=ExecutionState.ANALYZING,state="thinking",data="正在进行论文深度分析\n"))
         sem_n = max(1, config.get_int("llm_remote_rate_limit.max_concurrent_llm_tasks", 2))
-        llm_throttle = get_remote_llm_throttler()
+        llm_throttle = get_throttler_for_client_type("subanalyse-deep-analyse-model")
         logger.info(
             "[工作流·分析] 深度分析 %s 个聚类（LLM，并发 %s）…",
             len(cluster_results),

@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <h1>智能调研报告生成</h1>
+    <h1>智能调研报告生成-LlamaIndex</h1>
     
     <div class="input-section">
       <textarea 

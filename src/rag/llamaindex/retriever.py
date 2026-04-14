@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 
 from llama_index.core import VectorStoreIndex
-from src.core.model_client import chat_completion_text, create_default_client
+from src.core.llm_infra.invoke import chat_completion_text_routed
 from src.rag.llamaindex import config as li_cfg
 from src.rag.llamaindex.types import RetrievalHit, RetrievalResponse
 from src.utils.log_utils import setup_logger
@@ -21,13 +21,18 @@ def _meta_match(meta: dict[str, Any], filters: dict[str, Any]) -> bool:
 
 async def _hyde_transform(query: str) -> str | None:
     try:
-        client = create_default_client()
         prompt = (
             "请根据用户检索问题，写一段简短、通顺的英文或中文假想论文段落（不必真实），"
             "用于向量检索扩展；只输出段落正文，不要标题或解释。\n\n问题：\n"
             f"{query}"
         )
-        text = await chat_completion_text(client, prompt, temperature=0.2, source="rag_hyde")
+        text = await chat_completion_text_routed(
+            "rag-generation-model",
+            prompt,
+            node_name="rag_hyde",
+            temperature=0.2,
+            source="rag_hyde",
+        )
         t = (text or "").strip()
         return t or None
     except Exception as exc:  # noqa: BLE001

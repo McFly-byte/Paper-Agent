@@ -14,7 +14,7 @@ from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-from src.core.model_client import chat_completion_text, create_default_client
+from src.core.llm_infra.invoke import chat_completion_text_routed
 from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -196,8 +196,6 @@ async def evaluate_analysis_quality(
 ) -> AnalysisQualityEval:
     """使用 LLM-as-Judge 评估分析质量（优化版）"""
     try:
-        model_client = create_default_client()
-        
         parser = PydanticOutputParser(pydantic_object=AnalysisQualityEval)
         
         prompt = ChatPromptTemplate.from_template("""
@@ -227,8 +225,12 @@ async def evaluate_analysis_quality(
         
         # 使用项目自有 model_client（兼容本地 Ollama / qwen3.5:9b 等）
         # LangSmith @traceable 装饰器会自动捕获调用（无需手动 wrap_openai）
-        result_text = await chat_completion_text(
-            model_client, formatted_prompt, temperature=0.1, source="analysis_evaluator"
+        result_text = await chat_completion_text_routed(
+            "langsmith-eval-model",
+            formatted_prompt,
+            node_name="analysis_evaluator",
+            temperature=0.1,
+            source="analysis_evaluator",
         )
         
         parsed = parser.parse(result_text)
@@ -257,7 +259,6 @@ async def evaluate_writing_quality(
 ) -> WritingQualityEval:
     """评估写作质量，重点考察 RAG 利用情况（优化版）"""
     try:
-        model_client = create_default_client()
         parser = PydanticOutputParser(pydantic_object=WritingQualityEval)
         
         prompt = ChatPromptTemplate.from_template("""
@@ -290,8 +291,12 @@ RAG 检索记录:
         
         # 使用项目自有 model_client（兼容本地 Ollama）
         # LangSmith @traceable 会自动记录 LLM 调用
-        result_text = await chat_completion_text(
-            model_client, formatted_prompt, temperature=0.1, source="writing_evaluator"
+        result_text = await chat_completion_text_routed(
+            "langsmith-eval-model",
+            formatted_prompt,
+            node_name="writing_evaluator",
+            temperature=0.1,
+            source="writing_evaluator",
         )
         
         return parser.parse(result_text)

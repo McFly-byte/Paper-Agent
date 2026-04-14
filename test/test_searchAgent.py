@@ -6,7 +6,7 @@ from autogen_agentchat.ui import Console
 
 model_client = OpenAIChatCompletionClient(
     model="Qwen/Qwen3-32B",
-    api_key="sk-mvjhwoypajnggqoasejoqumfaabvifdrvztgvmxdpdyukggy", # Optional if you have an OPENAI_API_KEY environment variable set.
+    api_key="sk-couzhuarjlfymlqabdxqkqpzjvqabrhmqdthsxoclibsyqdh", # Optional if you have an OPENAI_API_KEY environment variable set.
     base_url="https://api.siliconflow.cn/v1",
     model_info=ModelInfo(
         vision=True,

@@ -14,7 +14,7 @@ from openai import RateLimitError
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
 from src.utils.log_utils import setup_logger
 from src.core.config import config
-from src.utils.llm_api_throttle import get_remote_llm_throttler
+from src.utils.llm_api_throttle import get_throttler_for_client_type
 import asyncio
 
 logger = setup_logger(__name__)
@@ -116,7 +116,7 @@ async def parallel_writing_node(
         config.get_int("llm_remote_rate_limit.max_concurrent_llm_tasks", 2),
     )
     semaphore = asyncio.Semaphore(max(1, sec_n))
-    llm_throttle = get_remote_llm_throttler()
+    llm_throttle = get_throttler_for_client_type("subwriting-writing-model")
 
     @retry(
         retry=retry_if_exception_type(RateLimitError),

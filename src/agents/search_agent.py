@@ -19,7 +19,7 @@ from src.core.model_client import create_search_model_client
 
 logger = setup_logger(__name__)
 
-
+# LLM 路由键：search-model（见 models.yaml llm-routing.client_policies；DEFAULT_LLM_PROVIDER 可切百炼）
 model_client = create_search_model_client()
 
 # 创建一个查询条件类，包括查询内容、主题、时间范围等信息，用于存储用户的查询需求
@@ -128,7 +128,7 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="initializing",data=None)) # 将初始状态推送到队列
 
         prompt = f"""
-        请根据用户查询需求，生成检索查询条件。
+        请根据用户查询需求，生成检索查询条件；按系统说明输出 **json** 结构化结果（querys / start_date / end_date）。
         用户查询需求：{current_state.user_request}
         """
         logger.info("[工作流·检索] 调用 LLM 生成 arXiv 检索条件（可能需数十秒）…")
