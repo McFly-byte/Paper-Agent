@@ -76,7 +76,11 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                 if chunk.type == "ThoughtEvent":
                     continue
                 if chunk.type == "TextMessage":
-                    current_state.report_markdown = chunk.content
+                    # 流式下可能多次 TextMessage：保留最长正文，避免仅末段 delta 参与门禁覆盖校验
+                    new_text = str(getattr(chunk, "content", "") or "")
+                    prev = str(getattr(current_state, "report_markdown", "") or "")
+                    if len(new_text) >= len(prev):
+                        current_state.report_markdown = new_text
                     report_text_captured = True
                     continue
                 if report_text_captured:

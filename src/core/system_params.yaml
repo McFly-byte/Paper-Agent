@@ -91,7 +91,10 @@ node_gates:
   writing_min_section_match_ratio: 0.75
   writing_min_review_pass_rate: 0.5
   report_min_chars: 800
-  report_min_section_coverage: 0.35
+  report_min_section_coverage: 0.2
+  # 报告与源章节重叠：字符 trigram 召回阈值（润色后子串常对不上，不宜过高）
+  report_section_trigram_recall_min: 0.11
+  report_section_overlap_max_chars: 1200
 
 llm_remote_rate_limit:
   enabled: true

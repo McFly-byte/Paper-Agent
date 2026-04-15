@@ -346,8 +346,8 @@ async def run_evaluation(
         )
     else:
         judge = DualHeadQualityEval(
-            analysis_quality=0.35,
-            writing_quality=0.3,
+            analysis_quality=0.20,
+            writing_quality=0.2,
             analysis_note="无分析/章节可评",
             writing_note="无分析/章节可评",
             analysis_dimensions={},

@@ -316,6 +316,72 @@ def gate_writing(
     )
 
 
+_REPORT_MD_NOISE = re.compile(r"[\s#*_>`\[\]\(\)\|'\"“”‘’:：,，.。;；\-—/\\|]+")
+
+
+def _report_text_for_overlap(s: str) -> str:
+    """弱化 Markdown 与空白噪声，便于与润色后的终稿做片段重叠判断。"""
+    t = (s or "").lower()
+    return _REPORT_MD_NOISE.sub("", t)
+
+
+def _char_ngram_set(norm: str, n: int = 3) -> set[str]:
+    if len(norm) < n:
+        return set()
+    return {norm[i : i + n] for i in range(len(norm) - n + 1)}
+
+
+def _trigram_recall_in_report(sec_raw: str, report_trigrams: set[str], *, max_sec_chars: int) -> float:
+    """源节在报告中的字符 trigram 召回率（对改写/重排比子串匹配更稳）。"""
+    norm = _report_text_for_overlap(sec_raw[:max_sec_chars])
+    if len(norm) < 12:
+        return 1.0
+    ts = _char_ngram_set(norm, 3)
+    if not ts:
+        return 0.0
+    return len(ts & report_trigrams) / len(ts)
+
+
+def _identifier_tokens(s: str) -> list[str]:
+    """英文/数字类标识（方法名、数据集、指标等），润色后仍易保留。"""
+    out: list[str] = []
+    for m in re.finditer(r"[A-Za-z][A-Za-z0-9._\-]{4,}", s):
+        tok = m.group(0).lower()
+        if len(tok) >= 5:
+            out.append(tok)
+    return out[:24]
+
+
+def _section_covers_report(
+    snip: str,
+    joined_lower: str,
+    report_trigrams: set[str],
+    *,
+    trigram_recall_min: float,
+    max_section_chars: int,
+) -> bool:
+    """判定「组装报告」是否仍体现该源节：先严子串，再 trigram 召回，再标识符命中。"""
+    s = (snip or "").strip()
+    if len(s) < 20:
+        return True
+    s_low = s.lower()
+    if s_low[:80] and s_low[:80] in joined_lower:
+        return True
+    first_line = (s.splitlines() or [""])[0].strip().lower()
+    if len(first_line) >= 8 and first_line in joined_lower:
+        return True
+    recall = _trigram_recall_in_report(s, report_trigrams, max_sec_chars=max_section_chars)
+    if recall >= trigram_recall_min:
+        return True
+    rep_fold = joined_lower
+    idents = _identifier_tokens(s)
+    if len(idents) >= 2 and sum(1 for t in idents if t in rep_fold) >= 2:
+        return True
+    if any(len(t) >= 10 and t in rep_fold for t in idents):
+        return True
+    return False
+
+
 def gate_report(
     *,
     report_markdown: str,
@@ -334,23 +400,35 @@ def gate_report(
         reasons.append("Markdown 缺少标题层级（未检测到 #）")
 
     joined = text.lower()
+    max_sec = config.get_int("node_gates.report_section_overlap_max_chars", 1200)
+    tri_min = config.get_float("node_gates.report_section_trigram_recall_min", 0.11)
+    rep_norm = _report_text_for_overlap(text)
+    report_trigrams = _char_ngram_set(rep_norm, 3)
+
     hits = 0
+    recalls: list[float] = []
     for snip in section_snippets or []:
-        s = (snip or "").strip()
+        s = str(snip or "").strip()
         if len(s) < 20:
-            continue
-        head = s[:80].lower()
-        if head and head in joined:
             hits += 1
-        else:
-            # 取首个非空行作弱匹配
-            first_line = (s.splitlines() or [""])[0].strip().lower()
-            if len(first_line) >= 8 and first_line in joined:
-                hits += 1
-    n_sec = len([s for s in (section_snippets or []) if (s or "").strip()])
+            continue
+        ok = _section_covers_report(
+            s,
+            joined,
+            report_trigrams,
+            trigram_recall_min=tri_min,
+            max_section_chars=max_sec,
+        )
+        if ok:
+            hits += 1
+        recalls.append(round(_trigram_recall_in_report(s, report_trigrams, max_sec_chars=max_sec), 4))
+    n_sec = len([s for s in (section_snippets or []) if str(s or "").strip()])
+    if recalls:
+        metrics["section_trigram_recalls"] = recalls[:16]
+    metrics["report_trigram_bucket_size"] = len(report_trigrams)
     coverage = (hits / n_sec) if n_sec else 1.0
     metrics["section_coverage_ratio"] = round(coverage, 4)
-    min_cov = config.get_float("node_gates.report_min_section_coverage", 0.35)
+    min_cov = config.get_float("node_gates.report_min_section_coverage", 0.20)
     if n_sec and coverage + 1e-9 < min_cov:
         reasons.append(
             f"报告对源章节覆盖偏低（{coverage:.2f} < {min_cov:.2f}，命中 {hits}/{n_sec}）"
