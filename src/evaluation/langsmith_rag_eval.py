@@ -31,6 +31,7 @@ from langsmith.schemas import Example, Run
 
 from src.core.config import config
 from src.core.llm_infra.langchain_chat import build_langchain_chat_openai
+from src.core.prompts import correctness_local_rag_judge_prompt
 from src.knowledge.knowledge import knowledge_base
 
 logger = logging.getLogger(__name__)
@@ -163,7 +164,7 @@ def _parse_judge_score(raw: str) -> float:
 
 @traceable(run_type="llm", name="Local LLM Correctness", tags=["evaluation", "rag", "judge"])
 async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
-    """在本机用小模型判断「预测是否覆盖参考答案要点」，分数 0~1；反馈键为 ``correctness_local``（与 LangSmith 云端 Correctness 区分）。"""
+    """在本机用小模型按 ``correctness_local_rag_judge_prompt`` 量表打分（0~1）；反馈键 ``correctness_local``。"""
     pred = _pick_prediction(run)
     ref = _pick_reference(example)
     if not ref:
@@ -174,10 +175,7 @@ async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
     pred_t = pred[:max_c]
 
     judge_prompt = (
-        "你是严格且简洁的阅卷助手。给定「参考答案」与「模型预测」，只判断预测是否在事实上覆盖参考要点"
-        "（允许表述不同；预测多写无关内容可扣分）。\n"
-        "只输出一行 JSON，不要其它文字：{\"score\": <0到1之间的小数>, \"brief\": \"不超过40字\"}\n\n"
-        f"【参考答案】\n{ref_t}\n\n【模型预测】\n{pred_t}"
+        correctness_local_rag_judge_prompt.replace("{reference}", ref_t).replace("{prediction}", pred_t)
     )
     try:
         chat = _get_lc_judge_chat()
