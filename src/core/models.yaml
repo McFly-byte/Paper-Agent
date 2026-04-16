@@ -1,148 +1,126 @@
-# 可选模型提供商
+# 可选模型提供商（用于解析 api_key 环境变量名）
 model-provider:
+  - dashscope
   - siliconflow
   # - ollama  # 恢复本地 Ollama 时取消注释，并在下方各模型块改回 model-provider: ollama
   - openai
-  - dashscope
   - ark
 
-# 项目默认使用的模型和嵌入模型配置（未单独配置的 create_default_client 等仍走此处）
+# ---------------------------------------------------------------------------
+# 百炼千问（DashScope OpenAI 兼容模式 https://dashscope.aliyuncs.com/compatible-mode/v1）
+# 环境变量：DASHSCOPE_API_KEY（与下方 dashscope.api_key 对应）
+#
+# 分层原则：
+#   qwen3.6-plus   — 高推理、低频、对结论质量影响大
+#   qwen3.5-plus   — 中复杂度、高频
+#   qwen3.5-flash  — 轻任务、工具路由、judge、检索辅助等高调用
+#
+# 向量嵌入仍使用硅基 BAAI/bge-m3（1024 维，与已有 Chroma 集合一致），需 SILICONFLOW_API_KEY。
+# ---------------------------------------------------------------------------
+
+# 项目默认（未单独配置的 create_default_client 等）
 default-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-plus
 
-# LangSmith RAG 离线评估（scripts/run_langsmith_rag_eval）的 target 生成：使用 LangChain ChatOpenAI 以便 LangSmith 统计 token。未配置时与 default-model 相同。
+# LangSmith RAG 离线评估：target 生成（高调用，与 judge 分层）
 rag-eval-chat-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
+  model-provider: dashscope
+  model: qwen3.5-flash
 
-# LangSmith RAG 离线评估：本机 LLM-as-Judge（替代 LangSmith 云端 Correctness，避免 210s 超时）。宜用小模型。
 rag-eval-judge-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-4B
+  model-provider: dashscope
+  model: qwen3.5-flash
 
-# 嵌入专用模型（与 chat 分离）
-# 当前：硅基流动 BAAI/bge-m3，稠密向量 1024 维（与 Chroma 配置一致）
-# 本地 Ollama 时：bge-m3，名称须与 ollama list 一致
+# 嵌入专用（与 chat 分离；维度须与 Chroma 一致）
 default-embedding-model:
   model-provider: siliconflow
   model: BAAI/bge-m3
   dimension: 1024
-  # model-provider: ollama
-  # model: bge-m3
-  # dimension: 1024
 
 embedding-model:
   model-provider: siliconflow
   model: BAAI/bge-m3
   dimension: 1024
-  # model-provider: ollama
-  # model: bge-m3
-  # dimension: 1024
 
-# 检索节点（自然语言转查询等）— 高调用/前置阶段
+# 检索节点：自然语言转查询等 — 高调用 / 前置
 search-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-flash
 
-# 阅读：篇级结构化提取
+# 阅读：篇级结构化提取 — 中复杂度、高频
 reading-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-plus
 
-# 分析子流程（聚类主题 / 深度 / 全局）
+# 分析子流程
 subanalyse-cluster-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-plus
 
 subanalyse-deep-analyse-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.6-plus
 
 subanalyse-global-analyse-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.6-plus
 
+# 写作子流程
 subwriting-writing-director-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.6-plus
 
 subwriting-writing-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-plus
+
+# SelectorGroupChat 选路（每轮一次，与执行 Agent 分离）
+subwriting-selector-model:
+  model-provider: dashscope
+  model: qwen3.5-flash
 
 subwriting-retrieval-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-flash
 
 report-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.6-plus
 
-# 项目模块具体使用的模型和嵌入模型配置（可选）
 writing-model:
-  model-provider: siliconflow
-  model: Qwen/Qwen3.5-35B-A3B
-  # model-provider: ollama
-  # model: qwen3.5:9b
+  model-provider: dashscope
+  model: qwen3.5-plus
 
 chroma-embedding-model:
   model-provider: siliconflow
   model: BAAI/bge-m3
   dimension: 1024
-  # model-provider: ollama
-  # model: bge-m3
-  # dimension: 1024
 
 cluster-embedding-model:
   model-provider: siliconflow
   model: BAAI/bge-m3
   dimension: 1024
-  # model-provider: ollama
-  # model: bge-m3
-  # dimension: 1024
 
 # 各个模型提供商的API密钥和基础URL
 # ollama:
-#   # Ollama 对 key 不校验。勿用字面量 ollama，否则与下方顶级键 ollama 冲突导致 config 解析错误
 #   api_key: sk-local-ollama
 #   base_url: http://127.0.0.1:11434/v1
-#   # 本地大模型流式「相邻 chunk 间隔」易超时；122B 多并发阅读时可再调大
 #   request_timeout: 1800
+
+dashscope:
+  api_key: DASHSCOPE_API_KEY
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  request_timeout: 600
 
 siliconflow:
   api_key: SILICONFLOW_API_KEY
   base_url: https://api.siliconflow.cn/v1
-  # 流式长输出 / 排队时避免 httpx ReadTimeout（默认非 ollama 已放宽，此处可覆盖）
   request_timeout: 600
 
 openai:
   api_key: OPENAI_API_KEY
   base_url: https://api.openai.com/v1
-
-dashscope:
-  api_key: DASHSCOPE_API_KEY
-  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 
 ark:
   api_key: ARK_API_KEY

@@ -7,7 +7,7 @@
 依赖：
   - `.env`：LangSmith Key；可选 ``RAG_EVAL_DB_ID`` 指定评估用向量库
   - ``rag-eval-chat-model`` / ``default-model``：target 生成（LangChain ``ChatOpenAI``）
-  - 可选 ``rag-eval-judge-model``：本机 ``correctness_local`` 判分（见 ``rag_eval_local_llm_correctness``），绕开 LangSmith 云端 210s
+  - 可选 ``rag-eval-judge-model``：本机 ``correctness_local`` 八维量表判分（见 ``local_llm_correctness``），绕开 LangSmith 云端 210s
 
 数据集约定（与 `data/csv/RAGdata.csv` 上传 LangSmith 一致）：
   - inputs: ``query``
@@ -43,7 +43,7 @@ def _build_lc_rag_eval_chat() -> ChatOpenAI:
     block = config.get("rag-eval-chat-model")
     if not isinstance(block, dict) or not block.get("model"):
         block = config.get("default-model") or {}
-    provider = block.get("model-provider") or "siliconflow"
+    provider = block.get("model-provider") or "dashscope"
     model = block.get("model")
     if not model:
         raise ValueError("rag-eval-chat-model / default-model 缺少 model")
@@ -77,7 +77,7 @@ def _build_lc_judge_chat() -> ChatOpenAI:
     block = config.get("rag-eval-judge-model")
     if not isinstance(block, dict) or not block.get("model"):
         block = config.get("rag-eval-chat-model") or config.get("default-model") or {}
-    provider = block.get("model-provider") or "siliconflow"
+    provider = block.get("model-provider") or "dashscope"
     model = block.get("model")
     if not model:
         raise ValueError("rag-eval-judge-model 缺少 model")
@@ -96,7 +96,7 @@ def _build_lc_judge_chat() -> ChatOpenAI:
         temperature=0.0,
         timeout=judge_timeout,
         max_retries=2,
-        model_kwargs={"max_tokens": 256},
+        max_tokens=1024,
     )
 
 
@@ -178,28 +178,159 @@ def answer_exact_match(run: Run, example: Example) -> dict[str, Any]:
     return {"key": "answer_exact_match", "score": float(pred == ref)}
 
 
-def _parse_judge_score(raw: str) -> float:
+def _strip_llm_json_fences(raw: str) -> str:
     text = (raw or "").strip()
-    if not text:
-        return 0.5
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE).strip()
         text = re.sub(r"\s*```\s*$", "", text).strip()
+    return text
+
+
+_DUAL_HEAD_SCORE_KEYS = (
+    "analysis_coverage",
+    "analysis_technical_depth",
+    "analysis_cluster_consistency",
+    "analysis_insight",
+    "writing_faithfulness",
+    "writing_coherence",
+    "writing_evidence_usage",
+    "writing_style",
+)
+
+
+WORKFLOW_DUAL_HEAD_JUDGE_PROMPT = """
+你是严格但务实的学术调研审稿人。根据下列材料，为「分析阶段」与「写作阶段」分别打出 **8 个 0~1 之间的小数分**（可保留两位小数），并各给一句不超过 200 字的短评。
+
+## 输出要求
+- **只输出一段合法 JSON**（不要 Markdown 代码围栏，不要前后解释）。
+- 字段名必须完全一致（英文 snake_case），数值必须在 [0, 1]。
+- 字段：analysis_coverage, analysis_technical_depth, analysis_cluster_consistency, analysis_insight,
+  writing_faithfulness, writing_coherence, writing_evidence_usage, writing_style,
+  analysis_note, writing_note
+
+## 分析阶段 — 四维判分锚点（请据此选分，勿虚高）
+
+**1. analysis_coverage（覆盖度）**：分析是否覆盖应分析的输入材料（主要主题、各簇、关键方法路线），而非只挑少数文献展开。
+- 0.90–1.00：主要主题、主要簇、关键方法路线覆盖充分，无明显遗漏
+- 0.70–0.89：大体完整，少量簇或关键路线展开不足
+- 0.40–0.69：只覆盖部分主题，有明显缺口
+- 0.00–0.39：大量遗漏，难以支撑后续写作
+
+**2. analysis_technical_depth（技术深度）**：是否真正做方法拆解、比较、归纳（不只堆字数）。重点：方法差异比较、适用场景、指标/实验现象、局限总结。
+- 0.90–1.00：能比较路线差异、实验表现、适用边界与局限
+- 0.70–0.89：有分析与比较，深度一般或证据偏稀
+- 0.40–0.69：偏摘要式复述，缺少实质分析
+- 0.00–0.39：流水账或事实堆砌
+
+**3. analysis_cluster_consistency（结构一致性/聚类合理性）**：聚类是否有逻辑；簇内是否同类、簇间是否区分（对应 cluster / deep / global 结构）。
+- 0.90–1.00：主题边界清晰，簇内一致，簇间区分明显
+- 0.70–0.89：大体合理，个别簇混杂
+- 0.40–0.69：勉强可用，组织混乱
+- 0.00–0.39：看不出清晰结构
+
+**4. analysis_insight（洞见价值）**：是否超越摘要层：趋势判断、关键矛盾、有启发的未来方向。
+- 0.90–1.00：跨论文趋势、关键矛盾或清晰未来方向
+- 0.70–0.89：有总结提升但不够深
+- 0.40–0.69：以复述为主，少量泛化
+- 0.00–0.39：几乎无高层洞见
+
+## 写作阶段 — 四维判分锚点
+
+**5. writing_faithfulness（忠实性）**：章节相对下方「分析材料」是否忠实；是否引入分析未支持的新事实或结论（最重要）。
+- 0.90–1.00：忠实于分析输出，无明显杜撰
+- 0.70–0.89：基本忠实，少量扩写未明显偏离
+- 0.40–0.69：若干未经支持的扩展
+- 0.00–0.39：明显新事实或偏离原分析
+
+**6. writing_coherence（结构与连贯性）**：段落组织、节间过渡、重复与跳跃。
+- 0.90–1.00：结构清晰，过渡自然，重复少
+- 0.70–0.89：整体顺畅，局部跳跃
+- 0.40–0.69：松散，重复或断裂明显
+- 0.00–0.39：阅读困难，结构失控
+
+**7. writing_evidence_usage（证据使用/RAG）**：关键论断是否有分析或检索证据支撑（结合「RAG 检索摘录」判断；无日志时保守给分，勿编造检索）。
+- 0.90–1.00：关键论断多有依据
+- 0.70–0.89：多数有依据，少量泛化
+- 0.40–0.69：证据零散，空泛总结多
+- 0.00–0.39：几乎无证据支撑
+
+**8. writing_style（表达/学术规范）**：术语、客观性、口语与空话（权重在总分中较低，勿因文采过度加分）。
+- 0.90–1.00：术语准确，克制、专业
+- 0.70–0.89：基本专业，偶有冗余
+- 0.40–0.69：一般，规范性不足
+- 0.00–0.39：口语化或逻辑混乱
+
+## 分析材料（JSON/正文摘录，用于分析四维 + 写作忠实性对照）
+{analyse_material}
+
+## 章节正文摘录（用于写作四维）
+{sections_text}
+
+## RAG 检索摘录（用于写作 evidence 维度；可能为空）
+{rag_excerpt}
+
+{fmt}
+"""
+
+
+def _pick_rag_excerpt(run: Run) -> str:
+    out = run.outputs or {}
+    if not isinstance(out, dict):
+        return ""
+    v = out.get("retrieved_context_preview")
+    if v is None:
+        return ""
+    return str(v).strip()
+
+
+def _parse_dual_head_judge(raw: str) -> tuple[float | None, dict[str, Any]]:
+    """解析双阶段 JSON；返回 (八维均值分数, 解析出的字段子集)。"""
+    text = _strip_llm_json_fences(raw)
+    if not text:
+        return None, {}
     try:
         obj = json.loads(text)
-        s = float(obj.get("score", 0.5))
-    except (json.JSONDecodeError, TypeError, ValueError):
-        m = re.search(r"\"score\"\s*:\s*([0-9]*\.?[0-9]+)", text)
-        if m:
-            s = float(m.group(1))
-        else:
-            return 0.5
-    return max(0.0, min(1.0, s))
+    except json.JSONDecodeError:
+        m = re.search(r"\{[\s\S]*\}\s*$", text)
+        if not m:
+            return None, {}
+        try:
+            obj = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return None, {}
+
+    if not isinstance(obj, dict):
+        return None, {}
+
+    scores: list[float] = []
+    detail: dict[str, Any] = {}
+    for k in _DUAL_HEAD_SCORE_KEYS:
+        if k not in obj:
+            continue
+        try:
+            s = float(obj[k])
+        except (TypeError, ValueError):
+            continue
+        s = max(0.0, min(1.0, s))
+        scores.append(s)
+        detail[k] = s
+    for note_key in ("analysis_note", "writing_note"):
+        if note_key in obj and obj[note_key] is not None:
+            detail[note_key] = str(obj[note_key])[:220]
+
+    if len(scores) != len(_DUAL_HEAD_SCORE_KEYS):
+        return None, detail
+
+    return sum(scores) / len(scores), detail
 
 
 @traceable(run_type="llm", name="Local LLM Correctness", tags=["evaluation", "rag", "judge"])
 async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
-    """在本机用小模型判断「预测是否覆盖参考答案要点」，分数 0~1；反馈键为 ``correctness_local``（与 LangSmith 云端 Correctness 区分）。"""
+    """在本机用小模型按「分析 / 写作」八维量表判分；聚合均值写入 ``correctness_local``（与 LangSmith 云端 Correctness 区分）。
+
+    数据集侧「参考答案」填入 ``analyse_material`` 作为分析对照；模型输出填入 ``sections_text``；
+    ``run.outputs.retrieved_context_preview`` 填入 ``rag_excerpt``（无则空串，由 prompt 要求保守给分）。
+    """
     pred = _pick_prediction(run)
     ref = _pick_reference(example)
     if not ref:
@@ -208,12 +339,13 @@ async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
     max_c = max(500, config.get_int("observability.langsmith.rag_eval_judge_max_chars", 2400))
     ref_t = ref[:max_c]
     pred_t = pred[:max_c]
+    rag_t = _pick_rag_excerpt(run)[:max_c]
 
     judge_prompt = (
-        "你是严格且简洁的阅卷助手。给定「参考答案」与「模型预测」，只判断预测是否在事实上覆盖参考要点"
-        "（允许表述不同；预测多写无关内容可扣分）。\n"
-        "只输出一行 JSON，不要其它文字：{\"score\": <0到1之间的小数>, \"brief\": \"不超过40字\"}\n\n"
-        f"【参考答案】\n{ref_t}\n\n【模型预测】\n{pred_t}"
+        WORKFLOW_DUAL_HEAD_JUDGE_PROMPT.replace("{analyse_material}", ref_t)
+        .replace("{sections_text}", pred_t)
+        .replace("{rag_excerpt}", rag_t or "（无检索摘录）")
+        .replace("{fmt}", "")
     )
     try:
         chat = _get_lc_judge_chat()
@@ -221,8 +353,16 @@ async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
         raw = getattr(msg, "content", None) or ""
         if isinstance(raw, list):
             raw = str(raw)
-        score = _parse_judge_score(str(raw))
-        return {"key": "correctness_local", "score": score, "comment": str(raw)[:200]}
+        raw_s = str(raw)
+        score, detail = _parse_dual_head_judge(raw_s)
+        comment_obj: dict[str, Any] = (
+            {"parse": "incomplete_json", "detail": detail, "raw": raw_s[:800]}
+            if score is None
+            else {"detail": detail, "raw": raw_s[:800]}
+        )
+        comment_max = max(400, config.get_int("observability.langsmith.rag_eval_judge_comment_max_chars", 2000))
+        comment = json.dumps(comment_obj, ensure_ascii=False)[:comment_max]
+        return {"key": "correctness_local", "score": score, "comment": comment}
     except Exception as e:
         logger.warning("本机 correctness 判分失败: %s", e)
         return {"key": "correctness_local", "score": None, "comment": str(e)[:200]}

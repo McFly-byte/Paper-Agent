@@ -63,9 +63,14 @@ class ModelClient:
         api_key = api_key or provider_config.get("api_key")
         base_url = base_url or provider_config.get("base_url")
         
-        # 根据provider设置默认family
-        if family == "Qwen" and provider != "siliconflow":
-            family = "GPT" if provider == "openai" else provider.capitalize()
+        # 根据 provider 设置默认 family（DashScope 上亦为千问，需保持 Qwen 以匹配能力声明）
+        if family == "Qwen":
+            if provider == "openai":
+                family = "GPT"
+            elif provider in ("siliconflow", "dashscope"):
+                family = "Qwen"
+            else:
+                family = provider.capitalize()
         
         # 验证必要参数
         if not model:
@@ -173,8 +178,8 @@ def create_embedding_client(client_type: str) -> OpenAI:
 def create_default_client() -> OpenAIChatCompletionClient:
     """创建默认的OpenAIChatCompletionClient实例，使用配置中指定的默认模型"""
     default_model_config = config.get("default-model", {})
-    provider = default_model_config.get("model-provider", "siliconflow")
-    model = default_model_config.get("model", "Qwen/Qwen3-32B")
+    provider = default_model_config.get("model-provider", "dashscope")
+    model = default_model_config.get("model", "qwen3.5-plus")
     
     return ModelClient.create_client(
         provider=provider,
@@ -255,7 +260,13 @@ def create_subwriting_writing_model_client() -> OpenAIChatCompletionClient:
 
 def create_subwriting_retrieval_model_client() -> OpenAIChatCompletionClient:
     """创建用于检索的模型客户端实例"""
-    return create_model_client("subwriting-retrieval-model") 
+    return create_model_client("subwriting-retrieval-model")
+
+
+def create_subwriting_selector_model_client() -> OpenAIChatCompletionClient:
+    """创建 SelectorGroupChat 选路专用客户端（高频、轻量）。"""
+    return create_model_client("subwriting-selector-model")
+
 
 def create_report_model_client() -> OpenAIChatCompletionClient:
     """创建用于写作报告的模型客户端实例"""

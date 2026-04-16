@@ -1,4 +1,4 @@
-from src.core.model_client import create_subwriting_writing_model_client
+from src.core.model_client import create_subwriting_selector_model_client
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.conditions import TextMentionTermination
 from src.agents.sub_writing_agent.writing_agent import create_writing_agent
@@ -14,7 +14,7 @@ WRITING_SELECTOR_GROUP_MAX_TURNS = 24
 
 
 def create_writing_group():
-    model_client = create_subwriting_writing_model_client()
+    selector_model_client = create_subwriting_selector_model_client()
 
     text_termination = TextMentionTermination("APPROVE")
     
@@ -26,7 +26,7 @@ def create_writing_group():
     # 写作组
     task_group = SelectorGroupChat(
         [writing_agent, retrieval_agent, review_agent],
-        model_client=model_client,
+        model_client=selector_model_client,
         termination_condition=text_termination,
         max_turns=WRITING_SELECTOR_GROUP_MAX_TURNS,
         selector_prompt=selector_prompt,

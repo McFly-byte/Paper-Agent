@@ -103,7 +103,7 @@ _throttler_instance: Optional[RemoteLLMThrottler] = None
 def _providers_when_enabled() -> Set[str]:
     raw = config.get_list("llm_remote_rate_limit.apply_when_model_provider_in", None)
     if not raw:
-        raw = ["siliconflow"]
+        raw = ["siliconflow", "dashscope"]
     return {str(x).strip().lower() for x in raw if str(x).strip()}
 
 

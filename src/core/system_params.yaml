@@ -41,6 +41,7 @@ llm_remote_rate_limit:
   enabled: true
   apply_when_model_provider_in:
     - siliconflow
+    - dashscope
   requests_per_minute: 1000
   tokens_per_minute: 40000
   # TPM 桶最大「瞬时容量」，须 ≥ 单次阅读预扣 token（reading_per_call_token_estimate_cap）
@@ -112,4 +113,4 @@ observability:
     # 本机 LLM 判分（feedback key: correctness_local），绕开 LangSmith 数据集上托管 Correctness 的 210s 限制；为 true 时请在 LangSmith 上移除或忽略云端 Correctness
     rag_eval_local_llm_correctness: false
     rag_eval_judge_max_chars: 2400
-    rag_eval_judge_timeout: 180
+    rag_eval_judge_timeout: 600
