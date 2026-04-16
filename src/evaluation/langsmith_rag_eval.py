@@ -164,7 +164,7 @@ def _parse_judge_score(raw: str) -> float:
 
 @traceable(run_type="llm", name="Local LLM Correctness", tags=["evaluation", "rag", "judge"])
 async def local_llm_correctness(run: Run, example: Example) -> dict[str, Any]:
-    """在本机用小模型按 ``correctness_local_rag_judge_prompt`` 量表打分（0~1）；反馈键 ``correctness_local``。"""
+    """在本机用小模型按 ``correctness_local_rag_judge_prompt`` 偏严量表打分（0~1）；反馈键 ``correctness_local``。"""
     pred = _pick_prediction(run)
     ref = _pick_reference(example)
     if not ref:
