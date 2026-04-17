@@ -5,6 +5,10 @@ from typing import Any
 
 from langsmith import traceable
 
+from src.utils.log_utils import setup_logger
+
+_trace_log = setup_logger(__name__)
+
 
 @traceable(
     run_type="chain",
@@ -41,8 +45,13 @@ async def trace_query_for_writing(
     query_mode: str,
     queries: list[str],
     top_k: int,
+    section_hint: str | None = None,
     runner: Callable[[], Awaitable[dict[str, Any]]],
 ) -> dict[str, Any]:
+    if section_hint:
+        _trace_log.debug(
+            "trace_query_for_writing section_hint_preview=%s", (section_hint or "")[:120]
+        )
     return await runner()
 
 

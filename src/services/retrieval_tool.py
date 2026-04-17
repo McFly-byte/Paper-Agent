@@ -6,7 +6,7 @@ from src.utils.log_utils import setup_logger
 import traceback
 import json
 from src.core.config import config
-from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
+from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var, rag_writing_section_hint_var
 from src.rag.llamaindex.config import get_rag_backend, llamaindex_top_k
 
 logger = setup_logger(__name__)
@@ -40,26 +40,37 @@ async def retrieval_tool(querys: List[str]) -> List[Any]:
                 from src.rag.llamaindex.service import get_llamaindex_rag_service
 
                 svc = get_llamaindex_rag_service()
+                sec_hint = rag_writing_section_hint_var.get()
                 pack = await svc.query_for_writing(
                     list(querys or []),
                     db_id=tmp_db_id,
                     top_k=top_k_li,
                     metadata_filters=None,
+                    section_hint=sec_hint,
                 )
                 strings = pack.get("context_strings") or []
                 retrieval_results.extend(strings)
                 transformed_q = pack.get("transformed_query")
                 retrieved_count = int(pack.get("retrieved_count") or 0)
                 final_n = int(pack.get("final_context_count") or len(strings))
+                finfo = pack.get("finalize_meta") or {}
                 logger.info(
                     "[retrieval_tool] backend=%s query=%r transformed_query=%r top_k=%s "
-                    "retrieved_count=%s final_context_count=%s",
+                    "retrieved_count=%s merged_unique=%s final_context_count=%s "
+                    "rerank=%s section_intent=%s plan_ms=%s retrieve_ms=%s finalize_ms=%s total_ms=%s",
                     backend,
                     querys,
                     transformed_q,
                     top_k_li,
                     retrieved_count,
+                    pack.get("merged_unique_count"),
                     final_n,
+                    finfo.get("reranker"),
+                    finfo.get("section_intent"),
+                    pack.get("plan_ms"),
+                    pack.get("retrieve_ms"),
+                    pack.get("finalize_ms"),
+                    pack.get("total_ms"),
                 )
                 await _append_rag_log(
                     {
@@ -69,7 +80,16 @@ async def retrieval_tool(querys: List[str]) -> List[Any]:
                         "transformed_query": transformed_q,
                         "top_k": top_k_li,
                         "retrieved_count": retrieved_count,
+                        "merged_unique_count": pack.get("merged_unique_count"),
                         "final_context_count": final_n,
+                        "planned_queries": pack.get("planned_queries"),
+                        "query_plan_meta": pack.get("query_plan_meta"),
+                        "finalize_meta": finfo,
+                        "plan_ms": pack.get("plan_ms"),
+                        "retrieve_ms": pack.get("retrieve_ms"),
+                        "finalize_ms": pack.get("finalize_ms"),
+                        "total_ms": pack.get("total_ms"),
+                        "section_hint": (sec_hint or "")[:240] if sec_hint else None,
                     }
                 )
             except Exception as li_err:  # noqa: BLE001

@@ -18,6 +18,7 @@ from openai import RateLimitError
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
 from src.utils.log_utils import setup_logger
 from src.core.config import config
+from src.core.run_context import rag_writing_section_hint_var
 from src.utils.llm_api_throttle import get_throttler_for_client_type
 import asyncio
 
@@ -82,6 +83,8 @@ async def parallel_writing_node(
         is_thinking = False
         cur_source = "user"
         agent_sources = {"writing_agent", "retrieval_agent", "review_agent"}
+        sec_hint = str(task.get("section") or "")
+        tok_sec = rag_writing_section_hint_var.set(sec_hint or None)
         try:
             logger.info(
                 "[工作流·写作] 章节进行中：第 %s/%s（并发槽已占用）",
@@ -142,6 +145,8 @@ async def parallel_writing_node(
             logger.info("[工作流·写作] 章节完成：第 %s/%s", sec_i, n_sections)
         except Exception as e:
             await state_queue.put(BackToFrontData(step=ExecutionState.SECTION_WRITING+"_"+str(task["index"] + 1),state="error",data=f"Section writing failed: {str(e)}"))
+        finally:
+            rag_writing_section_hint_var.reset(tok_sec)
 
     _writing_recovery = (state.get("recovery_feedback") or "").strip()
 

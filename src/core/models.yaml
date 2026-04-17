@@ -86,6 +86,12 @@ llm-routing:
       thinking_tier: light
       channel: realtime
       rate_limit_bucket: bailian_qwen35flash
+    rag-section-intent-model:
+      resolve_model_from_env_key: MODEL_RAG_SECTION_INTENT
+      model: qwen3.5-flash
+      thinking_tier: light
+      channel: realtime
+      rate_limit_bucket: bailian_qwen35flash
     rag-eval-chat-model:
       resolve_model_from_env_key: MODEL_LANGSMITH_EVAL
       model: qwen3.5-flash
@@ -148,6 +154,11 @@ embedding-model:
 
 # RAG 轻量生成（HyDE 等）；默认硅基，百炼时由 llm-routing 切至 flash。
 rag-generation-model:
+  model-provider: siliconflow
+  model: Qwen/Qwen3.5-35B-A3B
+
+# RAG section 意图分类（可与 rag-generation 相同或更小模型）
+rag-section-intent-model:
   model-provider: siliconflow
   model: Qwen/Qwen3.5-35B-A3B
 

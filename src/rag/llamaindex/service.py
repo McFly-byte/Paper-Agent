@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from typing import Any, Sequence
 
 from src.knowledge.knowledge import knowledge_base
@@ -11,7 +12,10 @@ from src.rag.llamaindex.ingestion import (
     embedding_settings_for_db,
     sentence_chunk_documents,
 )
+from src.rag.llamaindex.query_plan import plan_retrieval_queries
+from src.rag.llamaindex.rerank import apply_rerank
 from src.rag.llamaindex.retriever import LlamaIndexRetriever
+from src.rag.llamaindex.section_intent import resolve_section_preferences
 from src.rag.llamaindex.trace import (
     trace_format_context,
     trace_ingest_extracted_papers,
@@ -36,6 +40,103 @@ def _api_base_for_llamaindex_openai(base_url: str) -> str | None:
     if not b.endswith("/v1"):
         return f"{b}/v1"
     return b
+
+
+def _dedupe_retrieval_hits(hits: list[RetrievalHit]) -> list[RetrievalHit]:
+    seen: set[str] = set()
+    out: list[RetrievalHit] = []
+    for h in hits:
+        key = h.chunk_id or f"{h.paper_id}:{hash(h.text) & 0xFFFFFFFF}"
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(h)
+    return out
+
+
+def _relax_section_allowlist(preferred: list[str]) -> set[str]:
+    return set(preferred) | {"abstract", "contributions", "core_problem"}
+
+
+def _apply_hard_section_gate(
+    hits: list[RetrievalHit], preferred: list[str], min_keep: int
+) -> list[RetrievalHit]:
+    if not preferred:
+        return hits
+    allow = _relax_section_allowlist(preferred)
+    filtered = [h for h in hits if str((h.metadata or {}).get("section_type") or "") in allow]
+    if len(filtered) >= min_keep:
+        return filtered
+    keys = {h.chunk_id or f"{h.paper_id}:{hash(h.text) & 0xFFFFFFFF}" for h in filtered}
+    merged = list(filtered)
+    for h in sorted(hits, key=lambda x: x.score, reverse=True):
+        if len(merged) >= min_keep:
+            break
+        kid = h.chunk_id or f"{h.paper_id}:{hash(h.text) & 0xFFFFFFFF}"
+        if kid not in keys:
+            merged.append(h)
+            keys.add(kid)
+    return merged
+
+
+async def _finalize_for_writing(
+    fusion_query: str,
+    hits: list[RetrievalHit],
+    *,
+    final_top_k: int,
+    section_hint: str | None,
+) -> tuple[list[RetrievalHit], dict[str, Any]]:
+    info: dict[str, Any] = {}
+    enabled = li_cfg.llamaindex_section_intent_enabled()
+    filt_mode = li_cfg.llamaindex_section_filter_mode()
+
+    preferred: list[str] = []
+    intent_label = "disabled"
+    if enabled and filt_mode != "off":
+        preferred, intent_label = await resolve_section_preferences(section_hint or "")
+        info["section_classifier"] = li_cfg.llamaindex_section_classifier()
+    elif filt_mode == "off":
+        intent_label = "off"
+
+    info["section_intent"] = intent_label
+    info["section_preferred"] = list(preferred)
+
+    pool = list(hits)
+    if enabled and filt_mode == "hard" and preferred:
+        before = len(pool)
+        pool = _apply_hard_section_gate(pool, preferred, max(3, final_top_k))
+        info["hard_gate_in"] = before
+        info["hard_gate_out"] = len(pool)
+
+    boost_sections = preferred if (enabled and filt_mode in ("soft", "hard") and preferred) else None
+    boost = li_cfg.llamaindex_section_boost() if boost_sections else 0.0
+
+    if li_cfg.llamaindex_should_apply_rerank():
+        alpha = li_cfg.llamaindex_rerank_fuse_alpha()
+        mode = li_cfg.llamaindex_rerank_mode()
+        out, rstats = await apply_rerank(
+            mode,
+            fusion_query,
+            pool,
+            top_k=final_top_k,
+            fuse_alpha=alpha,
+            preferred_sections=boost_sections,
+            section_boost=boost,
+            cross_encoder_model=li_cfg.llamaindex_cross_encoder_model(),
+            cohere_model=li_cfg.llamaindex_rerank_cohere_model(),
+            voyage_model=li_cfg.llamaindex_rerank_voyage_model(),
+            cohere_api_key=li_cfg.llamaindex_rerank_cohere_api_key(),
+            voyage_api_key=li_cfg.llamaindex_rerank_voyage_api_key(),
+        )
+        info.update(rstats)
+        return out, info
+
+    pool.sort(key=lambda h: h.score, reverse=True)
+    out = pool[: max(1, final_top_k)]
+    info["reranker"] = "none"
+    info["candidates_in"] = len(hits)
+    info["candidates_out"] = len(out)
+    return out, info
 
 
 class LlamaIndexRAGService:
@@ -201,6 +302,26 @@ class LlamaIndexRAGService:
             self._index_by_db[db_id] = idx
         return idx
 
+    async def _vector_retrieve(
+        self,
+        query_text: str,
+        *,
+        db_id: str,
+        recall_top_k: int,
+        metadata_filters: dict[str, Any] | None,
+        query_mode: str | None,
+    ) -> RetrievalResponse:
+        idx = await self._get_index(db_id)
+        if idx is None:
+            return RetrievalResponse(hits=[], transformed_query=None, query_mode=query_mode or "plain")
+        retriever = LlamaIndexRetriever(idx)
+        return await retriever.retrieve(
+            query_text,
+            top_k=max(1, recall_top_k),
+            metadata_filters=metadata_filters,
+            query_mode=query_mode,
+        )
+
     async def query(
         self,
         query_text: str,
@@ -209,17 +330,28 @@ class LlamaIndexRAGService:
         top_k: int | None = None,
         metadata_filters: dict[str, Any] | None = None,
         query_mode: str | None = None,
+        section_hint: str | None = None,
     ) -> RetrievalResponse:
         k = top_k if top_k is not None else li_cfg.llamaindex_top_k()
-        idx = await self._get_index(db_id)
-        if idx is None:
-            return RetrievalResponse(hits=[], transformed_query=None, query_mode=query_mode or "plain")
-        retriever = LlamaIndexRetriever(idx, enable_rerank=li_cfg.llamaindex_enable_rerank())
-        return await retriever.retrieve(
+        recall = (
+            li_cfg.llamaindex_effective_recall_top_k(k) if li_cfg.llamaindex_expand_recall_pool() else k
+        )
+        resp = await self._vector_retrieve(
             query_text,
-            top_k=k,
+            db_id=db_id,
+            recall_top_k=recall,
             metadata_filters=metadata_filters,
             query_mode=query_mode,
+        )
+        hits, finfo = await _finalize_for_writing(
+            query_text,
+            resp.hits,
+            final_top_k=k,
+            section_hint=section_hint,
+        )
+        logger.debug("llamaindex.query finalize_meta=%s", finfo)
+        return RetrievalResponse(
+            hits=hits, transformed_query=resp.transformed_query, query_mode=resp.query_mode
         )
 
     async def query_for_writing(
@@ -229,39 +361,81 @@ class LlamaIndexRAGService:
         db_id: str,
         top_k: int | None = None,
         metadata_filters: dict[str, Any] | None = None,
+        section_hint: str | None = None,
     ) -> dict[str, Any]:
         k = top_k if top_k is not None else li_cfg.llamaindex_top_k()
         mode = li_cfg.llamaindex_query_mode()
 
         async def _inner() -> dict[str, Any]:
+            t_all0 = time.perf_counter()
+            t_plan0 = time.perf_counter()
+            planned, plan_meta = await plan_retrieval_queries(
+                list(queries or []), section_hint=section_hint
+            )
+            if not planned:
+                planned = [str(x).strip() for x in (queries or []) if str(x).strip()]
+            t_plan_ms = int((time.perf_counter() - t_plan0) * 1000)
+
+            recall = (
+                li_cfg.llamaindex_effective_recall_top_k(k)
+                if li_cfg.llamaindex_expand_recall_pool()
+                else k
+            )
+            hyde_primary = li_cfg.llamaindex_hyde_primary_only()
+            sem = asyncio.Semaphore(3)
+
+            async def _one(i: int, qtext: str) -> RetrievalResponse:
+                async with sem:
+                    qm = mode
+                    if mode == "hyde" and hyde_primary and i > 0:
+                        qm = "plain"
+                    return await self._vector_retrieve(
+                        qtext,
+                        db_id=db_id,
+                        recall_top_k=recall,
+                        metadata_filters=metadata_filters,
+                        query_mode=qm,
+                    )
+
+            t_ret0 = time.perf_counter()
+            resps = await asyncio.gather(*[_one(i, q) for i, q in enumerate(planned)])
+            t_ret_ms = int((time.perf_counter() - t_ret0) * 1000)
+
             all_hits: list[RetrievalHit] = []
             tq_last: str | None = None
-            nq = 0
-            for q in queries:
-                if not (q or "").strip():
-                    continue
-                nq += 1
-                resp = await self.query(
-                    q.strip(),
-                    db_id=db_id,
-                    top_k=k,
-                    metadata_filters=metadata_filters,
-                    query_mode=mode,
-                )
+            for resp in resps:
                 all_hits.extend(resp.hits)
                 if resp.transformed_query:
                     tq_last = resp.transformed_query
-            all_hits.sort(key=lambda h: h.score, reverse=True)
-            seen: set[str] = set()
-            deduped: list[RetrievalHit] = []
-            for h in all_hits:
-                key = h.chunk_id or f"{h.paper_id}:{hash(h.text) % 10**9}"
-                if key in seen:
-                    continue
-                seen.add(key)
-                deduped.append(h)
-            cap = max(k, k * max(1, nq))
-            trimmed = deduped[:cap]
+
+            merged = _dedupe_retrieval_hits(all_hits)
+            fusion_q = planned[0] if planned else ((queries or [""])[0] or "")
+
+            t_fn0 = time.perf_counter()
+            trimmed, finfo = await _finalize_for_writing(
+                fusion_q,
+                merged,
+                final_top_k=k,
+                section_hint=section_hint,
+            )
+            t_fin_ms = int((time.perf_counter() - t_fn0) * 1000)
+            total_ms = int((time.perf_counter() - t_all0) * 1000)
+
+            logger.info(
+                "llamaindex.query_for_writing planned=%s raw_hits=%s merged_unique=%s "
+                "final_context=%s rerank=%s section_intent=%s plan_ms=%s retrieve_ms=%s finalize_ms=%s total_ms=%s",
+                len(planned),
+                len(all_hits),
+                len(merged),
+                len(trimmed),
+                finfo.get("reranker"),
+                finfo.get("section_intent"),
+                t_plan_ms,
+                t_ret_ms,
+                t_fin_ms,
+                total_ms,
+            )
+
             strings = trace_format_context(
                 rag_backend="llamaindex",
                 query_mode=mode,
@@ -275,7 +449,15 @@ class LlamaIndexRAGService:
                 "transformed_query": tq_last,
                 "query_mode": mode,
                 "retrieved_count": len(all_hits),
+                "merged_unique_count": len(merged),
                 "final_context_count": len(trimmed),
+                "plan_ms": t_plan_ms,
+                "retrieve_ms": t_ret_ms,
+                "finalize_ms": t_fin_ms,
+                "total_ms": total_ms,
+                "planned_queries": planned,
+                "query_plan_meta": plan_meta,
+                "finalize_meta": finfo,
             }
 
         return await trace_query_for_writing(
@@ -283,6 +465,7 @@ class LlamaIndexRAGService:
             query_mode=mode,
             queries=queries,
             top_k=k,
+            section_hint=(section_hint or "")[:500] or None,
             runner=_inner,
         )
 

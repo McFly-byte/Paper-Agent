@@ -41,11 +41,10 @@ async def _hyde_transform(query: str) -> str | None:
 
 
 class LlamaIndexRetriever:
-    """最小检索器：plain / 可选 HyDE；rerank 仅占位；metadata 过滤为简单后过滤。"""
+    """向量召回 + 简单 metadata 后过滤；rerank 在 service 层统一完成。"""
 
-    def __init__(self, index: VectorStoreIndex, *, enable_rerank: bool) -> None:
+    def __init__(self, index: VectorStoreIndex) -> None:
         self._index = index
-        self._enable_rerank = enable_rerank
 
     async def retrieve(
         self,
@@ -56,6 +55,8 @@ class LlamaIndexRetriever:
         query_mode: str | None = None,
     ) -> RetrievalResponse:
         mode = (query_mode or li_cfg.llamaindex_query_mode()).lower()
+        if mode not in ("plain", "hyde"):
+            mode = "plain"
         transformed: str | None = None
         qtext = query
         if mode == "hyde":
@@ -103,8 +104,5 @@ class LlamaIndexRetriever:
                     metadata=meta,
                 )
             )
-
-        if self._enable_rerank:
-            logger.info("LLAMAINDEX_ENABLE_RERANK=true：Phase 1 未接入独立 reranker，保留向量相似度排序。")
 
         return RetrievalResponse(hits=hits, transformed_query=transformed, query_mode=mode)

@@ -5,17 +5,43 @@ SAVE_DIR: "data"
 KB_TYPE: "chroma"
 # RAG：写作阶段检索后端（环境变量 RAG_BACKEND 可覆盖）
 rag:
-  backend: legacy
+  backend: llamaindex
   llamaindex:
-    enable: false
+    enable: true
     top_k: 5
-    query_mode: plain
-    enable_rerank: false
-    enable_metadata_filters: false
-    use_semantic_splitter: false
+    query_mode: hyde
+    # HyDE 仅对 multi-query 子任务中的第一条执行，降低延迟与成本（关闭 multi_query 时行为与单路一致）
+    hyde_primary_only: true
+    enable_rerank: true
+    # 两阶段检索：0 表示按 top_k 自动放大召回（上限见代码）
+    recall_top_k: 0
+    rerank:
+      # tfidf_fuse | cross_encoder | cohere | voyage | none
+      mode: tfidf_fuse
+      fuse_alpha: 0.7
+      cross_encoder_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+      cohere_model: rerank-multilingual-v3.0
+      voyage_model: rerank-2
+      # 亦可设环境变量 COHERE_API_KEY / VOYAGE_API_KEY
+      cohere_api_key: ""
+      voyage_api_key: ""
+    multi_query:
+      # true 时在服务端再规划 3~5 条互补子查询（一次 LLM）；与 retrieval_agent 列表互补
+      enabled: true
+      max_queries: 6
+    section_intent:
+      # 根据当前写作小节文案推断 section_type 偏好；soft=重排加分，hard=先宽松过滤再补全
+      enabled: true
+      # keywords：规则；llm：轻量 Chat 分类（见 models.yaml rag-section-intent-model）
+      classifier: keywords
+      llm_client_type: rag-section-intent-model
+      filter_mode: soft
+      boost: 0.12
+    enable_metadata_filters: true
+    use_semantic_splitter: true
     chunk_size: 512
     chunk_overlap: 64
-enable_reranker: False
+enable_reranker: True
 tmpdb_top_k: 2
 tmpdb_similarity_threshold: 0.05
 top_k: 5
