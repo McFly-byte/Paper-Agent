@@ -20,6 +20,8 @@ from src.agents.planner.node import planner_node
 from src.agents.planner.review_node import plan_review_node
 from src.agents.reading_agent import reading_node
 from src.agents.researcher.background_node import background_investigation_node
+from src.agents.researcher.paper_filter_node import paper_filter_node
+from src.agents.researcher.evidence_index_node import evidence_index_node
 from src.agents.search_plan_adapter import search_node_with_plan
 from src.agents.analyse_agent import analyse_node
 from src.agents.writing_agent import writing_node
@@ -38,7 +40,9 @@ logger = setup_logger(__name__)
 
 _ERR_ATTRS = (
     "search_node_error",
+    "paper_filter_node_error",
     "reading_node_error",
+    "evidence_index_node_error",
     "analyse_node_error",
     "writing_node_error",
     "report_node_error",
@@ -75,11 +79,23 @@ def _route_after_node(state: State, *, node_key: str, err_attr: str, ok_next: st
 
 
 def route_after_search(state: State) -> str:
-    return _route_after_node(state, node_key="search", err_attr="search_node_error", ok_next="reading_node")
+    return _route_after_node(state, node_key="search", err_attr="search_node_error", ok_next="paper_filter_node")
+
+
+def route_after_paper_filter(state: State) -> str:
+    return _route_after_node(
+        state, node_key="paper_filter", err_attr="paper_filter_node_error", ok_next="reading_node"
+    )
 
 
 def route_after_reading(state: State) -> str:
-    return _route_after_node(state, node_key="reading", err_attr="reading_node_error", ok_next="analyse_node")
+    return _route_after_node(state, node_key="reading", err_attr="reading_node_error", ok_next="evidence_index_node")
+
+
+def route_after_evidence_index(state: State) -> str:
+    return _route_after_node(
+        state, node_key="evidence_index", err_attr="evidence_index_node_error", ok_next="analyse_node"
+    )
 
 
 def route_after_analyse(state: State) -> str:
@@ -146,7 +162,9 @@ class PaperAgentOrchestrator:
         builder.add_node("planner_node", planner_node)
         builder.add_node("plan_review_node", plan_review_node)
         builder.add_node("search_node", search_node_with_plan)
+        builder.add_node("paper_filter_node", paper_filter_node)
         builder.add_node("reading_node", reading_node)
+        builder.add_node("evidence_index_node", evidence_index_node)
         builder.add_node("analyse_node", analyse_node)
         builder.add_node("writing_node", writing_node)
         builder.add_node("report_node", report_node)
@@ -159,7 +177,9 @@ class PaperAgentOrchestrator:
         builder.add_edge("planner_node", "plan_review_node")
         builder.add_edge("plan_review_node", "search_node")
         builder.add_conditional_edges("search_node", route_after_search)
+        builder.add_conditional_edges("paper_filter_node", route_after_paper_filter)
         builder.add_conditional_edges("reading_node", route_after_reading)
+        builder.add_conditional_edges("evidence_index_node", route_after_evidence_index)
         builder.add_conditional_edges("analyse_node", route_after_analyse)
         builder.add_conditional_edges("writing_node", route_after_writing)
         builder.add_conditional_edges("report_node", route_after_report)

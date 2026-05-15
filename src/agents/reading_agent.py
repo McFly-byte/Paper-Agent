@@ -20,6 +20,7 @@ from src.services.run_tmp_state_store import (
     put_json,
     KEY_SEARCH_RESULTS,
     KEY_EXTRACTED_DATA,
+    KEY_READING_SUCCESSFUL_PAPERS,
 )
 from src.core.node_gates import gate_reading, record_gate
 from src.core.workflow_recovery import (
@@ -319,6 +320,14 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             )
 
     await put_json(current_state, KEY_EXTRACTED_DATA, extracted_papers.model_dump())
+    if successful_papers:
+        serializable_ok: list[dict[str, Any]] = []
+        for p in successful_papers:
+            if isinstance(p, dict):
+                serializable_ok.append(dict(p))
+            else:
+                serializable_ok.append({"value": str(p)})
+        await put_json(current_state, KEY_READING_SUCCESSFUL_PAPERS, serializable_ok)
     current_state.extracted_data = ExtractedPapersData(papers=[])
 
     rg = gate_reading(

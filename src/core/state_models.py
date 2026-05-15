@@ -68,7 +68,9 @@ class AnalysisResults(BaseModel):
 
 class NodeError(BaseModel):
     search_node_error: Optional[str] = Field(default=None, description="搜索节点错误信息")
+    paper_filter_node_error: Optional[str] = Field(default=None, description="论文过滤节点错误信息（严格模式）")
     reading_node_error: Optional[str] = Field(default=None, description="阅读节点错误信息")
+    evidence_index_node_error: Optional[str] = Field(default=None, description="证据索引节点错误信息（严格模式）")
     analyse_node_error: Optional[str] = Field(default=None, description="分析节点错误信息")
     writing_node_error: Optional[str] = Field(default=None, description="写作节点错误信息")
     report_node_error: Optional[str] = Field(default=None, description="报告生成节点错误信息")

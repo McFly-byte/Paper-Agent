@@ -220,3 +220,12 @@ workflow_v2:
   auto_approve_plan: true
   enable_background_investigation: true
   enable_trace_events: true
+  # Phase 2：检索结果过滤与证据索引（环境变量见 docs/refactor/PHASE2_FILTER_AND_EVIDENCE.md）
+  enable_paper_filter: true
+  paper_filter_min_score: 0.05
+  paper_filter_fallback_keep_top_k: true
+  paper_filter_max_reject_log: 20
+  enable_strict_paper_filter: false
+  enable_evidence_index: true
+  enable_strict_evidence_index: false
+  evidence_max_items_to_context: 64

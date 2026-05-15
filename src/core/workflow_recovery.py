@@ -10,7 +10,9 @@ from src.core.state_models import NodeError, PaperAgentState
 # 逻辑节点键 → (NodeError 字段名, LangGraph 节点名)
 NODE_SPEC: Final[dict[str, tuple[str, str]]] = {
     "search": ("search_node_error", "search_node"),
+    "paper_filter": ("paper_filter_node_error", "paper_filter_node"),
     "reading": ("reading_node_error", "reading_node"),
+    "evidence_index": ("evidence_index_node_error", "evidence_index_node"),
     "analyse": ("analyse_node_error", "analyse_node"),
     "writing": ("writing_node_error", "writing_node"),
     "report": ("report_node_error", "report_node"),

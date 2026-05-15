@@ -13,7 +13,10 @@ from src.utils.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 KEY_SEARCH_RESULTS = "workflow_search_results"
+KEY_FILTERED_PAPERS = "workflow_filtered_papers"
 KEY_EXTRACTED_DATA = "workflow_extracted_data"
+KEY_READING_SUCCESSFUL_PAPERS = "workflow_reading_successful_papers"
+KEY_EVIDENCE_LEDGER = "workflow_evidence_ledger"
 KEY_ANALYSE_RESULTS = "workflow_analyse_results"
 KEY_WRITTED_SECTIONS = "workflow_writted_sections"
 
