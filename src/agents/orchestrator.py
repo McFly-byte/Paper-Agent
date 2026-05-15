@@ -15,8 +15,12 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from src.core.state_models import PaperAgentState, ExecutionState, NodeError, PaperRunContext
 from src.agents.userproxy_agent import WebUserProxyAgent
-from src.agents.search_agent import search_node
+from src.agents.coordinator.node import coordinator_node
+from src.agents.planner.node import planner_node
+from src.agents.planner.review_node import plan_review_node
 from src.agents.reading_agent import reading_node
+from src.agents.researcher.background_node import background_investigation_node
+from src.agents.search_plan_adapter import search_node_with_plan
 from src.agents.analyse_agent import analyse_node
 from src.agents.writing_agent import writing_node
 from src.agents.report_agent import report_node
@@ -137,7 +141,11 @@ class PaperAgentOrchestrator:
         """构建并编译 LangGraph 工作流：声明状态/配置类型、添加 6 个节点、设置入口与条件边/终点边。"""
         builder = StateGraph(State, context_schema=PaperRunContext)
 
-        builder.add_node("search_node", search_node)
+        builder.add_node("coordinator_node", coordinator_node)
+        builder.add_node("background_investigation_node", background_investigation_node)
+        builder.add_node("planner_node", planner_node)
+        builder.add_node("plan_review_node", plan_review_node)
+        builder.add_node("search_node", search_node_with_plan)
         builder.add_node("reading_node", reading_node)
         builder.add_node("analyse_node", analyse_node)
         builder.add_node("writing_node", writing_node)
@@ -145,9 +153,11 @@ class PaperAgentOrchestrator:
         builder.add_node("workflow_recovery_node", workflow_recovery_node)
         builder.add_node("handle_error_node", self.handle_error_node)
 
-        builder.set_entry_point("search_node")
-
-        builder.add_edge(START, "search_node")
+        builder.add_edge(START, "coordinator_node")
+        builder.add_edge("coordinator_node", "background_investigation_node")
+        builder.add_edge("background_investigation_node", "planner_node")
+        builder.add_edge("planner_node", "plan_review_node")
+        builder.add_edge("plan_review_node", "search_node")
         builder.add_conditional_edges("search_node", route_after_search)
         builder.add_conditional_edges("reading_node", route_after_reading)
         builder.add_conditional_edges("analyse_node", route_after_analyse)

@@ -214,3 +214,9 @@ observability:
     rag_eval_local_llm_correctness: false
     rag_eval_judge_max_chars: 2400
     rag_eval_judge_timeout: 180
+
+# v2 工作流：计划驱动 / Trace（环境变量可覆盖，见 docs/refactor/MIGRATION_PLAN.md）
+workflow_v2:
+  auto_approve_plan: true
+  enable_background_investigation: true
+  enable_trace_events: true

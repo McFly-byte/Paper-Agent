@@ -20,18 +20,22 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # ---------- DOT 源（供 pygraphviz 或 graphviz 包使用）----------
 
 def get_orchestrator_dot() -> str:
-    """主编排器 DAG 的 DOT 源：检索 → 阅读 → 分析 → 写作 → 报告，含条件边与错误节点。"""
+    """主编排器 DAG 的 DOT 源：v2 计划链 → 检索 → 阅读 → …，含条件边与错误节点。"""
     return r"""
 digraph {
     rankdir=LR;
     splines=polyline;
-    label="Paper-Agent 主编排 DAG (LangGraph)";
+    label="Paper-Agent 主编排 DAG (LangGraph, v2 Phase1)";
     labelloc=t;
     fontsize=14;
     fontname="Microsoft YaHei";
 
     START [shape=ellipse, style=filled, fillcolor="#e8f5e9", label="START"];
-    search_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="search_node\n(检索)"];
+    coordinator_node [shape=box, style="rounded,filled", fillcolor="#dcedc8", label="coordinator_node\n(简报)"];
+    background_investigation_node [shape=box, style="rounded,filled", fillcolor="#dcedc8", label="background_investigation\n(背景)"];
+    planner_node [shape=box, style="rounded,filled", fillcolor="#dcedc8", label="planner_node\n(计划)"];
+    plan_review_node [shape=box, style="rounded,filled", fillcolor="#dcedc8", label="plan_review_node\n(审核)"];
+    search_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="search_node\n(检索+adapter)"];
     reading_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="reading_node\n(阅读)"];
     analyse_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="analyse_node\n(分析)"];
     writing_node [shape=box, style="rounded,filled", fillcolor="#bbdefb", label="writing_node\n(写作)"];
@@ -39,7 +43,11 @@ digraph {
     handle_error_node [shape=box, style="rounded,filled", fillcolor="#ffcdd2", label="handle_error_node\n(错误处理)"];
     END [shape=ellipse, style=filled, fillcolor="#fff3e0", label="END"];
 
-    START -> search_node;
+    START -> coordinator_node;
+    coordinator_node -> background_investigation_node;
+    background_investigation_node -> planner_node;
+    planner_node -> plan_review_node;
+    plan_review_node -> search_node;
     search_node -> reading_node [label="成功"];
     search_node -> handle_error_node [label="错误", color=red];
     reading_node -> analyse_node [label="成功"];

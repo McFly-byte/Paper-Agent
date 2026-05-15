@@ -134,9 +134,15 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         await state_queue.put(BackToFrontData(step=ExecutionState.SEARCHING,state="initializing",data=None)) # 将初始状态推送到队列
 
         _rec = format_recovery_user_block(current_state.config or {}, "search")
+        _plan_hints = (current_state.config or {}).get("search_plan_hints") or ""
+        if str(_plan_hints).strip():
+            _plan_hints = f"\n{_plan_hints}\n"
+        else:
+            _plan_hints = ""
         prompt = f"""
         请根据用户查询需求，生成检索查询条件；按系统说明输出 **json** 结构化结果（querys / start_date / end_date）。
         用户查询需求：{current_state.user_request}
+        {_plan_hints}
         {_rec}
         """
         logger.info("[工作流·检索] 调用 LLM 生成 arXiv 检索条件（可能需数十秒）…")

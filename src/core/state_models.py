@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 from asyncio import Queue
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, TypedDict
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional, TypedDict
+
+from pydantic import BaseModel, Field
+
+from src.agents.planner.models import PlanReviewResult, ResearchPlan
+from src.domain.paper.evidence import EvidenceLedger
+from src.domain.paper.models import PaperCandidate
+from src.runtime.state import BackgroundContext, ResearchBrief
 
 
 class BackToFrontData(BaseModel):
@@ -100,6 +108,29 @@ class PaperAgentState(BaseModel):
     rag_retrieval_logs: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="写作阶段 RAG 调用摘要，供 LangSmith 评估与 backend 对比",
+    )
+
+    # --- v2：计划驱动 / 证据 / 追踪（与 LangGraph checkpoint 兼容；旧节点可忽略） ---
+    brief: Optional[ResearchBrief] = Field(default=None, description="coordinator 输出的调研简报")
+    background_context: Optional[BackgroundContext] = Field(
+        default=None, description="background_investigation 输出的背景扩展"
+    )
+    plan: Optional[ResearchPlan] = Field(default=None, description="planner 输出的研究计划")
+    plan_review: Optional[PlanReviewResult] = Field(default=None, description="plan_review 输出")
+    plan_approved: bool = Field(default=False, description="计划是否已批准（通过后方可向 search 注入 hints）")
+    paper_candidates: List[PaperCandidate] = Field(
+        default_factory=list, description="统一论文候选（后续 paper_filter 使用）"
+    )
+    filtered_papers: List[PaperCandidate] = Field(default_factory=list, description="过滤后的论文候选")
+    paper_readings: List[Dict[str, Any]] = Field(
+        default_factory=list, description="预留：结构化阅读快照列表"
+    )
+    evidence_ledger: Optional[EvidenceLedger] = Field(default=None, description="证据账本（后续写作/审查）")
+    trace_events: List[Dict[str, Any]] = Field(
+        default_factory=list, description="TraceEvent.model_dump 列表，供可观测性扩展"
+    )
+    workflow_errors: List[Dict[str, Any]] = Field(
+        default_factory=list, description="v2 节点非致命错误记录（与 NodeError 并存）"
     )
 
 @dataclass
