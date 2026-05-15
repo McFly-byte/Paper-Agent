@@ -162,6 +162,7 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         # 调用检索服务搜索论文
         results = await paper_searcher.search_papers(
             querys=safe_querys,
+            max_results=current_state.max_papers,
             start_date=search_query.start_date,
             end_date=search_query.end_date,
         )
@@ -173,6 +174,7 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             dedup_keys.append(str(pid))
         dedup_n = len(set(dedup_keys)) if dedup_keys else 0
         top_titles = [str((p or {}).get("title") or "")[:160] for p in results[:5]]
+        top_abstracts = [str((p or {}).get("summary") or (p or {}).get("abstract") or "")[:500] for p in results[:5]]
         gate_ctx = {
             "querys": safe_querys,
             "start_date": search_query.start_date,
@@ -180,6 +182,9 @@ async def search_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
             "raw_result_count": raw_n,
             "dedup_count": dedup_n,
             "top_titles": top_titles,
+            "top_abstracts": top_abstracts,
+            "user_request": current_state.user_request,
+            "requested_max_results": current_state.max_papers,
         }
         current_state.config["search_gate_context"] = gate_ctx
         sg = gate_search(gate_ctx)

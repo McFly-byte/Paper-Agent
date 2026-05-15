@@ -272,7 +272,14 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         await put_text(current_state, KEY_ANALYSE_RESULTS, analyse_results)
         current_state.analyse_results = None
 
-        ag = gate_analyse(analyse_results)
+        ag = gate_analyse(
+            analyse_results,
+            input_paper_count=n_papers,
+            parsed_paper_titles=[
+                str(getattr(p, "core_problem", "") or "")[:160]
+                for p in (extracted_papers.papers if extracted_papers else [])
+            ],
+        )
         current_state.boundary_checks = record_gate(current_state.boundary_checks, "analyse", ag)
         if not ag.passed:
             detail = "；".join(ag.reasons) if ag.reasons else "分析门禁未通过"

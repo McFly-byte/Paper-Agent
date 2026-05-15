@@ -101,6 +101,7 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         wg = gate_writing(
             planned_sections=writing_state.get("sections") or [],
             writted_sections=writing_state.get("writted_sections") or [],
+            rag_retrieval_logs=current_state.rag_retrieval_logs,
         )
         current_state.boundary_checks = record_gate(current_state.boundary_checks, "writing", wg)
         if not wg.passed:

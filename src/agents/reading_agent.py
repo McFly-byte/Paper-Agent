@@ -291,6 +291,7 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
     )
     await add_papers_to_kb(successful_papers, extracted_papers, current_state)
 
+    llamaindex_node_count: int | None = None
     if llamaindex_ingestion_enabled():
         try:
             # 惰性导入：未安装 llama-index 时仅在关闭 LLAMAINDEX 时避免加载整个 LlamaIndex 栈
@@ -305,6 +306,7 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                     paper_meta_list=successful_papers,
                     extracted_list=extracted_dicts,
                 )
+                llamaindex_node_count = n_nodes
                 logger.info(
                     "[工作流·阅读] LlamaIndex 多节点入库完成 run_id=%s nodes=%s",
                     current_state.run_id,
@@ -323,6 +325,8 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         input_paper_count=input_paper_count,
         papers_parsed=extracted_papers.papers,
         kb_write_count=len(extracted_papers.papers),
+        paper_metadatas=successful_papers,
+        llamaindex_node_count=llamaindex_node_count,
     )
     current_state.boundary_checks = record_gate(current_state.boundary_checks, "reading", rg)
     if not rg.passed:
