@@ -58,4 +58,6 @@ class WritingState(TypedDict, total=False):
     current_section_index: int
     retrieved_docs: List[Dict[str, Any]]
     recovery_feedback: str  # 编排器注入的写作阶段恢复说明（纯文本）
-
+    citation_marker_instruction: str  # Phase 3：引用与证据约束说明
+    evidence_bound_block: str  # 全局证据上下文（无小节结构时）
+    section_evidence_blocks: List[str]  # 与章节索引对齐的证据上下文

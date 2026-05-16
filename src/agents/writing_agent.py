@@ -76,6 +76,14 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                 current_state.config or {}, "writing"
             ),
         }
+        try:
+            from src.agents.writing_evidence_helpers import prepare_evidence_bound_writing_bundle
+
+            ev_bundle = await prepare_evidence_bound_writing_bundle(current_state)
+            if ev_bundle:
+                writing_state.update(ev_bundle)  # type: ignore[arg-type]
+        except Exception as ev_exc:  # noqa: BLE001
+            logger.warning("[工作流·写作] 证据绑定准备失败（已忽略）: %s", ev_exc)
         writingWorkFlow = WritingWorkflow()
         logger.info("[工作流·写作] 启动写作子图：大纲 → 多章节并行撰写（LLM 密集，耗时较长）…")
         tmp_id = (current_state.config or {}).get("tmp_db_id")

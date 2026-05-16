@@ -46,16 +46,17 @@ def _strict_evidence_index(val: PaperAgentState) -> bool:
     return config.get_bool("workflow_v2.enable_strict_evidence_index", False)
 
 
-    if val.filtered_papers:
-        out: list[dict[str, Any]] = []
-        for p in val.filtered_papers:
-            if isinstance(p, PaperCandidate):
-                d = p.model_dump(mode="json")
-                out.append(d)
-            elif isinstance(p, dict):
-                out.append(dict(p))
-        return out
-    return []
+def _paper_meta_list_from_filtered(val: PaperAgentState) -> list[dict[str, Any]]:
+    """从 state.filtered_papers 提取可 JSON 序列化的元数据 dict 列表。"""
+    if not val.filtered_papers:
+        return []
+    out: list[dict[str, Any]] = []
+    for p in val.filtered_papers:
+        if isinstance(p, PaperCandidate):
+            out.append(p.model_dump(mode="json"))
+        elif isinstance(p, dict):
+            out.append(dict(p))
+    return out
 
 
 async def evidence_index_node(state: State, runtime: Runtime[PaperRunContext]) -> State:

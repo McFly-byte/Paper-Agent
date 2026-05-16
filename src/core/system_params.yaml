@@ -229,3 +229,12 @@ workflow_v2:
   enable_evidence_index: true
   enable_strict_evidence_index: false
   evidence_max_items_to_context: 64
+  # Phase 3：CitationMap / 证据绑定写作 / 忠实度审查（见 docs/refactor/PHASE3_CITATION_AND_FAITHFULNESS.md）
+  enable_evidence_bound_writing: true
+  evidence_context_max_items_per_section: 16
+  evidence_context_max_chars: 12000
+  enable_faithfulness_review: true
+  enable_llm_faithfulness_review: false
+  enable_strict_faithfulness_review: false
+  enable_report_faithfulness_appendix: false
+  faithfulness_long_section_chars: 500

@@ -15,6 +15,7 @@ NODE_SPEC: Final[dict[str, tuple[str, str]]] = {
     "evidence_index": ("evidence_index_node_error", "evidence_index_node"),
     "analyse": ("analyse_node_error", "analyse_node"),
     "writing": ("writing_node_error", "writing_node"),
+    "faithfulness": ("faithfulness_review_node_error", "faithfulness_review_node"),
     "report": ("report_node_error", "report_node"),
 }
 

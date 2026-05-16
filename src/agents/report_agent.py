@@ -11,7 +11,9 @@ from autogen_agentchat.base import TaskResult
 
 from src.core.model_client import create_report_model_client
 from src.services.report_history_store import append_completed
-from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS
+from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS, KEY_CITATION_MAP, KEY_FAITHFULNESS_REVIEW
+from src.core.config import config
+from src.domain.paper.citation import CitationMap
 from src.core.node_gates import gate_report, record_gate
 from src.core.workflow_recovery import (
     clear_recovery_feedback_for,
@@ -60,6 +62,7 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
         2. 自动补充必要的过渡语句使报告连贯
         3. 保持专业学术风格
         4. 直接输出完整报告，无需解释过程
+        5. 不要删除或改写章节正文中已有的 [C1]、[C2] 等引用标记
 
         【额外说明】
         请确保章节逻辑顺序合理，如有需要可调整章节排列。
@@ -90,6 +93,36 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                 if state is None:
                     continue
                 await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state=state,data=chunk.content))
+
+        # Phase 3：在门禁前拼接 References（不由 LLM 生成正文引用列表）
+        md = str(getattr(current_state, "report_markdown", "") or "").strip()
+        cmap_dict = current_state.citation_map if isinstance(current_state.citation_map, dict) else None
+        if not cmap_dict or not cmap_dict.get("refs"):
+            loaded_cm = await get_json(current_state, KEY_CITATION_MAP)
+            if isinstance(loaded_cm, dict):
+                cmap_dict = loaded_cm
+        if cmap_dict and cmap_dict.get("refs"):
+            try:
+                cmap = CitationMap.model_validate(cmap_dict)
+                ref_block = cmap.to_markdown_references().strip()
+                if ref_block and "## References" not in md:
+                    md = md.rstrip() + "\n\n## References\n\n" + ref_block + "\n"
+                    current_state.report_markdown = md
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[工作流·报告] CitationMap 解析失败，跳过 References 拼接: %s", exc)
+
+        if config.get_bool("workflow_v2.enable_report_faithfulness_appendix", False):
+            fr = current_state.faithfulness_review if isinstance(current_state.faithfulness_review, dict) else None
+            if not fr:
+                fr = await get_json(current_state, KEY_FAITHFULNESS_REVIEW)
+            if isinstance(fr, dict) and fr.get("summary"):
+                app = (
+                    "\n\n## Evidence Review Appendix\n\n"
+                    f"- summary: {fr.get('summary')}\n"
+                    f"- unsupported_claims: {fr.get('total_unsupported_claims', 0)}\n"
+                    f"- citation_issues: {fr.get('total_citation_issues', 0)}\n"
+                )
+                current_state.report_markdown = (current_state.report_markdown or "").rstrip() + app
 
         kb_label = current_state.config.get("knowledge_base_label")
 

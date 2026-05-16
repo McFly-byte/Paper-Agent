@@ -73,6 +73,7 @@ class NodeError(BaseModel):
     evidence_index_node_error: Optional[str] = Field(default=None, description="证据索引节点错误信息（严格模式）")
     analyse_node_error: Optional[str] = Field(default=None, description="分析节点错误信息")
     writing_node_error: Optional[str] = Field(default=None, description="写作节点错误信息")
+    faithfulness_review_node_error: Optional[str] = Field(default=None, description="忠实度审查节点错误（严格模式）")
     report_node_error: Optional[str] = Field(default=None, description="报告生成节点错误信息")
     error: Optional[str] = Field(default=None, description="错误信息")
 
@@ -128,6 +129,14 @@ class PaperAgentState(BaseModel):
         default_factory=list, description="预留：结构化阅读快照列表"
     )
     evidence_ledger: Optional[EvidenceLedger] = Field(default=None, description="证据账本（后续写作/审查）")
+    citation_map: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="CitationMap JSON（LangGraph checkpoint 友好；业务代码可 model_validate）",
+    )
+    faithfulness_review: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="FaithfulnessReviewReport JSON",
+    )
     trace_events: List[Dict[str, Any]] = Field(
         default_factory=list, description="TraceEvent.model_dump 列表，供可观测性扩展"
     )

@@ -26,6 +26,7 @@ from src.agents.search_plan_adapter import search_node_with_plan
 from src.agents.analyse_agent import analyse_node
 from src.agents.writing_agent import writing_node
 from src.agents.report_agent import report_node
+from src.agents.reviewer.faithfulness_node import faithfulness_review_node
 from src.agents.workflow_recovery_node import workflow_recovery_node
 from src.core.state_models import BackToFrontData, State
 from src.core.workflow_recovery import should_abort_to_terminal_error
@@ -45,6 +46,7 @@ _ERR_ATTRS = (
     "evidence_index_node_error",
     "analyse_node_error",
     "writing_node_error",
+    "faithfulness_review_node_error",
     "report_node_error",
     "error",
 )
@@ -103,7 +105,18 @@ def route_after_analyse(state: State) -> str:
 
 
 def route_after_writing(state: State) -> str:
-    return _route_after_node(state, node_key="writing", err_attr="writing_node_error", ok_next="report_node")
+    return _route_after_node(
+        state, node_key="writing", err_attr="writing_node_error", ok_next="faithfulness_review_node"
+    )
+
+
+def route_after_faithfulness_review(state: State) -> str:
+    return _route_after_node(
+        state,
+        node_key="faithfulness",
+        err_attr="faithfulness_review_node_error",
+        ok_next="report_node",
+    )
 
 
 def route_after_report(state: State) -> str:
@@ -167,6 +180,7 @@ class PaperAgentOrchestrator:
         builder.add_node("evidence_index_node", evidence_index_node)
         builder.add_node("analyse_node", analyse_node)
         builder.add_node("writing_node", writing_node)
+        builder.add_node("faithfulness_review_node", faithfulness_review_node)
         builder.add_node("report_node", report_node)
         builder.add_node("workflow_recovery_node", workflow_recovery_node)
         builder.add_node("handle_error_node", self.handle_error_node)
@@ -182,6 +196,7 @@ class PaperAgentOrchestrator:
         builder.add_conditional_edges("evidence_index_node", route_after_evidence_index)
         builder.add_conditional_edges("analyse_node", route_after_analyse)
         builder.add_conditional_edges("writing_node", route_after_writing)
+        builder.add_conditional_edges("faithfulness_review_node", route_after_faithfulness_review)
         builder.add_conditional_edges("report_node", route_after_report)
         builder.add_conditional_edges("workflow_recovery_node", route_after_recovery)
         builder.add_edge("handle_error_node", END)

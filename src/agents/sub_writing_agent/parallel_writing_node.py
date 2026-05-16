@@ -72,11 +72,19 @@ async def parallel_writing_node(
         nonlocal state
         sec_i = task["index"] + 1
         _wf = task.get("writing_recovery") or ""
+        _cit = (task.get("citation_instruction") or "").strip()
+        _evb = (task.get("evidence_block") or "").strip()
+        extra = ""
+        if _cit:
+            extra += "\n\n" + _cit
+        if _evb:
+            extra += "\n\n" + _evb
         task_prompt = f"""请根据以下内容完成写作任务：
                 用户的请求是：{task['user_request']}
                 当前写作子任务: {task['section']}
                 论文全局分析: {task['global_analyse']}
                 {_wf}
+                {extra}
 
                 请开始写作：
             """
@@ -149,16 +157,26 @@ async def parallel_writing_node(
             rag_writing_section_hint_var.reset(tok_sec)
 
     _writing_recovery = (state.get("recovery_feedback") or "").strip()
+    _cit_instr = (state.get("citation_marker_instruction") or "").strip()
+    sec_blocks = state.get("section_evidence_blocks") or []
+    glob_ev = (state.get("evidence_bound_block") or "").strip()
 
     subtasks = []
     for i in range(len(sections)):
         await state_queue.put(BackToFrontData(step=ExecutionState.SECTION_WRITING+"_"+str(i+1),state="initializing",data=None))
+        ev_block = ""
+        if i < len(sec_blocks) and (sec_blocks[i] or "").strip():
+            ev_block = str(sec_blocks[i]).strip()
+        elif glob_ev:
+            ev_block = glob_ev
         subtasks.append({
             "user_request": user_request,
             "global_analyse": global_analyse,
             "section": sections[i],
             "index": i,
             "writing_recovery": _writing_recovery,
+            "citation_instruction": _cit_instr,
+            "evidence_block": ev_block,
         })
 
     sec_n = config.get_int(
