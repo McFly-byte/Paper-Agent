@@ -40,7 +40,6 @@ def _get_coordinator_agent():
             name="coordinator_agent",
             model_client=create_default_client(),
             system_message=_COORDINATOR_SYSTEM,
-            output_content_type=ResearchBrief,
         )
     return _coordinator_agent
 def _trace_enabled(val: PaperAgentState) -> bool:
@@ -78,6 +77,28 @@ def _extract_json_object(text: str) -> dict:
     return json.loads(m.group(0))
 
 
+def _normalize_brief_dict(data: dict, user_request: str) -> dict:
+    """补齐 LLM 常漏字段，避免 ResearchBrief 校验失败（不修改 schema 语义）。"""
+    d = dict(data or {})
+    ur = (user_request or "").strip()
+    if not (d.get("original_query") or "").strip():
+        d["original_query"] = ur
+    if not (d.get("clarified_topic") or "").strip():
+        d["clarified_topic"] = (d.get("original_query") or ur or "未指定主题").strip()
+    tr = d.get("time_range")
+    if tr is None:
+        d["time_range"] = (None, None)
+    elif isinstance(tr, (list, tuple)) and len(tr) >= 2:
+        d["time_range"] = (tr[0], tr[1])
+    elif isinstance(tr, (list, tuple)) and len(tr) == 1:
+        d["time_range"] = (tr[0], None)
+    else:
+        d["time_range"] = (None, None)
+    if not isinstance(d.get("clarification_questions"), list):
+        d["clarification_questions"] = []
+    return d
+
+
 async def coordinator_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
     val = state["value"]
     run_id = val.run_id
@@ -105,7 +126,9 @@ async def coordinator_node(state: State, runtime: Runtime[PaperRunContext]) -> S
         if isinstance(raw, ResearchBrief):
             brief = raw
         else:
-            brief = ResearchBrief.model_validate(_extract_json_object(str(raw)))
+            brief = ResearchBrief.model_validate(
+                _normalize_brief_dict(_extract_json_object(str(raw)), val.user_request)
+            )
 
         val.brief = brief
         append_trace_event(
@@ -121,7 +144,7 @@ async def coordinator_node(state: State, runtime: Runtime[PaperRunContext]) -> S
             enabled=enable_trace,
         )
     except Exception as e:  # noqa: BLE001
-        logger.exception("[coordinator_node] 失败，使用启发式 ResearchBrief 回退")
+        logger.warning("[coordinator_node] 失败，使用启发式 ResearchBrief 回退: %s", e)
         append_workflow_error(
             val,
             {"node": node, "error": f"{type(e).__name__}: {e}"},

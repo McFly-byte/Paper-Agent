@@ -1,350 +1,167 @@
-<!-- <h1 align="center">基于多智能体和工作流的大模型的调研报告生成系统</h1> -->
-<h1 align="center">Paper-Agent: 智能学术调研报告生成系统</h1>
 
-<p align="center">
-  语言:
-  <a href="../README.md">English</a> ·
-  简体中文 
-</p>
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
-## 📖 简介
+# Paper-Agent：智能学术调研报告生成系统
 
-**Paper-Agent** 是一个面向科研人员的自动化调研报告生成系统，目标在于解决学术领域论文调研“耗时长、分析浅”的痛点。它不是简单的文献摘要工具，而是一个具备“检索-阅读-分析-综合-报告”全流程能力的智能领域研究助理，能生成有深度、有见解的领域综述报告。
+语言： [English](../README.md) · 简体中文（与根目录 [README.md](../README.md) 同步维护）
 
-## 📸 项目预览
+[License](../LICENSE)
+[Python](https://www.python.org/)
 
-<summary>点击放大截图查看</summary>
+## 简介
 
-| 截图1 | 截图2 | 截图3 |
-|-------|-------|-------|
-| <img width="400" src="https://github.com/user-attachments/assets/b3617fee-ab47-4aac-9be7-0cb543fd706a" /> | <img width="400" src="https://github.com/user-attachments/assets/a27882fb-3bd8-4f44-b18f-8161bb0d44a6" /> | <img width="400" src="https://github.com/user-attachments/assets/18f2f0bc-6d2c-4b5f-a2b9-a87d16fcd6be" /> |
-| 截图4 | 截图5 | 截图6 |
-| <img width="400" src="https://github.com/user-attachments/assets/21e5dc93-1c8b-46e3-b33c-f359d94cf2db" /> | <img width="400" src="https://github.com/user-attachments/assets/1e21162d-e083-40bc-93de-08302f28b08b" /> | <img width="400" src="https://github.com/user-attachments/assets/77738e3d-7d80-4d8c-9ea4-61c45e3db5d6" /> |
+**Paper-Agent** 面向科研人员，将「结构化检索 → 并行阅读与抽取 → 多阶段分析 → RAG 辅助写作 → Markdown 报告 → 前端 SSE 进度」串成一条流水线。后端为 **FastAPI**，工作流由 **LangGraph** 编排；分析与写作子步骤中采用 **AutoGen** 风格的多智能体群聊。
 
-</div>
+更完整的架构说明见仓库根目录 **[design.md](../design.md)**。阶段性重构说明见 **[refactor/](refactor/)** 目录。
 
-## ✨ 核心特性
+## 项目预览
 
-- 🤖 **多智能体协作架构**：基于 AutoGen 框架，采用多智能体协作模式，涵盖检索、阅读、分析、写作等多个智能体，自动协作完成复杂任务
-- 📚 **智能文献检索**：将自然语言查询转换为精确的搜索条件，支持人工审核，从 arXiv 获取相关学术论文
-- 🔍 **结构化信息抽取**：智能阅读自动提取论文的核心问题、技术路线、实验结果、数据集、局限性等关键信息，输出标准化 JSON 结构
-- 🧠 **深度领域分析**：通过聚类分析、深度分析、全局分析三阶段流程，识别研究趋势和热点
-- ✍️ **领域综述报告生成**：将分析结果整合成结构完整、逻辑清晰的学术报告，支持 Markdown 格式输出
-- 🔄 **实时流式输出**：基于 SSE（Server-Sent Events）技术，实时推送任务进度到前端
-- ⚡ **并行处理优化**：支持论文并行阅读、聚类并行分析、章节并行写作，大幅提升处理效率
-- 🔧 **模块化设计**：各功能模块解耦，基于 LangGraph 构建工作流，便于扩展和维护
-- 💾 **向量数据库支持**：使用 ChromaDB 存储提取的论文信息，支持检索增强写作
-- 👥 **用户交互审查**：在关键步骤引入人工审核，确保查询条件和生成内容符合预期
+点击放大截图
+
+
+| 截图 1 | 截图 2 | 截图 3 |
+| ---- | ---- | ---- |
+|      |      |      |
+| 截图 4 | 截图 5 | 截图 6 |
+|      |      |      |
+
+
+## 核心特性
+
+- **LangGraph 工作流**：协调器 → 背景调研 → 规划器 → 计划审核 → arXiv 检索（与计划联动）→ 去重/过滤 → 并行阅读（PDF/文本）→ **证据索引** → 聚类 + 深度 + 全局分析 → 并行写作子会话 → **忠实度审查** → 终稿报告；另有可选的 **工作流恢复** 与终端 **错误** 节点。
+- **人机协同**：`WebUserProxyAgent` 处理审核类输入；接口按 **run** 划分（`POST /api/research/runs/{run_id}/input`）。旧版 `POST /send_input` 已废弃，返回 **410**。
+- **RAG**：写作阶段默认通过 **LlamaIndex** 基于 Chroma 检索（HyDE、可选重排/多查询、元数据过滤等），见 `[../src/core/system_params.yaml](../src/core/system_params.yaml)` 与 `[.env.example](../.env.example)` 中的 `RAG_BACKEND`。部分路径仍兼容旧版 Chroma 工具。
+- **知识库 HTTP API**：在 `**/knowledge/...`** 下提供库管理与文档入库（`[../src/knowledge/knowledge_router.py](../src/knowledge/knowledge_router.py)`）。
+- **报告历史 API**：在 `**/api/reports/...`** 下列表/查看/删除已保存报告（`[../src/api/reports_router.py](../src/api/reports_router.py)`）。
+- **可观测与评估**：对接 LangSmith 的追踪习惯；在配置齐全时，流程结束后可通过 SSE 推送 **评估** 结果（`[../src/evaluation/](../src/evaluation/)`）。
+- **并发与韧性**：可配置远端 LLM 限流、重试与图级恢复（`[../src/core/workflow_recovery.py](../src/core/workflow_recovery.py)`、`system_params.yaml`）。
 
 ## 系统架构
 
-**下面是简要的介绍，更多关于系统架构、节点实现、智能体协作的详细说明，请参考 [design.md](design.md) 文档。**
-
-Paper-Agent 采用模块化设计，基于 LangGraph 构建完整的工作流，由六个核心节点协同工作：
-
-### 核心节点
-
-1. **search_agent_node（论文搜索节点）**
-   - 使用 LLM 将用户自然语言需求转换为结构化查询条件
-   - 通过用户代理（userProxyAgent）进行人工审核
-   - 调用 PaperSearcher 从 arXiv 检索相关论文
-   - 支持查询条件：querys、start_date、end_date
-
-2. **reading_agent_node（论文阅读节点）**
-   - 并行处理多篇论文，提取每篇论文的核心信息
-   - 按照预定义模型提取：核心问题、关键方法、数据集、评估指标、主要结果、局限性、贡献
-   - 将提取结果存入向量数据库，支持后续检索增强
-
-3. **analyse_agent_node（论文分析节点）**
-   - **PaperClusterAgent**：使用嵌入向量和 KMeans 算法进行论文聚类，自动确定聚类数量
-   - **DeepAnalyseAgent**：对每个聚类进行深入分析，包括技术路线、方法对比、应用领域等
-   - **GlobalanalyseAgent**：汇总所有聚类分析结果，生成包含六大模块的全局分析报告
-
-4. **writing_agent_node（写作节点）**
-   - **writing_director_node**：根据用户需求和全局分析，生成报告大纲并拆分为写作子任务
-   - **parallel_writing_node**：并行执行所有写作子任务，使用多智能体协作完成各章节写作
-   - 支持检索增强写作和质量审查
-
-5. **report_agent_node（报告生成节点）**
-   - 汇总所有写作章节，生成完整的调研报告
-   - 使用 Markdown 格式输出，自动补充过渡语句
-   - 流式输出，实时推送生成进度
-
-### 子智能体架构
-
-**写作模块子智能体**
-- **writing_agent**：负责根据子任务撰写章节内容
-- **retrieval_agent**：从向量数据库检索相关内容，补充写作所需资料
-- **review_agent**：审查写作内容质量，通过后输出 "APPROVE" 终止子任务
-
-**分析模块子智能体**
-- **PaperClusterAgent**：论文聚类分析，生成主题描述和关键词
-- **DeepAnalyseAgent**：单个聚类深度分析
-- **GlobalanalyseAgent**：全局分析，生成六大模块报告
-
-### 工作流架构
-
-- **主控协调模块（orchestrator）**
-  - 基于 LangGraph 构建完整工作流
-  - 协调各节点有序执行
-  - 管理全局状态与错误处理
-  - 通过 SSE 实时推送任务进度到前端
-
-- **状态管理**
-  - 使用 State 管理全局状态
-  - 通过队列实现前后端通信
-  - 支持实时状态推送
+### LangGraph 主路径节点
 
 
-## 工作流程
+| 顺序  | 节点                              | 职责                                              |
+| --- | ------------------------------- | ----------------------------------------------- |
+| 1   | `coordinator_node`              | 澄清意图，为下游准备上下文。                                  |
+| 2   | `background_investigation_node` | 轻量网络/背景信息收集，辅助规划。                               |
+| 3   | `planner_node`                  | 产出结构化调研/检索计划。                                   |
+| 4   | `plan_review_node`              | 校验或修订计划（可含人工输入）。                                |
+| 5   | `search_node`                   | 按计划执行检索（如 arXiv，`search_plan_adapter`）。         |
+| 6   | `paper_filter_node`             | 去重/相关性过滤，减轻后续阅读压力。                              |
+| 7   | `reading_node`                  | 并行从论文中抽取结构化字段。                                  |
+| 8   | `evidence_index_node`           | 构建证据片段/索引，供分析与写作使用。                             |
+| 9   | `analyse_node`                  | 聚类 → 单簇深度分析 → 全局综合（子智能体在 `sub_analyse_agent/`）。 |
+| 10  | `writing_node`                  | 写作总监 + 并行子写手 + 检索 + 审查（`sub_writing_agent/`）。   |
+| 11  | `faithfulness_review_node`      | 汇总前做 groundedness/引用向检查。                        |
+| 12  | `report_node`                   | 组装 Markdown，经运行队列推送进度。                          |
 
-系统基于 LangGraph 构建完整的工作流，通过六个核心节点协同完成调研报告生成：
+
+辅助节点：`workflow_recovery_node`（重试路由）、`handle_error_node`（失败终态 + SSE）。当前图使用进程内 **内存 checkpoint**（`InMemorySaver`）。
+
+### 子智能体模块
+
+- **分析**（`[../src/agents/sub_analyse_agent/](../src/agents/sub_analyse_agent/)`）：嵌入 + sklearn **KMeans** 聚类、单簇深度分析、全局「六大块」式综述。
+- **写作**（`[../src/agents/sub_writing_agent/](../src/agents/sub_writing_agent/)`）：写作总监、并行写作组、检索智能体、审查智能体、共享写作状态模型。
+
+### HTTP 接口（`[../main.py](../main.py)`）
 
 
-### 完整流程
+| 方法   | 路径                                   | 说明                                                                      |
+| ---- | ------------------------------------ | ----------------------------------------------------------------------- |
+| POST | `/api/research/runs`                 | 启动一次运行；请求体含 `query`，可选 `kb_label`、`user_id`；返回 `run_id`（亦作 `trace_id`）。 |
+| GET  | `/api/research/runs/{run_id}/stream` | **SSE**，推送 `BackToFrontData` 的 JSON，直至 `finished`。                      |
+| POST | `/api/research/runs/{run_id}/input`  | 向该次运行的用户代理提交人机协同文本。                                                     |
 
-1. **输入查询**：用户提供研究主题或问题
-2. **论文检索**：系统自动生成查询条件，支持人工审核，从 arXiv 检索相关论文
-3. **论文阅读**：并行处理多篇论文，提取核心信息并结构化
-4. **深度分析**：
-   - 聚类分析：按主题对论文进行分组
-   - 深度分析：对每个聚类进行技术路线、方法对比等深入分析
-   - 全局分析：汇总所有聚类结果，生成六大模块报告
-5. **内容生成**：
-   - 生成大纲：根据用户需求和全局分析，生成报告大纲
-   - 任务拆分：将大纲解析为可并行执行的写作子任务
-   - 并行写作：使用多智能体协作完成各章节写作
-6. **报告整合**：汇总所有章节，生成完整的 Markdown 格式调研报告
 
-### 关键特性
+路由前缀：`**/knowledge/...`**、`**/api/reports/...**`。默认 ASGI 监听 `**0.0.0.0:8001**`。
 
-- **实时流式输出**：基于 SSE 技术，实时推送任务进度到前端
-- **并行处理优化**：论文并行阅读、聚类并行分析、章节并行写作
-- **用户交互审查**：在关键步骤引入人工审核
-- **检索增强写作**：从向量数据库检索相关内容补充写作资料
-- **质量审查机制**：review_agent 审查写作内容质量
+## 端到端流程（用户视角）
 
-## 📂 目录结构
+1. 用户提交自然语言调研需求（可选知识库标签 `kb_label`）。
+2. 协调器与背景/规划阶段形成 **可审核的计划**。
+3. **检索** 与 **过滤** 降噪；**阅读** 产出结构化证据。
+4. **证据索引** 支撑 **分析**（聚类 + 深度 + 全局）。
+5. **写作** 并行完成各章并走 **RAG**；**忠实度** 关口抑制无依据表述。
+6. **报告** 合并为 Markdown；SSE 展示进度；末尾可选 **评估** 事件。
+
+## 仓库目录（精简）
 
 ```text
-Paper-Agents/
-├── main.py                 # 应用主入口，FastAPI应用初始化
-├── pyproject.toml          # Python项目配置和依赖声明
-├── LICENSE                 # MIT许可证文件
-├── README.md               # 英文说明文档
-├── .gitignore              # Git忽略文件
-│
-├── docs/                   # 文档目录
-│   ├── README_cn.md        # 中文说明文档
-│   └── design.md           # 系统设计文档
-│
-├── src/                    # 源代码目录
-│   ├── agents/             # 智能体模块
-│   │   ├── orchestrator.py         # 工作流协调器
-│   │   ├── search_agent.py         # 论文检索智能体
-│   │   ├── userproxy_agent.py      # 用户审查代理
-│   │   ├── reading_agent.py        # 论文阅读智能体
-│   │   ├── analyse_agent.py        # 论文分析智能体
-│   │   ├── writing_agent.py        # 内容写作智能体
-│   │   ├── report_agent.py         # 报告生成智能体
-│   │   ├── sub_analyse_agent/      # 子分析智能体目录
-│   │   │   ├── cluster_agent.py           # 论文聚类智能体
-│   │   │   ├── deep_analyse_agent.py      # 论文深度分析智能体
-│   │   │   └── global_analyse_agent.py    # 全局分析智能体
-│   │   └── sub_writing_agent/      # 子写作智能体目录
-│   │       ├── writing_director_agent.py    # 写作主管智能体
-│   │       ├── parallel_writing_node.py     # 并行写作节点
-│   │       ├── writing_agent.py             # 章节写作智能体
-│   │       ├── retrieval_agent.py           # 检索增强智能体
-│   │       ├── review_agent.py              # 质量审查智能体
-│   │       ├── writing_chatGroup.py         # 写作协作组
-│   │       └── writing_state_models.py       # 写作状态模型
-│   │
-│   ├── core/               # 核心模块
-│   │   ├── config.py        # 配置管理
-│   │   ├── model_client.py  # 模型客户端
-│   │   ├── models.yaml      # 模型配置
-│   │   ├── prompts.py       # 提示词模板
-│   │   └── state_models.py  # 状态模型定义
-│   │
-│   ├── services/           # 服务层
-│   │   ├── arxiv_client.py           # arXiv API客户端
-│   │   ├── arxiv_fetcher.py          # arXiv论文获取器
-│   │   ├── chroma_client.py          # Chroma向量数据库客户端
-│   │   └── retrieval_tool.py         # 检索工具
-│   │
-│   ├── tasks/              # 任务模块
-│   │   ├── deduplicator.py      # 论文去重（暂不支持，待完善）
-│   │   ├── paper_downloader.py  # 论文下载（暂不支持，待完善）
-│   │   ├── paper_filter.py      # 论文过滤（暂不支持，待完善）
-│   │   ├── paper_search.py      # 论文搜索
-│   │   └── papers/              # 论文存储目录（暂不支持，待完善）
-│   │
-│   └── utils/              # 工具函数
-│       └── log_utils.py    # 日志工具
-│
-├── test/                   # 测试目录
-│   ├── test_analyseAgent.py    # 分析智能体测试
-│   ├── test_readingAgent.py    # 阅读智能体测试
-│   ├── test_searchAgent.py     # 搜索智能体测试
-│   ├── test_writingAgent.py    # 写作智能体测试
-│   └── test_workflow.py        # 工作流测试
-│
-├── web/                    # 前端目录
-│   ├── index.html          # 前端入口页面
-│   ├── package.json        # 前端依赖配置
-│   ├── src/                # 前端源代码
-│   └── vite.config.js      # Vite配置
-│
-├── data/                   # 数据存储目录
-└── output/                 # 输出目录
-    └── log/                # 日志输出目录
+Paper-Agent/
+├── main.py                      # FastAPI：调研运行、SSE、路由挂载
+├── pyproject.toml               # Poetry 依赖（package-mode = false）
+├── design.md                    # 系统设计（主架构文档）
+├── docs/                        # 补充文档（refactor、面试题、本中文 README）
+├── src/
+│   ├── agents/                  # LangGraph 各节点、检索/阅读/写作/报告、规划、调研、审查
+│   ├── api/                     # reports 等 HTTP 模块
+│   ├── core/                    # config、models.yaml、system_params.yaml、状态、LLM 基础设施、恢复策略
+│   ├── knowledge/               # 知识库工厂、Chroma 实现、索引、路由
+│   ├── rag/                     # LlamaIndex RAG（检索器、重排、入库等）
+│   ├── services/                # arXiv、Chroma、运行临时态、报告历史等
+│   ├── domain/                  # 论文领域：过滤、证据、忠实度、引用
+│   ├── evaluation/              # 运行后评估与 LangSmith 辅助
+│   ├── plugins/                 # OCR、护栏等可选路径
+│   ├── tasks/                   # 论文检索任务辅助
+│   └── utils/                   # 日志、限流、工具函数
+├── web/                         # Vue 3 + Vite 5（将 /api、/knowledge 代理到 :8001）
+├── test/                        # pytest（工作流、RAG、规划、忠实度等）
+├── data/                        # 运行时 KB / Chroma 路径（见 system_params 中 SAVE_DIR）
+└── output/log/                  # 常见日志目录（见 logging 配置）
 ```
 
-## 🚀 快速开始
+## 快速开始
 
-1. **环境准备**
-   - Python 3.12+
-   - 项目使用poetry 管理虚拟环境
-   - 安装依赖：`poetry install`
-
-2. **配置环境**
-   - 复制 `.env.example` 为 `.env` 并填写您的API密钥
-   - 修改 `models.yaml` 中的参数
-
-3. **运行系统**
-   ```bash
-   poetry run python main.py
-   ```
-
-4. **Web界面**
-   ```bash
-   cd web && npm install && npm run dev
-   ```
-   - 访问 http://localhost:5173 使用Web界面
-
+1. **环境**：Python **3.12**（上限见 `pyproject.toml`）、[Poetry](https://python-poetry.org/)、前端需 Node.js。
+2. **安装后端**：`poetry install`
+3. **配置**：
+  - 将 `**[.env.example](../.env.example)`** 复制为 `**.env**`，至少配置一家 LLM 服务商密钥（如 `SILICONFLOW_API_KEY`，其余见 `[../src/core/models.yaml](../src/core/models.yaml)` 与 `.env.example` 注释）。
+  - 按需修改 `**[../src/core/models.yaml](../src/core/models.yaml)**`（厂商、`llm-routing`、各 client 类型模型）。
+  - 按需修改 `**[../src/core/system_params.yaml](../src/core/system_params.yaml)**`（RAG 后端、并发、限流、日志路径等）。
+4. **启动 API**：`poetry run python main.py` → **[http://0.0.0.0:8001](http://0.0.0.0:8001)**
+5. **启动前端**（另一终端）：`cd web && npm install && npm run dev` → **[http://localhost:5173](http://localhost:5173)**（Vite 将 `/api`、`/knowledge` 代理到 8001）。
 
 ## 配置说明
 
-### 环境变量配置
+- **环境变量（`.env`）**：API 密钥、可选 `DEFAULT_LLM_PROVIDER`、LangSmith（`LANGCHAIN_API_KEY` / `LANGSMITH_*`）、`RAG_BACKEND`、DashScope / 火山等。变量名以 `**[.env.example](../.env.example)`** 为准。
+- `**src/core/models.yaml**`：厂商注册、嵌入模型、各模块客户端、**llm-routing** 与限流桶名。
+- `**src/core/system_params.yaml`**：路径（`SAVE_DIR`）、`KB_TYPE`、**rag** 段（LlamaIndex 开关、HyDE、重排、分块）、并发、日志、恢复相关默认项。
 
-在 `.env` 文件中设置API密钥和相关配置：
-
-```env
-# 模型提供商API密钥
-OPENAI_API_KEY=your_openai_api_key
-# 或其他提供商的API密钥
-```
-
-### 模型配置
-
-系统配置文件位于 `models.yaml`，可根据需求调整以下参数：
-
-**可选模型提供商**
-- OpenAI
-- 其他兼容的LLM提供商
-
-**项目默认使用的模型和嵌入模型配置**
-- 默认LLM模型
-- 默认嵌入模型
-- 模型参数（temperature、max_tokens等）
-
-**项目模块具体使用的模型和嵌入模型配置（可选）**
-- search_agent：搜索专用模型
-- reading_agent：阅读专用模型
-- analyse_agent：分析专用模型
-- writing_agent：写作专用模型
-- report_agent：报告生成专用模型
-- 各模块的嵌入模型配置
-
-**各个模型提供商的API密钥和基础URL**
-- API密钥配置
-- 基础URL配置
-- 其他连接参数
-
-### 配置示例
-
-```yaml
-# models.yaml 示例
-default:
-  model-provider: "openai"
-  model: "gpt-4"
-  embedding-model: "text-embedding-3-large"
-  embedding-dimension: 1024
-
-modules:
-  search_agent:
-    model-provider: "openai"
-    model: "gpt-3.5-turbo"
-  reading_agent:
-    model-provider: "openai"
-    model: "gpt-4"
-  analyse_agent:
-    model-provider: "openai"
-    model: "gpt-4"
-  writing_agent:
-    model-provider: "openai"
-    model: "gpt-4"
-  report_agent:
-    model-provider: "openai"
-    model: "gpt-4"
-
-openai:
-  api-key: ${OPENAI_API_KEY}
-  base-url: https://api.openai.com/v1
-```
+请勿将真实密钥提交到 Git；`.env` 已被忽略。
 
 ## 技术栈
 
-### 后端
-- **编程语言**: Python 3.12+
-- **智能体框架**: 
-  - AutoGen：多智能体协作框架
-  - LangGraph：工作流编排框架
-- **Web框架**: FastAPI, Uvicorn
-- **实时通信**: SSE (Server-Sent Events)
-- **向量数据库**: ChromaDB
-- **数据处理**: pyyaml, python-dotenv, tenacity
-- **机器学习**: 
-  - scikit-learn：KMeans 聚类、肘部法则
-  - numpy：向量计算
-- **论文检索**: arXiv API
-- **网络请求**: requests, aiohttp
-- **包管理**: Poetry
-- **日志系统**: Python标准库logging模块 (自定义配置)
 
-### 前端
-- **框架**: Vue.js 3.4+
-- **构建工具**: Vite 5.0+
-- **开发工具**: @vitejs/plugin-vue
+| 层次       | 技术                                                                                   |
+| -------- | ------------------------------------------------------------------------------------ |
+| 运行时      | Python 3.12、Poetry                                                                   |
+| API      | FastAPI、Uvicorn、sse-starlette                                                        |
+| 编排       | LangGraph、LangSmith（可选追踪/评估）                                                         |
+| 智能体      | pyautogen、autogen-agentchat、autogen-ext                                              |
+| LLM 调用   | LangChain 对话集成（`langchain-openai`、`langchain-community`），厂商路由在仓库内实现                  |
+| 检索与 RAG  | arXiv、ChromaDB、**LlamaIndex**（`llama-index-*`）                                       |
+| NLP / ML | scikit-learn（KMeans、肘部法则）、pandas、sentence-transformers（可选 extra `rag-cross-encoder`） |
+| 文档       | PyMuPDF、python-docx、markdownify、beautifulsoup4                                       |
+| 前端       | Vue 3.4、Vue Router 4、Vite 5、axios、marked                                             |
 
-## 贡献指南
 
-我们欢迎各种形式的贡献，包括但不限于：
+## 参与贡献
 
-1. 提交issue报告bug或建议新功能
-2. 提交pull request改进代码
-3. 完善文档
-
-请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多细节。
+欢迎通过 Issue 与 Pull Request 贡献代码。请勿提交密钥；较大行为变更请与 `**design.md`** 或 `**docs/refactor/**` 中的设计叙述保持一致，便于评审。
 
 ## 许可证
 
-本项目采用MIT许可证，详情参见 [LICENSE](LICENSE) 文件。
+MIT — 见 [LICENSE](../LICENSE)。
 
 ## 联系方式
 
-如有任何问题或建议，请通过以下方式反馈：
-- **GitHub Issues**：请在项目仓库中提交Issue，这是最推荐的问题反馈方式
-- 项目主页：https://github.com/Tswoen/paper-agent
+- **GitHub Issues**：报告缺陷与功能建议的首选渠道  
+- 项目主页：[https://github.com/Tswoen/paper-agent](https://github.com/Tswoen/paper-agent)
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给我们点个星支持一下！
-
+⭐ 若本项目对你有帮助，欢迎在仓库上点 Star 以便他人发现。
 
 ## Star 历史
 
-[![Star History Chart](https://api.star-history.com/image?repos=Tswoen/Paper-Agent&type=date&legend=top-left)](https://www.star-history.com/?repos=Tswoen%2FPaper-Agent&type=date&logscale=&legend=top-left)
+[Star History Chart](https://www.star-history.com/?repos=Tswoen%2FPaper-Agent&type=date&logscale=&legend=top-left)

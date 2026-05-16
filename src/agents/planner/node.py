@@ -11,6 +11,7 @@ from langgraph.runtime import Runtime
 
 from src.agents.planner.defaults import default_research_plan
 from src.agents.planner.models import ResearchPlan
+from src.agents.planner.plan_normalization import normalize_plan_dict
 from src.core.config import config
 from src.core.model_client import chat_completion_text, create_default_client
 from src.core.state_models import PaperAgentState, PaperRunContext, State
@@ -95,7 +96,8 @@ async def planner_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                 except Exception:  # noqa: BLE001
                     logger.debug("planner client close 忽略", exc_info=True)
 
-        plan = ResearchPlan.model_validate(_extract_json_object(raw_text))
+        raw_obj = _extract_json_object(raw_text)
+        plan = ResearchPlan.model_validate(normalize_plan_dict(raw_obj, brief))
         if not plan.search_tasks:
             plan.search_tasks = default_research_plan(brief, bg).search_tasks
         if not plan.reading_tasks:
@@ -118,7 +120,7 @@ async def planner_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             enabled=enable_trace,
         )
     except Exception as e:  # noqa: BLE001
-        logger.exception("[planner_node] 失败，使用默认 ResearchPlan")
+        logger.warning("[planner_node] 失败，使用默认 ResearchPlan: %s", e)
         append_workflow_error(val, {"node": node, "error": f"{type(e).__name__}: {e}"})
         val.plan = default_research_plan(brief, bg)
         append_trace_event(

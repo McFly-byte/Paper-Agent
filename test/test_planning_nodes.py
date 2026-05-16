@@ -50,6 +50,30 @@ def test_default_research_plan_nonempty_tasks():
     assert plan.writing_tasks
 
 
+def test_normalize_plan_dict_llm_shape():
+    """LLM 常见偏差：缺 title、criteria 为字符串、reading 用 description、analysis 用 task_id。"""
+    from src.agents.planner.plan_normalization import normalize_plan_dict
+
+    brief = ResearchBrief(original_query="u", clarified_topic="主题A")
+    raw = {
+        "thought": "计划说明第一行作为标题回退",
+        "search_tasks": [
+            {"query": "q1", "inclusion_criteria": "准则一段", "exclusion_criteria": "排除一段"},
+        ],
+        "reading_tasks": [{"task_id": "r1", "description": "阅读重点描述"}],
+        "analysis_tasks": [{"task_id": "a1", "description": "分析说明"}],
+        "writing_tasks": [{"section_title": "引言", "section_goal": "定义问题"}],
+        "evaluation_criteria": "单条标准",
+    }
+    plan = ResearchPlan.model_validate(normalize_plan_dict(raw, brief))
+    assert plan.title
+    assert plan.search_tasks[0].inclusion_criteria == ["准则一段"]
+    assert "阅读重点" in plan.reading_tasks[0].focus
+    assert plan.analysis_tasks[0].name
+    assert plan.analysis_tasks[0].analysis_type == "clustering"
+    assert plan.evaluation_criteria == ["单条标准"]
+
+
 def test_plan_review_no_plan_does_not_crash():
     import asyncio
 

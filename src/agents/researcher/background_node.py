@@ -22,8 +22,11 @@ logger = setup_logger(__name__)
 _bg_client = create_default_client()
 _background_system = (
     "你是学术文献调研中的背景调查助手。基于给定的 ResearchBrief（JSON），"
-    "输出 BackgroundContext JSON：expanded_keywords、related_terms、initial_findings（短句列表）、"
-    "suggested_search_queries（适合 arXiv 的英文关键词或短语，勿包含中文）、notes。"
+    "输出 BackgroundContext JSON，字段必须齐全：\n"
+    "- `topic`（字符串，与 Brief 主题一致或为其精炼一句）；\n"
+    "- `expanded_keywords`、`related_terms`、`initial_findings`、`suggested_search_queries` 均为字符串数组；\n"
+    "- `suggested_search_queries` 适合 arXiv 的英文关键词或短语，勿包含中文；\n"
+    "- `notes` 为**单个字符串**或 null（勿用字符串数组代替 notes；多条说明请合并为一个字符串，用换行分隔）。\n"
     "不要检索网络；不要列出具体论文标题；不要编造实验结果。"
 )
 
@@ -31,7 +34,6 @@ background_agent = AssistantAgent(
     name="background_investigation_agent",
     model_client=_bg_client,
     system_message=_background_system,
-    output_content_type=BackgroundContext,
 )
 
 
@@ -74,6 +76,32 @@ def _extract_json_object(text: str) -> dict:
     if not m:
         raise ValueError("响应中未找到 JSON 对象")
     return json.loads(m.group(0))
+
+
+def _normalize_background_dict(data: dict, brief: ResearchBrief) -> dict:
+    """补齐 / 纠正 LLM 常见格式偏差，再交给 BackgroundContext 校验。"""
+    d = dict(data or {})
+    topic_src = (brief.clarified_topic or brief.original_query or "").strip()
+    if not (d.get("topic") or "").strip():
+        d["topic"] = topic_src or "未命名主题"
+
+    notes = d.get("notes")
+    if isinstance(notes, list):
+        d["notes"] = "\n".join(str(x).strip() for x in notes if str(x).strip()) or None
+    elif notes is not None and not isinstance(notes, str):
+        d["notes"] = str(notes)
+
+    for key in ("expanded_keywords", "related_terms", "initial_findings", "suggested_search_queries"):
+        v = d.get(key)
+        if v is None:
+            d[key] = []
+        elif isinstance(v, str):
+            d[key] = [v] if v.strip() else []
+        elif isinstance(v, list):
+            d[key] = [str(x) for x in v if str(x).strip()]
+        else:
+            d[key] = []
+    return d
 
 
 async def background_investigation_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
@@ -130,7 +158,9 @@ async def background_investigation_node(state: State, runtime: Runtime[PaperRunC
         if isinstance(raw, BackgroundContext):
             val.background_context = raw
         else:
-            val.background_context = BackgroundContext.model_validate(_extract_json_object(str(raw)))
+            val.background_context = BackgroundContext.model_validate(
+                _normalize_background_dict(_extract_json_object(str(raw)), brief)
+            )
         append_trace_event(
             val,
             TraceEvent(
@@ -144,7 +174,7 @@ async def background_investigation_node(state: State, runtime: Runtime[PaperRunC
             enabled=enable_trace,
         )
     except Exception as e:  # noqa: BLE001
-        logger.exception("[background_investigation_node] 失败，规则回退")
+        logger.warning("[background_investigation_node] 失败，规则回退: %s", e)
         append_workflow_error(val, {"node": node, "error": f"{type(e).__name__}: {e}"})
         val.background_context = _rule_based_background(brief)
         append_trace_event(
