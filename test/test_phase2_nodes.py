@@ -2,36 +2,13 @@
 
 from __future__ import annotations
 
-import sys
-import types
-from unittest.mock import MagicMock
-
-
-def _install_langchain_import_stubs() -> None:
-    """最小环境可能未装全量 langchain 依赖，避免收集用例时加载索引链失败。"""
-    m_lcts = MagicMock()
-    m_lcts.RecursiveCharacterTextSplitter = MagicMock
-    sys.modules.setdefault("langchain_text_splitters", m_lcts)
-
-    m_lcdl = MagicMock()
-    for name in (
-        "CSVLoader",
-        "JSONLoader",
-        "PyPDFLoader",
-        "TextLoader",
-        "UnstructuredHTMLLoader",
-        "UnstructuredMarkdownLoader",
-        "UnstructuredWordDocumentLoader",
-    ):
-        setattr(m_lcdl, name, MagicMock)
-    sys.modules.setdefault("langchain_community.document_loaders", m_lcdl)
-    sys.modules.setdefault("langchain_community", types.ModuleType("langchain_community"))
-
-
-_install_langchain_import_stubs()
-
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from test.helpers.import_stubs import install_minimal_langchain_document_loader_stubs
+
+
+install_minimal_langchain_document_loader_stubs()
 
 from src.agents.researcher.evidence_index_node import evidence_index_node
 from src.agents.researcher.paper_filter_node import paper_filter_node

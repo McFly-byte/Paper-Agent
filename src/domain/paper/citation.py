@@ -23,6 +23,68 @@ class CitationRef(BaseModel):
     inline_marker: str = Field(default="", description="如 [C1]")
 
 
+def _infer_source(it: EvidenceItem) -> tuple[str | None, str | None]:
+    pid = (it.paper_id or "").lower()
+    if "arxiv" in pid or pid.startswith("cs.") or re.search(r"\d{4}\.\d{4,5}", pid):
+        return "arXiv", "arxiv"
+    return None, None
+
+
+def _merge_paper_level_fields(rep: EvidenceItem, meta: dict[str, Any] | None) -> tuple[str, list[str], int | None, str | None, str | None, str | None]:
+    """合并 EvidenceItem 与外部论文元数据（不编造缺失字段）。"""
+    meta = meta or {}
+    raw = meta.get("raw") if isinstance(meta.get("raw"), dict) else {}
+
+    title = (meta.get("title") or rep.title or "").strip() or "Untitled"
+
+    authors: list[str]
+    if isinstance(meta.get("authors"), list) and meta["authors"]:
+        authors = [str(a) for a in meta["authors"]]
+    else:
+        authors = list(rep.authors or [])
+
+    year: int | None = None
+    if meta.get("year") is not None:
+        try:
+            year = int(meta["year"])
+        except (TypeError, ValueError):
+            year = rep.year
+    else:
+        year = rep.year
+
+    url = (
+        meta.get("url")
+        or meta.get("pdf_url")
+        or raw.get("url")
+        or raw.get("pdf_url")
+        or getattr(rep, "url", None)
+        or getattr(rep, "pdf_url", None)
+    )
+    if isinstance(url, str):
+        url = url.strip() or None
+    else:
+        url = None
+
+    source = meta.get("source") or raw.get("source") or getattr(rep, "source", None)
+    if isinstance(source, str):
+        source = source.strip() or None
+    else:
+        source = None
+
+    source_label = meta.get("source_label") or raw.get("source_label") or getattr(rep, "source_label", None)
+    if isinstance(source_label, str):
+        source_label = source_label.strip() or None
+    else:
+        source_label = None
+
+    if not source_label and not source:
+        sl, s = _infer_source(rep)
+        source_label = source_label or sl
+        source = source or s
+
+    return title, authors, year, url, source, source_label
+
+
 class CitationMap(BaseModel):
     refs: list[CitationRef] = Field(default_factory=list)
     evidence_id_to_citation_id: dict[str, str] = Field(default_factory=dict)
@@ -30,8 +92,19 @@ class CitationMap(BaseModel):
     @classmethod
     def from_evidence_ledger(cls, ledger: EvidenceLedger) -> CitationMap:
         """按 paper_id 聚合：同一论文共享一个 citation_id；保留 evidence_id → citation 映射。"""
+        return cls.from_evidence_ledger_with_metadata(ledger, None)
+
+    @classmethod
+    def from_evidence_ledger_with_metadata(
+        cls,
+        ledger: EvidenceLedger,
+        paper_metadata_by_id: dict[str, dict[str, Any]] | None = None,
+    ) -> CitationMap:
+        """在 ``from_evidence_ledger`` 基础上合并 ``paper_id → 元数据``（优先 metadata，再 EvidenceItem）。"""
         if not ledger.items:
             return cls(refs=[], evidence_id_to_citation_id={})
+
+        meta_by_id = paper_metadata_by_id or {}
 
         paper_order: list[str] = []
         seen_paper: set[str] = set()
@@ -41,13 +114,11 @@ class CitationMap(BaseModel):
                 seen_paper.add(pid)
                 paper_order.append(pid)
 
-        paper_to_cid: dict[str, str] = {}
         ev_map: dict[str, str] = {}
         refs: list[CitationRef] = []
 
         for i, pid in enumerate(paper_order, start=1):
             cid = f"C{i}"
-            paper_to_cid[pid] = cid
             rep: EvidenceItem | None = None
             for it in ledger.items:
                 p = (it.paper_id or "").strip() or "_unknown"
@@ -61,18 +132,20 @@ class CitationMap(BaseModel):
                 if p == pid:
                     ev_map[it.evidence_id] = cid
 
-            src_lbl, src = _infer_source(rep)
+            pm = meta_by_id.get(pid) or meta_by_id.get(rep.paper_id) or {}
+            title, authors, year, url, source, source_label = _merge_paper_level_fields(rep, pm if isinstance(pm, dict) else {})
+
             refs.append(
                 CitationRef(
                     citation_id=cid,
                     evidence_id=rep.evidence_id,
                     paper_id=rep.paper_id,
-                    title=rep.title or "Untitled",
-                    authors=list(rep.authors or []),
-                    year=rep.year,
-                    url=None,
-                    source=src,
-                    source_label=src_lbl,
+                    title=title,
+                    authors=authors,
+                    year=year,
+                    url=url,
+                    source=source,
+                    source_label=source_label,
                     inline_marker=f"[{cid}]",
                 )
             )
@@ -116,10 +189,3 @@ class CitationMap(BaseModel):
 
     def to_jsonable(self) -> dict[str, Any]:
         return self.model_dump(mode="json")
-
-
-def _infer_source(it: EvidenceItem) -> tuple[str | None, str | None]:
-    pid = (it.paper_id or "").lower()
-    if "arxiv" in pid or pid.startswith("cs.") or re.search(r"\d{4}\.\d{4,5}", pid):
-        return "arXiv", "arxiv"
-    return None, None

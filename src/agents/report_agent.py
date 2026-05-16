@@ -11,15 +11,27 @@ from autogen_agentchat.base import TaskResult
 
 from src.core.model_client import create_report_model_client
 from src.services.report_history_store import append_completed
-from src.services.run_tmp_state_store import get_json, KEY_WRITTED_SECTIONS, KEY_CITATION_MAP, KEY_FAITHFULNESS_REVIEW
+from src.services.run_tmp_state_store import (
+    get_json,
+    KEY_WRITTED_SECTIONS,
+    KEY_CITATION_MAP,
+    KEY_FAITHFULNESS_REVIEW,
+    KEY_REPORT_CITATION_VALIDATION,
+    put_json,
+)
 from src.core.config import config
 from src.domain.paper.citation import CitationMap
+from src.domain.paper.report_citation_validation import (
+    references_heading_present,
+    validate_report_citations,
+)
 from src.core.node_gates import gate_report, record_gate
 from src.core.workflow_recovery import (
     clear_recovery_feedback_for,
     format_recovery_user_block,
     set_recovery_target,
 )
+from src.runtime.trace_utils import append_workflow_error
 
 logger = setup_logger(__name__)
 
@@ -94,22 +106,33 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                     continue
                 await state_queue.put(BackToFrontData(step=ExecutionState.REPORTING,state=state,data=chunk.content))
 
-        # Phase 3：在门禁前拼接 References（不由 LLM 生成正文引用列表）
-        md = str(getattr(current_state, "report_markdown", "") or "").strip()
+        md_llm = str(getattr(current_state, "report_markdown", "") or "").strip()
+        current_state.config = dict(current_state.config or {})
+        current_state.config["report_before_reference_append_len"] = len(md_llm)
+        md = md_llm
+
         cmap_dict = current_state.citation_map if isinstance(current_state.citation_map, dict) else None
         if not cmap_dict or not cmap_dict.get("refs"):
             loaded_cm = await get_json(current_state, KEY_CITATION_MAP)
             if isinstance(loaded_cm, dict):
                 cmap_dict = loaded_cm
+
         if cmap_dict and cmap_dict.get("refs"):
             try:
                 cmap = CitationMap.model_validate(cmap_dict)
                 ref_block = cmap.to_markdown_references().strip()
-                if ref_block and "## References" not in md:
-                    md = md.rstrip() + "\n\n## References\n\n" + ref_block + "\n"
-                    current_state.report_markdown = md
+                if ref_block:
+                    if not references_heading_present(md):
+                        md = md.rstrip() + "\n\n## References\n\n" + ref_block + "\n"
+                    else:
+                        md = md.rstrip() + "\n\n## References (Generated)\n\n" + ref_block + "\n"
+                        current_state.config["report_references_heading_collision"] = True
+                current_state.report_markdown = md
             except Exception as exc:  # noqa: BLE001
-                logger.warning("[工作流·报告] CitationMap 解析失败，跳过 References 拼接: %s", exc)
+                logger.warning("[工作流·报告] CitationMap 解析或 References 拼接失败: %s", exc)
+                current_state.report_markdown = md
+        else:
+            current_state.report_markdown = md
 
         if config.get_bool("workflow_v2.enable_report_faithfulness_appendix", False):
             fr = current_state.faithfulness_review if isinstance(current_state.faithfulness_review, dict) else None
@@ -124,6 +147,61 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                 )
                 current_state.report_markdown = (current_state.report_markdown or "").rstrip() + app
 
+        md_final = str(current_state.report_markdown or "").strip()
+        current_state.report_markdown = md_final
+        cmap_for_val: CitationMap | None = None
+        if cmap_dict and cmap_dict.get("refs"):
+            try:
+                cmap_for_val = CitationMap.model_validate(cmap_dict)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[工作流·报告] CitationMap 校验前解析失败: %s", exc)
+        if cmap_for_val and cmap_for_val.refs:
+            val = validate_report_citations(
+                md_final,
+                cmap_for_val,
+                require_references_section=True,
+                allow_unused_references=True,
+            )
+            current_state.config["report_citation_validation"] = val.model_dump(mode="json")
+            try:
+                await put_json(current_state, KEY_REPORT_CITATION_VALIDATION, val.model_dump(mode="json"))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[工作流·报告] 写入 KEY_REPORT_CITATION_VALIDATION 失败: %s", exc)
+            await state_queue.put(
+                BackToFrontData(
+                    step=ExecutionState.REPORTING,
+                    state="citation_validated",
+                    data={
+                        "verdict": val.verdict,
+                        "citation_marker_count": val.citation_marker_count,
+                        "reference_count": val.reference_count,
+                        "unknown_markers": val.unknown_markers,
+                        "unused_references": val.unused_references[:10],
+                    },
+                ),
+            )
+            if val.verdict == "fail":
+                append_workflow_error(
+                    current_state,
+                    {
+                        "node": "report_node",
+                        "phase": "report_citation_validation",
+                        "verdict": val.verdict,
+                        "summary": val.summary,
+                        "unknown_markers": val.unknown_markers,
+                    },
+                )
+                if config.get_bool("workflow_v2.enable_strict_report_citation_validation", False):
+                    current_state.error.report_node_error = (val.summary or "report_citation_validation_fail")[:2000]
+                    set_recovery_target(current_state, "report")
+                    await state_queue.put(
+                        BackToFrontData(
+                            step=ExecutionState.REPORTING,
+                            state="error",
+                            data=(val.summary or "citation_validation_fail")[:800],
+                        ),
+                    )
+                    return {"value": current_state}
         kb_label = current_state.config.get("knowledge_base_label")
 
         repg = gate_report(

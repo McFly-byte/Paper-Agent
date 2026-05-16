@@ -238,3 +238,5 @@ workflow_v2:
   enable_strict_faithfulness_review: false
   enable_report_faithfulness_appendix: false
   faithfulness_long_section_chars: 500
+  # Phase 3.5：终稿引用校验（见 docs/refactor/MIGRATION_PLAN.md）
+  enable_strict_report_citation_validation: false

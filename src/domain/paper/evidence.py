@@ -31,6 +31,11 @@ class EvidenceItem(BaseModel):
     page_or_section: str | None = None
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     supports_argument: str | None = None
+    # 可选：索引/阅读阶段若已解析出链接，可写入以改善 CitationMap（不编造）
+    url: str | None = None
+    pdf_url: str | None = None
+    source: str | None = None
+    source_label: str | None = None
 
 
 class EvidenceLedger(BaseModel):

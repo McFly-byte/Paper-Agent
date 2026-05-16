@@ -66,3 +66,39 @@ def test_empty_ledger():
     cmap = CitationMap.from_evidence_ledger(EvidenceLedger(items=[]))
     assert cmap.refs == []
     assert cmap.get_marker("x") == ""
+
+
+def test_from_evidence_ledger_with_metadata_fills_url():
+    ledger = EvidenceLedger(
+        items=[
+            EvidenceItem(
+                evidence_id="e1",
+                paper_id="pid-1",
+                title="From Item",
+                authors=["X"],
+                year=2019,
+                section_type="method",
+                claim="Claim text is long enough for unit tests here.",
+                supports_argument="method",
+                confidence=0.5,
+            ),
+        ]
+    )
+    meta = {
+        "pid-1": {
+            "title": "From Meta",
+            "authors": ["A", "B"],
+            "year": 2020,
+            "url": "https://example.org/paper",
+            "source": "arxiv",
+            "source_label": "arXiv",
+        }
+    }
+    cmap = CitationMap.from_evidence_ledger_with_metadata(ledger, meta)
+    assert len(cmap.refs) == 1
+    r = cmap.refs[0]
+    assert r.title == "From Meta"
+    assert r.url == "https://example.org/paper"
+    assert r.year == 2020
+    md = cmap.to_markdown_references()
+    assert "https://example.org/paper" in md

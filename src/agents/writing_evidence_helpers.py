@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from typing import Any
 
 from src.core.config import config
@@ -14,7 +15,15 @@ from src.domain.paper.evidence_context import (
     build_global_evidence_context,
     build_section_evidence_context,
 )
-from src.services.run_tmp_state_store import get_json, put_json, KEY_CITATION_MAP, KEY_EVIDENCE_BOUND_SECTIONS, KEY_EVIDENCE_LEDGER
+from src.domain.paper.models import PaperCandidate
+from src.services.run_tmp_state_store import (
+    KEY_CITATION_MAP,
+    KEY_EVIDENCE_BOUND_SECTIONS,
+    KEY_EVIDENCE_LEDGER,
+    KEY_FILTERED_PAPERS,
+    get_json,
+    put_json,
+)
 from src.runtime.trace_utils import append_workflow_error
 from src.utils.log_utils import setup_logger
 
@@ -26,6 +35,79 @@ def _evidence_bound_enabled() -> bool:
     if raw is not None and str(raw).strip() != "":
         return str(raw).strip().lower() in ("1", "true", "yes")
     return config.get_bool("workflow_v2.enable_evidence_bound_writing", True)
+
+
+def _year_from_published(published: str | None, explicit: Any = None) -> int | None:
+    if explicit is not None:
+        try:
+            return int(explicit)
+        except (TypeError, ValueError):
+            pass
+    if not published:
+        return None
+    m = re.search(r"(19|20)\d{2}", str(published))
+    return int(m.group(0)) if m else None
+
+
+def _row_to_paper_meta(row: Any) -> tuple[str, dict[str, Any]]:
+    """从 PaperCandidate 或 dict 提取 paper_id 与可用于 CitationMap 的元数据。"""
+    if isinstance(row, PaperCandidate):
+        d = row.model_dump(mode="python")
+        raw = d.get("raw") if isinstance(d.get("raw"), dict) else {}
+        pid = str(d.get("paper_id") or "").strip()
+        pub = d.get("published")
+        meta: dict[str, Any] = {
+            "title": d.get("title"),
+            "authors": d.get("authors"),
+            "year": _year_from_published(pub, d.get("year")),
+            "url": d.get("url") or raw.get("url"),
+            "pdf_url": d.get("pdf_url") or raw.get("pdf_url"),
+            "source": d.get("source") or raw.get("source"),
+            "source_label": raw.get("source_label") or d.get("source_label"),
+            "raw": raw,
+        }
+        return pid, {k: v for k, v in meta.items() if v not in (None, "", [])}
+
+    if isinstance(row, dict):
+        raw = row.get("raw") if isinstance(row.get("raw"), dict) else {}
+        pid = str(row.get("paper_id") or "").strip()
+        pub = row.get("published")
+        meta = {
+            "title": row.get("title"),
+            "authors": row.get("authors"),
+            "year": _year_from_published(pub, row.get("year")),
+            "url": row.get("url") or raw.get("url"),
+            "pdf_url": row.get("pdf_url") or raw.get("pdf_url"),
+            "source": row.get("source") or raw.get("source"),
+            "source_label": row.get("source_label") or raw.get("source_label"),
+            "raw": raw,
+        }
+        return pid, {k: v for k, v in meta.items() if v not in (None, "", [])}
+
+    return "", {}
+
+
+async def _paper_metadata_by_id_from_state(state: PaperAgentState) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for row in state.filtered_papers or []:
+        pid, meta = _row_to_paper_meta(row)
+        if pid and meta:
+            out[pid] = {**out.get(pid, {}), **meta}
+    for row in state.paper_candidates or []:
+        pid, meta = _row_to_paper_meta(row)
+        if pid and meta:
+            out[pid] = {**out.get(pid, {}), **meta}
+    try:
+        loaded = await get_json(state, KEY_FILTERED_PAPERS)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("读取 KEY_FILTERED_PAPERS 失败（忽略）: %s", exc)
+        loaded = None
+    if isinstance(loaded, list):
+        for row in loaded:
+            pid, meta = _row_to_paper_meta(row)
+            if pid and meta:
+                out[pid] = {**out.get(pid, {}), **meta}
+    return out
 
 
 async def _load_ledger(state: PaperAgentState) -> EvidenceLedger | None:
@@ -57,7 +139,11 @@ async def prepare_evidence_bound_writing_bundle(state: PaperAgentState) -> dict[
     max_items = config.get_int("workflow_v2.evidence_context_max_items_per_section", 16)
     max_chars = config.get_int("workflow_v2.evidence_context_max_chars", 12000)
 
-    cmap = CitationMap.from_evidence_ledger(ledger)
+    meta_by_id = await _paper_metadata_by_id_from_state(state)
+    if meta_by_id:
+        cmap = CitationMap.from_evidence_ledger_with_metadata(ledger, meta_by_id)
+    else:
+        cmap = CitationMap.from_evidence_ledger(ledger)
     cmap_json = cmap.to_jsonable()
     state.citation_map = cmap_json  # type: ignore[assignment]
     try:
