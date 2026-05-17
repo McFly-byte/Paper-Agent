@@ -1,0 +1,17 @@
+{
+  "run_id": "00000000-0000-0000-0000-00000000sample",
+  "current_step": "completed",
+  "max_papers": 5,
+  "has_plan": true,
+  "search_result_count": 0,
+  "filtered_paper_count": 0,
+  "extracted_paper_count": 0,
+  "evidence_item_count": 0,
+  "citation_ref_count": 0,
+  "written_section_count": 0,
+  "report_length": 0,
+  "workflow_error_count": 0,
+  "boundary_check_keys": [],
+  "faithfulness_verdict": null,
+  "report_citation_verdict": null
+}

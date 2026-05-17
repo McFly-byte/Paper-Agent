@@ -9,10 +9,11 @@ search_agent_prompt = """
    - ("denoising diffusion" AND SR)
 3. 从用户中文需求中 **自行翻译** 为主题英文关键词与标准缩写（如 diffusion、super-resolution、GAN、Transformer）。
 4. 多角度给 2～4 条子式（宽窄搭配），每条单独字符串，**不要**在每条条目前加 all:（程序会自动加）。
-5. start_date、end_date 用 YYYY-MM-DD；若用户只说年份范围，按当年 01-01 与 12-31 填写。
+5. **每条子式尽量短（建议 ≤200 字符）**：避免巨型 OR 列表，否则 arXiv API 易返回 429。
+6. start_date、end_date 用 YYYY-MM-DD；若用户只说年份范围，按当年 01-01 与 12-31 填写。
 
 输出必须符合结构化模式（字段名固定）：querys, start_date, end_date。
-6. 【重要·兼容百炼/OpenAI JSON 模式】最终回复必须是合法 **json** 对象（仅上述三字段）；本条含关键字 json 以满足接口对 response_format=json_object 的校验。
+7. 【重要·兼容百炼/OpenAI JSON 模式】最终回复必须是合法 **json** 对象（仅上述三字段）；本条含关键字 json 以满足接口对 response_format=json_object 的校验。
 """
 
 

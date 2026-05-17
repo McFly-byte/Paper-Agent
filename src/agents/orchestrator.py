@@ -241,18 +241,23 @@ class PaperAgentOrchestrator:
         )
 
         logger.info("[工作流][run_id=%s] 进入 LangGraph，当前从检索节点启动…", run_id)
-        
-        # 执行 LangGraph 工作流 (已通过 config 启用 LangSmith tracing)
-        final_state = await self.graph.ainvoke(
-            {"value": initial_state},
-            context=PaperRunContext(state_queue=self.state_queue, user_proxy=user_proxy),
-            config={
-                "configurable": {"thread_id": run_id},
-                # LangSmith 会自动追踪此 run，包含所有子节点和 traceable 函数
-            },
-        )
 
-        current_value = final_state.get("value", initial_state)
+        current_value = initial_state
+        try:
+            # 执行 LangGraph 工作流 (已通过 config 启用 LangSmith tracing)
+            final_state = await self.graph.ainvoke(
+                {"value": initial_state},
+                context=PaperRunContext(state_queue=self.state_queue, user_proxy=user_proxy),
+                config={
+                    "configurable": {"thread_id": run_id},
+                    # LangSmith 会自动追踪此 run，包含所有子节点和 traceable 函数
+                },
+            )
+            current_value = final_state.get("value", initial_state)
+        finally:
+            from src.observability.run_audit import maybe_export_run_audit_after_run
+
+            await maybe_export_run_audit_after_run(self.state_queue, current_value)
         if getattr(current_value, "current_step", None) == ExecutionState.FAILED:
             logger.error(
                 "[工作流][run_id=%s] 已失败终止，跳过 LangSmith 评估。%s",

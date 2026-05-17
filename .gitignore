@@ -112,3 +112,7 @@ data/knowledge_base_data/chroma_data/kb_8f70a13918811436348933387ee5c158/uploads
 
 # 文档
 docs/
+
+# Run audit 本地导出（保留目录占位）
+artifacts/run_audits/*
+!artifacts/run_audits/.gitkeep

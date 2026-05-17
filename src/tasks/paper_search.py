@@ -3,9 +3,11 @@ import logging
 import threading
 import time
 import arxiv
+import requests
 from typing import List, Dict, Optional, Union, Tuple, Any
 from datetime import datetime, timedelta
 
+from src.core.config import config
 from src.utils.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -15,36 +17,59 @@ logger = setup_logger(__name__)
 # 多 run / 多标签页会创建多个 Client → 各实例互不感知 → 同一时刻多发请求 → 429。
 # 做法：在 requests.Session.get 外包一层，全进程共享「下一次允许发起请求」的时间戳；
 # 只在极短临界区里 sleep/改时间戳，**不**在持锁期间跑完整次检索或长退避（避免此前全局锁卡死）。
-_ARXIV_GLOBAL_MIN_INTERVAL = 3.6
 _arxiv_http_lock = threading.Lock()
 _arxiv_next_request_monotonic = 0.0
 
 
+def _arxiv_global_min_interval() -> float:
+    return float(config.get("paper_search.arxiv_global_min_interval", 4.5) or 4.5)
+
+
+def _arxiv_trust_env() -> bool:
+    return config.get_bool("paper_search.arxiv_trust_env", False)
+
+
+def _arxiv_client_inner_retries() -> int:
+    return int(config.get_int("paper_search.arxiv_client_inner_retries", 0))
+
+
+def _arxiv_retry_backoffs() -> Tuple[int, ...]:
+    raw = config.get("paper_search.arxiv_retry_backoff_seconds")
+    if isinstance(raw, list) and raw and all(isinstance(x, (int, float)) for x in raw):
+        return tuple(int(x) for x in raw)
+    return (20, 45, 90, 120)
+
+
+def _arxiv_simplify_on_retry() -> bool:
+    return config.get_bool("paper_search.arxiv_simplify_query_on_retry", True)
+
+
+def _arxiv_reduce_max_from_attempt() -> int:
+    return int(config.get_int("paper_search.arxiv_reduce_max_results_from_attempt", 2))
+
+
 def _install_arxiv_global_rate_limit(session: Any) -> None:
-    """对 arxiv 使用的 Session 打补丁：任意 Client、任意协程/线程，两次 GET 起始间隔 ≥ _ARXIV_GLOBAL_MIN_INTERVAL。"""
+    """对 arxiv 使用的 Session 打补丁：任意 Client、任意协程/线程，两次 GET 起始间隔可配置（默认 ≥4.5s）。"""
     if getattr(session, "_paper_agent_arxiv_gated", False):
         return
     raw_get = session.get
 
     def gated_get(url: str, **kwargs: Any):
         global _arxiv_next_request_monotonic
+        interval = max(2.0, _arxiv_global_min_interval())
         with _arxiv_http_lock:
             now = time.monotonic()
             wait = _arxiv_next_request_monotonic - now
             if wait > 0:
                 time.sleep(wait)
-            _arxiv_next_request_monotonic = time.monotonic() + _ARXIV_GLOBAL_MIN_INTERVAL
+            _arxiv_next_request_monotonic = time.monotonic() + interval
         return raw_get(url, **kwargs)
 
     session.get = gated_get  # type: ignore[method-assign]
     session._paper_agent_arxiv_gated = True
 
 
-# Client 内部 delay 关闭，避免与全局间隔叠加成「每页多等一倍」
 _ARXIV_CLIENT_DELAY_SECONDS = 0.0
-_ARXIV_CLIENT_RETRIES = 2
-# 全局节流下应极少 429；保留短退避作保险
-_ARXIV_RETRY_BACKOFF_SECS = (12, 30, 60)
 _ARXIV_REQUEST_TIMEOUT: Tuple[float, float] = (15.0, 180.0)
 _ARXIV_USER_AGENT = (
     "Paper-Agent/1.0 (compatible; +https://arxiv.org/help/api/tou; academic research tool)"
@@ -89,28 +114,105 @@ class PaperSearcher:
             search_query = f"({search_query}) AND {date_filter}"
         return search_query
 
-    def _fetch_with_retry_backoff(self, search: arxiv.Search, max_results: int) -> List[Dict]:
-        """执行检索；遇 HTTP 429/503 时当前检索长退避后整段重试（不持全局锁，避免拖死其它 run）。"""
-        page_size = max(1, min(50, max_results))
-        n_backoffs = len(_ARXIV_RETRY_BACKOFF_SECS)
+    @staticmethod
+    def _simplify_querys_for_retry(querys: List[str], attempt: int) -> List[str]:
+        """重试时缩短布尔式，降低 arXiv 对超长 query 的 429 概率。"""
+        if attempt <= 0 or not querys:
+            return list(querys)
+        cleaned = [(q or "").strip() for q in querys if (q or "").strip()]
+        if not cleaned:
+            return list(querys)
+        if len(cleaned) == 1:
+            q0 = cleaned[0]
+            if attempt == 1 and len(q0) > 240:
+                return [q0[:240].rstrip()]
+            if attempt >= 2 and len(q0) > 120:
+                return [q0[:120].rstrip()]
+            return [q0]
+        shortest = min(cleaned, key=len)
+        if attempt == 1:
+            return [shortest]
+        s = shortest.strip()
+        if len(s) > 160:
+            s = s[:160].rstrip()
+        return [s] if s else cleaned[:1]
+
+    def _arxiv_retryable(self, exc: BaseException) -> bool:
+        if isinstance(exc, arxiv.HTTPError):
+            return getattr(exc, "status", None) in (429, 503)
+        if isinstance(
+            exc,
+            (
+                requests.exceptions.ProxyError,
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError,
+            ),
+        ):
+            return True
+        return False
+
+    def _fetch_with_retry_backoff(
+        self,
+        querys: List[str],
+        start_date: Optional[Union[str, datetime]],
+        end_date: Optional[Union[str, datetime]],
+        max_results: int,
+        sort_by: arxiv.SortCriterion,
+        sort_order: arxiv.SortOrder,
+    ) -> List[Dict]:
+        """执行检索；遇 HTTP 429/503 或代理/连接类错误时退避后重试，并可逐步简化子查询。"""
+        backoffs = _arxiv_retry_backoffs()
+        n_backoffs = len(backoffs)
+        simplify = _arxiv_simplify_on_retry()
+        reduce_from = _arxiv_reduce_max_from_attempt()
+
         for attempt in range(n_backoffs + 1):
+            q_use = self._simplify_querys_for_retry(querys, attempt) if simplify else list(querys)
+            if not q_use:
+                q_use = list(querys)
+            mr = max_results
+            if reduce_from > 0 and attempt >= reduce_from:
+                mr = max(5, min(max_results, 25))
+
+            search_query = self._build_arxiv_search_query(q_use, start_date, end_date)
+            if not search_query.strip():
+                logger.warning("论文搜索跳过：简化后 arXiv 查询为空")
+                return []
+
+            if attempt > 0:
+                logger.info(
+                    "arXiv 重试 attempt=%s：子式数=%s max_results=%s 查询长度=%s",
+                    attempt,
+                    len(q_use),
+                    mr,
+                    len(search_query),
+                )
+
+            page_size = max(1, min(50, mr))
             client = arxiv.Client(
                 page_size=page_size,
                 delay_seconds=_ARXIV_CLIENT_DELAY_SECONDS,
-                num_retries=_ARXIV_CLIENT_RETRIES,
+                num_retries=_arxiv_client_inner_retries(),
             )
             client._session.headers.update({"User-Agent": _ARXIV_USER_AGENT})
             client._session.timeout = _ARXIV_REQUEST_TIMEOUT
+            client._session.trust_env = _arxiv_trust_env()
             _install_arxiv_global_rate_limit(client._session)
+
             try:
+                search = arxiv.Search(
+                    query=search_query,
+                    max_results=mr,
+                    sort_by=sort_by,
+                    sort_order=sort_order,
+                )
                 return self.format_papers_list(client.results(search))
             except arxiv.HTTPError as e:
                 status = getattr(e, "status", None)
-                if status not in (429, 503):
+                if status not in (429, 503) or attempt >= n_backoffs:
                     raise
-                if attempt >= n_backoffs:
-                    raise
-                wait = _ARXIV_RETRY_BACKOFF_SECS[attempt]
+                wait = backoffs[attempt]
                 reason = "请求过频(429)" if status == 429 else "服务暂时不可用(503)"
                 logger.warning(
                     "arXiv 返回 HTTP %s（%s），等待 %s 秒后重试 (%s/%s)",
@@ -121,6 +223,21 @@ class PaperSearcher:
                     n_backoffs,
                 )
                 time.sleep(wait)
+            except Exception as e:  # noqa: BLE001
+                if not self._arxiv_retryable(e) or attempt >= n_backoffs:
+                    raise
+                wait = backoffs[attempt]
+                logger.warning(
+                    "arXiv 请求异常（%s: %s），等待 %s 秒后重试 (%s/%s)",
+                    type(e).__name__,
+                    str(e)[:500],
+                    wait,
+                    attempt + 1,
+                    n_backoffs,
+                )
+                time.sleep(wait)
+
+        raise RuntimeError("arXiv 检索：重试耗尽仍未返回结果")
 
     def _search_papers_sync(
         self,
@@ -136,28 +253,22 @@ class PaperSearcher:
             logger.warning("论文搜索跳过：querys 为空")
             return []
         try:
-            search_query = self._build_arxiv_search_query(querys, start_date, end_date)
-            if not search_query.strip():
+            preview = self._build_arxiv_search_query(querys, start_date, end_date)
+            if not preview.strip():
                 logger.warning("论文搜索跳过：拼接后的 arXiv 查询为空")
                 return []
 
-            logger.info(f"开始搜索论文: query='{search_query}', max_results={max_results}, sort_by={sort_by}")
+            logger.info(
+                "开始搜索论文: max_results=%s sort_by=%s 查询长度=%s",
+                max_results,
+                sort_by,
+                len(preview),
+            )
+            logger.info("论文搜索查询条件: %s", preview[:4000] + ("…" if len(preview) > 4000 else ""))
 
-
-            logger.info(f"论文搜索查询条件: {search_query}")
-
-            try:
-                search = arxiv.Search(
-                    query=search_query,
-                    max_results=max_results,
-                    sort_by=sort_by,
-                    sort_order=sort_order,
-                )
-            except Exception as e:
-                logger.error(f"创建arxiv搜索对象失败: {str(e)}")
-                return []
-
-            papers = self._fetch_with_retry_backoff(search, max_results)
+            papers = self._fetch_with_retry_backoff(
+                querys, start_date, end_date, max_results, sort_by, sort_order
+            )
 
             logger.info(f"论文搜索完成，共找到 {len(papers)} 篇论文")
             return papers

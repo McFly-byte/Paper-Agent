@@ -1,0 +1,15 @@
+{
+  "run_id": "00000000-0000-0000-0000-00000000sample",
+  "user_request": "(示例) 请将本目录替换为你本地脱敏后的真实 run 导出",
+  "created_at": "2026-05-16T00:00:00+00:00",
+  "workflow_version": "v2",
+  "artifacts": [
+    "manifest.json",
+    "state_summary.json"
+  ],
+  "summary": {
+    "run_id": "00000000-0000-0000-0000-00000000sample",
+    "current_step": "completed",
+    "note": "此为占位示例，完整审计包请从 artifacts/run_audits/<run_id>/ 复制而来"
+  }
+}

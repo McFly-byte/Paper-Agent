@@ -68,6 +68,21 @@ request:
   max_retries: 3
   retry_delay: 1
 
+# arXiv 检索（export.arxiv.org）：代理/429 与 ToU 友好默认
+paper_search:
+  # false：Session 不使用 HTTP(S)_PROXY 等环境代理（常见「坏代理」→ ProxyError；需走公司代理时再设 true）
+  arxiv_trust_env: false
+  # 全进程任意两次 arXiv GET 起始间隔（秒），略大于官方约 3s 建议
+  arxiv_global_min_interval: 4.5
+  # arxiv.Client 内部遇错立即重试次数；0 表示仅由本模块退避重试，避免与外层节流打架
+  arxiv_client_inner_retries: 0
+  # 遇 429/503/网络类错误时的整段重试退避（秒）
+  arxiv_retry_backoff_seconds: [20, 45, 90, 120]
+  # 重试时是否逐步缩短子查询（减轻超长布尔式触发的 429）
+  arxiv_simplify_query_on_retry: true
+  # 从第几次重试起降低 max_results（0=不降低）
+  arxiv_reduce_max_results_from_attempt: 2
+
 # 并发配置
 concurrency:
   max_workers: 4
@@ -240,3 +255,13 @@ workflow_v2:
   faithfulness_long_section_chars: 500
   # Phase 3.5：终稿引用校验（见 docs/refactor/MIGRATION_PLAN.md）
   enable_strict_report_citation_validation: false
+  # Phase 3.6：run 结束导出脱敏审计包（默认关闭；见 examples/run_audits/README.md）
+  enable_run_audit_dump: false
+  run_audit_dir: "artifacts/run_audits"
+  run_audit_include_full_report: true
+  run_audit_include_written_sections: true
+  run_audit_include_evidence_claims: true
+  run_audit_max_papers: 20
+  run_audit_max_evidence_items: 120
+  run_audit_max_text_chars: 4000
+  run_audit_redact_secrets: true

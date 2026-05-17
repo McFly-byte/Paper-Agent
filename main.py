@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.knowledge.knowledge_router import knowledge
 from src.api.reports_router import reports_router
+from src.api.audit_router import router as audit_router
 
 from src.core.state_models import BackToFrontData, ExecutionState
 
@@ -24,6 +25,7 @@ logger = setup_logger(name="main", log_file="project.log")
 app = FastAPI()
 app.include_router(knowledge)
 app.include_router(reports_router, prefix="/api")
+app.include_router(audit_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -90,6 +92,7 @@ def _sse_generator(queue: asyncio.Queue):
 
 class CreateResearchRunBody(BaseModel):
     query: str = Field(min_length=1)
+    max_papers: int = Field(default=50, ge=1, le=200)
     kb_label: str | None = None
     user_id: str | None = None
 
@@ -104,6 +107,7 @@ async def _run_research_workflow(
     state_queue: asyncio.Queue,
     user_proxy: WebUserProxyAgent,
     query: str,
+    max_papers: int = 50,
     knowledge_base_label: str | None = None,
     user_id: str | None = None,
 ) -> None:
@@ -116,6 +120,7 @@ async def _run_research_workflow(
             user_request=query,
             run_id=run_id,
             user_proxy=user_proxy,
+            max_papers=max_papers,
             knowledge_base_label=knowledge_base_label,
             user_id=user_id,
         )
@@ -145,6 +150,7 @@ async def create_research_run(body: CreateResearchRunBody):
             state_queue=rec.queue,
             user_proxy=rec.user_proxy,
             query=body.query,
+            max_papers=body.max_papers,
             knowledge_base_label=body.kb_label,
             user_id=body.user_id,
         )
