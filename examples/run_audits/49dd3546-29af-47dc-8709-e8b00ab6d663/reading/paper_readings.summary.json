@@ -1,0 +1,385 @@
+{
+  "count": 16,
+  "sample": [
+    {
+      "paper_id": "2506.23260v2",
+      "title": "From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows",
+      "authors": [
+        "Mohamed Amine Ferrag",
+        "Norbert Tihanyi",
+        "Djallel Hamouda",
+        "Leandros Maglaras",
+        "Abderrahmane Lakas",
+        "Merouane Debbah"
+      ],
+      "summary": "Autonomous AI agents powered by large language models (LLMs) with structured function-calling interfaces enable real-time data retrieval, computation, and multi-step orchestration. However, the rapid growth of plugins, connectors, and inter-agent protocols has outpaced security practices, leading to brittle integrations that rely on ad-hoc authentication, inconsistent schemas, and weak validation. This survey introduces a unified end-to-end threat model for LLM-agent ecosystems, covering host-to-tool and agent-to-agent communications. We systematically categorize more than thirty attack techniques spanning input manipulation, model compromise, system and privacy attacks, and protocol-level vulnerabilities. For each category, we provide a formal threat formulation defining attacker capabilities, objectives, and affected system layers. Representative examples include Prompt-to-SQL injections and the Toxic Agent Flow exploit in GitHub MCP servers. We analyze attack feasibility, review existing defenses, and discuss mitigation strategies such as dynamic trust management, cryptographic provenance tracking, and sandboxed agent interfaces. The framework is validated through expert review and cross-mapping with real-world incidents and public vulnerability repositories, including CVE and NIST NVD. Compared to prior surveys, this work presents the first integrated taxonomy bridging input-level exploits and protocol-layer vulnerabilities in LLM-agent ecosystems, offering actionable guidance for designing secure and resilient agentic AI systems.",
+      "published": 2025,
+      "published_date": "2025-06-29T14:32:32+00:00",
+      "url": "http://arxiv.org/abs/2506.23260v2",
+      "pdf_url": "https://arxiv.org/pdf/2506.23260v2",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "doi": "10.1016/j.icte.2025.12.001",
+      "abstract": "Autonomous AI agents powered by large language models (LLMs) with structured function-calling interfaces enable real-time data retrieval, computation, and multi-step orchestration. However, the rapid growth of plugins, connectors, and inter-agent protocols has outpaced security practices, leading to brittle integrations that rely on ad-hoc authentication, inconsistent schemas, and weak validation. This survey introduces a unified end-to-end threat model for LLM-agent ecosystems, covering host-to-tool and agent-to-agent communications. We systematically categorize more than thirty attack techniques spanning input manipulation, model compromise, system and privacy attacks, and protocol-level vulnerabilities. For each category, we provide a formal threat formulation defining attacker capabilities, objectives, and affected system layers. Representative examples include Prompt-to-SQL injections and the Toxic Agent Flow exploit in GitHub MCP servers. We analyze attack feasibility, review existing defenses, and discuss mitigation strategies such as dynamic trust management, cryptographic provenance tracking, and sandboxed agent interfaces. The framework is validated through expert review and cross-mapping with real-world incidents and public vulnerability repositories, including CVE and NIST NVD. Compared to prior surveys, this work presents the first integrated taxonomy bridging input-level exploits and protocol-layer vulnerabilities in LLM-agent ecosystems, offering actionable guidance for designing secure and resilient agentic AI systems."
+    },
+    {
+      "paper_id": "2601.10955v2",
+      "title": "Beyond Max Tokens: Stealthy Resource Amplification via Tool Calling Chains in LLM Agents",
+      "authors": [
+        "Kaiyu Zhou",
+        "Yongsen Zheng",
+        "Yicheng He",
+        "Meng Xue",
+        "Xueluan Gong",
+        "Yuji Wang",
+        "Xuanye Zhang",
+        "Kwok-Yan Lam"
+      ],
+      "summary": "The agent--tool interaction loop is a critical attack surface for modern Large Language Model (LLM) agents. Existing denial-of-service (DoS) attacks typically function at the user-prompt or retrieval-augmented generation (RAG) context layer and are inherently single-turn in nature. This limitation restricts cost amplification and diminishes stealth in goal-oriented workflows. To address these issues, we proposed a stealthy, multi-turn economic DoS attack at the tool layer under the Model Context Protocol (MCP). By simply editing text-visible fields and implementing a template-driven return policy, our malicious server preserves function signatures and the terminal benign payload while steering agents into prolonged, verbose tool-calling chains. We optimize these text-only edits with Monte Carlo Tree Search (MCTS) to maximize cost under a task-success constraint. Across six LLMs on ToolBench and BFCL benchmarks, our attack yields trajectories over 60K tokens, increases per-query cost by up to 658 times, raises energy by 100 to 560 times, and pushes GPU key-value (KV) cache occupancy to 35--74%. Standard prompt filters and output trajectory monitors seldom detect these attacks, highlighting the need for defenses that safeguard agentic processes rather than focusing solely on final outcomes. We will release the code soon.",
+      "published": 2026,
+      "published_date": "2026-01-16T02:47:45+00:00",
+      "url": "http://arxiv.org/abs/2601.10955v2",
+      "pdf_url": "https://arxiv.org/pdf/2601.10955v2",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "doi": null,
+      "abstract": "The agent--tool interaction loop is a critical attack surface for modern Large Language Model (LLM) agents. Existing denial-of-service (DoS) attacks typically function at the user-prompt or retrieval-augmented generation (RAG) context layer and are inherently single-turn in nature. This limitation restricts cost amplification and diminishes stealth in goal-oriented workflows. To address these issues, we proposed a stealthy, multi-turn economic DoS attack at the tool layer under the Model Context Protocol (MCP). By simply editing text-visible fields and implementing a template-driven return policy, our malicious server preserves function signatures and the terminal benign payload while steering agents into prolonged, verbose tool-calling chains. We optimize these text-only edits with Monte Carlo Tree Search (MCTS) to maximize cost under a task-success constraint. Across six LLMs on ToolBench and BFCL benchmarks, our attack yields trajectories over 60K tokens, increases per-query cost by up to 658 times, raises energy by 100 to 560 times, and pushes GPU key-value (KV) cache occupancy to 35--74%. Standard prompt filters and output trajectory monitors seldom detect these attacks, highlighting the need for defenses that safeguard agentic processes rather than focusing solely on final outcomes. We will release the code soon."
+    },
+    {
+      "paper_id": "2407.12784v1",
+      "title": "AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases",
+      "authors": [
+        "Zhaorun Chen",
+        "Zhen Xiang",
+        "Chaowei Xiao",
+        "Dawn Song",
+        "Bo Li"
+      ],
+      "summary": "LLM agents have demonstrated remarkable performance across various applications, primarily due to their advanced capabilities in reasoning, utilizing external knowledge and tools, calling APIs, and executing actions to interact with environments. Current agents typically utilize a memory module or a retrieval-augmented generation (RAG) mechanism, retrieving past knowledge and instances with similar embeddings from knowledge bases to inform task planning and execution. However, the reliance on unverified knowledge bases raises significant concerns about their safety and trustworthiness. To uncover such vulnerabilities, we propose a novel red teaming approach AgentPoison, the first backdoor attack targeting generic and RAG-based LLM agents by poisoning their long-term memory or RAG knowledge base. In particular, we form the trigger generation process as a constrained optimization to optimize backdoor triggers by mapping the triggered instances to a unique embedding space, so as to ensure that whenever a user instruction contains the optimized backdoor trigger, the malicious demonstrations are retrieved from the poisoned memory or knowledge base with high probability. In the meantime, benign instructions without the trigger will still maintain normal performance. Unlike conventional backdoor attacks, AgentPoison requires no additional model training or fine-tuning, and the optimized backdoor trigger exhibits superior transferability, in-context coherence, and stealthiness. Extensive experiments demonstrate AgentPoison's effectiveness in attacking three types of real-world LLM agents: RAG-based autonomous driving agent, knowledge-intensive QA agent, and healthcare EHRAgent. On each agent, AgentPoison achieves an average attack success rate higher than 80% with minimal impact on benign performance (less than 1%) with a poison rate less than 0.1%.",
+      "published": 2024,
+      "published_date": "2024-07-17T17:59:47+00:00",
+      "url": "http://arxiv.org/abs/2407.12784v1",
+      "pdf_url": "https://arxiv.org/pdf/2407.12784v1",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CR",
+        "cs.IR"
+      ],
+      "doi": null,
+      "abstract": "LLM agents have demonstrated remarkable performance across various applications, primarily due to their advanced capabilities in reasoning, utilizing external knowledge and tools, calling APIs, and executing actions to interact with environments. Current agents typically utilize a memory module or a retrieval-augmented generation (RAG) mechanism, retrieving past knowledge and instances with similar embeddings from knowledge bases to inform task planning and execution. However, the reliance on unverified knowledge bases raises significant concerns about their safety and trustworthiness. To uncover such vulnerabilities, we propose a novel red teaming approach AgentPoison, the first backdoor attack targeting generic and RAG-based LLM agents by poisoning their long-term memory or RAG knowledge base. In particular, we form the trigger generation process as a constrained optimization to optimize backdoor triggers by mapping the triggered instances to a unique embedding space, so as to ensure that whenever a user instruction contains the optimized backdoor trigger, the malicious demonstrations are retrieved from the poisoned memory or knowledge base with high probability. In the meantime, benign instructions without the trigger will still maintain normal performance. Unlike conventional backdoor attacks, AgentPoison requires no additional model training or fine-tuning, and the optimized backdoor trigger exhibits superior transferability, in-context coherence, and stealthiness. Extensive experiments demonstrate AgentPoison's effectiveness in attacking three types of real-world LLM agents: RAG-based autonomous driving agent, knowledge-intensive QA agent, and healthcare EHRAgent. On each agent, AgentPoison achieves an average attack success rate higher than 80% with minimal impact on benign performance (less than 1%) with a poison rate less than 0.1%."
+    },
+    {
+      "paper_id": "2601.02577v1",
+      "title": "Orchestral AI: A Framework for Agent Orchestration",
+      "authors": [
+        "Alexander Roman",
+        "Jacob Roman"
+      ],
+      "summary": "The rapid proliferation of LLM agent frameworks has forced developers to choose between vendor lock-in through provider-specific SDKs and complex multi-package ecosystems that obscure control flow and hinder reproducibility. Integrating tool calling across multiple LLM providers remains a core engineering challenge due to fragmented APIs, incompatible message formats, and inconsistent streaming and tool-calling behavior, making it difficult to build portable, reliable agent systems. We introduce Orchestral, a lightweight Python framework that provides a unified, type-safe interface for building LLM agents across major providers while preserving the simplicity required for scientific computing and production deployment. Orchestral defines a single universal representation for messages, tools, and LLM usage that operates seamlessly across providers, eliminating manual format translation and reducing framework-induced complexity. Automatic tool schema generation from Python type hints removes the need for handwritten descriptors while maintaining type safety across provider boundaries. A synchronous execution model with streaming support enables deterministic behavior, straightforward debugging, and real-time interaction without introducing server dependencies. The framework's modular architecture cleanly separates provider integration, tool execution, conversation orchestration, and user-facing interfaces, enabling extensibility without architectural entanglement. Orchestral supports advanced agent capabilities found in larger frameworks, including rich tool calling, context compaction, workspace sandboxing, user approval workflows, sub-agents, memory management, and MCP integration.",
+      "published": 2026,
+      "published_date": "2026-01-05T22:02:11+00:00",
+      "url": "http://arxiv.org/abs/2601.02577v1",
+      "pdf_url": "https://arxiv.org/pdf/2601.02577v1",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "astro-ph.IM",
+        "hep-ph"
+      ],
+      "doi": null,
+      "abstract": "The rapid proliferation of LLM agent frameworks has forced developers to choose between vendor lock-in through provider-specific SDKs and complex multi-package ecosystems that obscure control flow and hinder reproducibility. Integrating tool calling across multiple LLM providers remains a core engineering challenge due to fragmented APIs, incompatible message formats, and inconsistent streaming and tool-calling behavior, making it difficult to build portable, reliable agent systems. We introduce Orchestral, a lightweight Python framework that provides a unified, type-safe interface for building LLM agents across major providers while preserving the simplicity required for scientific computing and production deployment. Orchestral defines a single universal representation for messages, tools, and LLM usage that operates seamlessly across providers, eliminating manual format translation and reducing framework-induced complexity. Automatic tool schema generation from Python type hints removes the need for handwritten descriptors while maintaining type safety across provider boundaries. A synchronous execution model with streaming support enables deterministic behavior, straightforward debugging, and real-time interaction without introducing server dependencies. The framework's modular architecture cleanly separates provider integration, tool execution, conversation orchestration, and user-facing interfaces, enabling extensibility without architectural entanglement. Orchestral supports advanced agent capabilities found in larger frameworks, including rich tool calling, context compaction, workspace sandboxing, user approval workflows, sub-agents, memory management, and MCP integration."
+    },
+    {
+      "paper_id": "2604.01532v2",
+      "title": "PHMForge: Evaluating LLM Agents on Industrial Prognostics through MCP-Native, Algorithm-Grounded Tools",
+      "authors": [
+        "Tianjun Feng",
+        "Yunfeng Chen",
+        "Chun-Yi Tsai",
+        "Yihan Sun",
+        "Ayan Das",
+        "Kaoutar El Maghraoui",
+        "Shuxin Lin",
+        "Dhaval Patel"
+      ],
+      "summary": "LLM agents are beginning to invoke industrial asset-management tools through the Model Context Protocol (MCP), yet whether they can act reliably on this substrate for safety-critical \\emph{Prognostics and Health Management (PHM)} is unanswered. Prior benchmarks conflate protocol fluency with reasoning, instrumentation failures with agent failures, and tool use with tool retrieval. We introduce \\textbf{PHMForge}, an evaluation environment that closes each conflation. PHMForge ships 99 SME-authored scenarios across eight industrial asset classes spanning rotating equipment, aero-engines, and lithium-ion cells, on public datasets including NASA PCoE, served through 39 MCP-native tools wrapping published PHM algorithms (C-MAPSS, ISO~10816, Arrhenius capacity-fade models, time-series foundation models). Krippendorff's $α\\in [0.74,\\,0.82]$ on a 30-scenario stratified rotating-equipment/aero-engine sample; the battery extension is single-rater. Across three agentic frameworks and six LLM backbones, the strongest configuration reaches \\textbf{80.8\\% pass@1}, with the residual gap concentrated in orchestration and tool-sequencing errors. Crucially, an architectural ablation shows that replacing MCP execution with text-based Retrieval-Augmented Generation (RAG) over telemetry-equivalent evidence collapses Remaining Useful Life \\emph{pass-all-3} from \\textbf{100\\% to 20\\%} (5/5 vs.\\ 1/5) on the battery class, exposing the structural limits of static retrieval for prognostic computation. Trajectory decomposition shows orchestration errors dominate failures across backbones, while schema-invalid tool calls concentrate in smaller open-weight models. Frontier LLMs are stronger at calling tools than at planning when to call them. PHMForge is open-sourced with deterministic evaluators, a public leaderboard, and a datasheet.",
+      "published": 2026,
+      "published_date": "2026-04-02T02:09:27+00:00",
+      "url": "http://arxiv.org/abs/2604.01532v2",
+      "pdf_url": "https://arxiv.org/pdf/2604.01532v2",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "doi": null,
+      "abstract": "LLM agents are beginning to invoke industrial asset-management tools through the Model Context Protocol (MCP), yet whether they can act reliably on this substrate for safety-critical \\emph{Prognostics and Health Management (PHM)} is unanswered. Prior benchmarks conflate protocol fluency with reasoning, instrumentation failures with agent failures, and tool use with tool retrieval. We introduce \\textbf{PHMForge}, an evaluation environment that closes each conflation. PHMForge ships 99 SME-authored scenarios across eight industrial asset classes spanning rotating equipment, aero-engines, and lithium-ion cells, on public datasets including NASA PCoE, served through 39 MCP-native tools wrapping published PHM algorithms (C-MAPSS, ISO~10816, Arrhenius capacity-fade models, time-series foundation models). Krippendorff's $α\\in [0.74,\\,0.82]$ on a 30-scenario stratified rotating-equipment/aero-engine sample; the battery extension is single-rater. Across three agentic frameworks and six LLM backbones, the strongest configuration reaches \\textbf{80.8\\% pass@1}, with the residual gap concentrated in orchestration and tool-sequencing errors. Crucially, an architectural ablation shows that replacing MCP execution with text-based Retrieval-Augmented Generation (RAG) over telemetry-equivalent evidence collapses Remaining Useful Life \\emph{pass-all-3} from \\textbf{100\\% to 20\\%} (5/5 vs.\\ 1/5) on the battery class, exposing the structural limits of static retrieval for prognostic computation. Trajectory decomposition shows orchestration errors dominate failures across backbones, while schema-invalid tool calls concentrate in smaller open-weight models. Frontier LLMs are stronger at calling tools than at planning when to call them. PHMForge is open-sourced with deterministic evaluators, a public leaderboard, and a datasheet."
+    },
+    {
+      "paper_id": "2604.10383v1",
+      "title": "Agentic Video Generation: From Text to Executable Event Graphs via Tool-Constrained LLM Planning",
+      "authors": [
+        "Nicolae Cudlenco",
+        "Mihai Masala",
+        "Marius Leordeanu"
+      ],
+      "summary": "Existing multi-agent video generation systems use LLM agents to orchestrate neural video generators, producing visually impressive but semantically unreliable outputs with no ground truth annotations. We present an agentic system that inverts this paradigm: instead of generating pixels, the LLM constructs a formal Graph of Events in Space and Time (GEST) -- a structured specification of actors, actions, objects, and temporal constraints -- which is then executed deterministically in a 3D game engine. A staged LLM refinement pipeline fails entirely at this task (0 of 50 attempts produce an executable specification), motivating a fundamentally different architecture based on a separation of concerns: the LLM handles narrative planning through natural language reasoning, while a programmatic state backend enforces all simulator constraints through validated tool calls, guaranteeing that every generated specification is executable by construction. The system uses a hierarchical two-agent architecture -- a Director that plans the story and a Scene Builder that constructs individual scenes through a round-based state machine -- with dedicated Relation Subagents that populate the logical and semantic edge types of the GEST formalism that procedural generation leaves empty, making this the first approach to exercise the full expressive capacity of the representation. We evaluate in two stages: autonomous generation against procedural baselines via a 3-model LLM jury, where agentic narratives win 79% of text and 74% of video comparisons; and seeded generation where the same text is given to our system, VEO 3.1, and WAN 2.2, with human annotations showing engine-generated videos substantially outperform neural generators on physical validity (58% vs 25% and 20%) and semantic alignment (3.75/5 vs 2.33 and 1.50).",
+      "published": 2026,
+      "published_date": "2026-04-11T23:51:13+00:00",
+      "url": "http://arxiv.org/abs/2604.10383v1",
+      "pdf_url": "https://arxiv.org/pdf/2604.10383v1",
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "doi": null,
+      "abstract": "Existing multi-agent video generation systems use LLM agents to orchestrate neural video generators, producing visually impressive but semantically unreliable outputs with no ground truth annotations. We present an agentic system that inverts this paradigm: instead of generating pixels, the LLM constructs a formal Graph of Events in Space and Time (GEST) -- a structured specification of actors, actions, objects, and temporal constraints -- which is then executed deterministically in a 3D game engine. A staged LLM refinement pipeline fails entirely at this task (0 of 50 attempts produce an executable specification), motivating a fundamentally different architecture based on a separation of concerns: the LLM handles narrative planning through natural language reasoning, while a programmatic state backend enforces all simulator constraints through validated tool calls, guaranteeing that every generated specification is executable by construction. The system uses a hierarchical two-agent architecture -- a Director that plans the story and a Scene Builder that constructs individual scenes through a round-based state machine -- with dedicated Relation Subagents that populate the logical and semantic edge types of the GEST formalism that procedural generation leaves empty, making this the first approach to exercise the full expressive capacity of the representation. We evaluate in two stages: autonomous generation against procedural baselines via a 3-model LLM jury, where agentic narratives win 79% of text and 74% of video comparisons; and seeded generation where the same text is given to our system, VEO 3.1, and WAN 2.2, with human annotations showing engine-generated videos substantially outperform neural generators on physical validity (58% vs 25% and 20%) and semantic alignment (3.75/5 vs 2.33 and 1.50)."
+    },
+    {
+      "paper_id": "2603.02345v1",
+      "title": "RIVA: Leveraging LLM Agents for Reliable Configuration Drift Detection",
+      "authors": [
+        "Sami Abuzakuk",
+        "Lucas Crijns",
+        "Anne-Marie Kermarrec",
+        "Rafael Pires",
+        "Martijn de Vos"
+      ],
+      "summary": "Infrastructure as code (IaC) tools automate cloud provisioning but verifying that deployed systems remain consistent with the IaC specifications remains challenging. Such configuration drift occurs because of bugs in the IaC specification, manual changes, or system updates. Large language model (LLM)-based agentic AI systems can automate the analysis of large volumes of telemetry data, making them suitable for the detection of configuration drift. However, existing agentic systems implicitly assume that the tools they invoke always return correct outputs, making them vulnerable to erroneous tool responses. Since agents cannot distinguish whether an anomalous tool output reflects a real infrastructure problem or a broken tool, such errors may cause missed drift or false alarms, reducing reliability precisely when it is most needed. We introduce RIVA (Robust Infrastructure by Verification Agents), a novel multi-agent system that performs robust IaC verification even when tools produce incorrect or misleading outputs. RIVA employs two specialized agents, a verifier agent and a tool generation agent, that collaborate through iterative cross-validation, multi-perspective verification, and tool call history tracking. Evaluation on the AIOpsLab benchmark demonstrates that RIVA, in the presence of erroneous tool responses, recovers task accuracy from 27.3% when using a baseline ReAct agent to 50.0% on average. RIVA also improves task accuracy 28% to 43.8% without erroneous tool responses. Our results show that cross-validation of diverse tool calls enables more reliable autonomous infrastructure verification in production cloud environments.",
+      "published": 2026,
+      "published_date": "2026-03-02T19:28:27+00:00",
+      "url": "http://arxiv.org/abs/2603.02345v1",
+      "pdf_url": "https://arxiv.org/pdf/2603.02345v1",
+      "primary_category": "cs.SE",
+      "categories": [
+        "cs.SE",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "doi": null,
+      "abstract": "Infrastructure as code (IaC) tools automate cloud provisioning but verifying that deployed systems remain consistent with the IaC specifications remains challenging. Such configuration drift occurs because of bugs in the IaC specification, manual changes, or system updates. Large language model (LLM)-based agentic AI systems can automate the analysis of large volumes of telemetry data, making them suitable for the detection of configuration drift. However, existing agentic systems implicitly assume that the tools they invoke always return correct outputs, making them vulnerable to erroneous tool responses. Since agents cannot distinguish whether an anomalous tool output reflects a real infrastructure problem or a broken tool, such errors may cause missed drift or false alarms, reducing reliability precisely when it is most needed. We introduce RIVA (Robust Infrastructure by Verification Agents), a novel multi-agent system that performs robust IaC verification even when tools produce incorrect or misleading outputs. RIVA employs two specialized agents, a verifier agent and a tool generation agent, that collaborate through iterative cross-validation, multi-perspective verification, and tool call history tracking. Evaluation on the AIOpsLab benchmark demonstrates that RIVA, in the presence of erroneous tool responses, recovers task accuracy from 27.3% when using a baseline ReAct agent to 50.0% on average. RIVA also improves task accuracy 28% to 43.8% without erroneous tool responses. Our results show that cross-validation of diverse tool calls enables more reliable autonomous infrastructure verification in production cloud environments."
+    },
+    {
+      "paper_id": "2603.13791v1",
+      "title": "DeceptGuard :A Constitutional Oversight Framework For Detecting Deception in LLM Agents",
+      "authors": [
+        "Snehasis Mukhopadhyay"
+      ],
+      "summary": "Reliable detection of deceptive behavior in Large Language Model (LLM) agents is an essential prerequisite for safe deployment in high-stakes agentic contexts. Prior work on scheming detection has focused exclusively on black-box monitors that observe only externally visible tool calls and outputs, discarding potentially rich internal reasoning signals. We introduce DECEPTGUARD, a unified framework that systematically compares three monitoring regimes: black-box monitors (actions and outputs only), CoT-aware monitors (additionally observing the agent's chain-of-thought reasoning trace), and activation-probe monitors (additionally reading hidden-state representations from a frozen open-weights encoder).\n  We introduce DECEPTSYNTH, a scalable synthetic pipeline for generating deception-positive and deception-negative agent trajectories across a novel 12-category taxonomy spanning verbal, behavioral, and structural deception. Our monitors are optimized on 4,800 synthetic trajectories and evaluated on 9,200 held-out samples from DeceptArena, a benchmark of realistic sandboxed agent environments with execution-verified labels.\n  Across all evaluation settings, CoT-aware and activation-probe monitors substantially outperform their black-box counterparts (mean pAUROC improvement of +0.097), with the largest gains on subtle, long-horizon deception that leaves minimal behavioral footprints. We empirically characterize a transparency-detectability trade-off: as agents learn to suppress overt behavioral signals, chain-of-thought becomes the primary detection surface but is itself increasingly unreliable due to post-training faithfulness degradation.\n  We propose HYBRID-CONSTITUTIONAL ensembles as a robust defense-in-depth approach, achieving a pAUROC of 0.934 on the held-out test set, representing a substantial advance over the prior state of the art.",
+      "published": 2026,
+      "published_date": "2026-03-14T06:45:43+00:00",
+      "url": "http://arxiv.org/abs/2603.13791v1",
+      "pdf_url": "https://arxiv.org/pdf/2603.13791v1",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "doi": null,
+      "abstract": "Reliable detection of deceptive behavior in Large Language Model (LLM) agents is an essential prerequisite for safe deployment in high-stakes agentic contexts. Prior work on scheming detection has focused exclusively on black-box monitors that observe only externally visible tool calls and outputs, discarding potentially rich internal reasoning signals. We introduce DECEPTGUARD, a unified framework that systematically compares three monitoring regimes: black-box monitors (actions and outputs only), CoT-aware monitors (additionally observing the agent's chain-of-thought reasoning trace), and activation-probe monitors (additionally reading hidden-state representations from a frozen open-weights encoder).\n  We introduce DECEPTSYNTH, a scalable synthetic pipeline for generating deception-positive and deception-negative agent trajectories across a novel 12-category taxonomy spanning verbal, behavioral, and structural deception. Our monitors are optimized on 4,800 synthetic trajectories and evaluated on 9,200 held-out samples from DeceptArena, a benchmark of realistic sandboxed agent environments with execution-verified labels.\n  Across all evaluation settings, CoT-aware and activation-probe monitors substantially outperform their black-box counterparts (mean pAUROC improvement of +0.097), with the largest gains on subtle, long-horizon deception that leaves minimal behavioral footprints. We empirically characterize a transparency-detectability trade-off: as agents learn to suppress overt behavioral signals, chain-of-thought becomes the primary detection surface but is itself increasingly unreliable due to post-training faithfulness degradation.\n  We propose HYBRID-CONSTITUTIONAL ensembles as a robust defense-in-depth approach, achieving a pAUROC of 0.934 on the held-out test set, representing a substantial advance over the prior state of the art."
+    },
+    {
+      "paper_id": "2512.22673v3",
+      "title": "Beyond Itinerary Planning-A Real-World Benchmark for Multi-Turn and Tool-Using Travel Tasks",
+      "authors": [
+        "Xiang Cheng",
+        "Yulan Hu",
+        "Xiangwen Zhang",
+        "Lu Xu",
+        "Lide Tan",
+        "Zheng Pan",
+        "Xin Li",
+        "Yong Liu"
+      ],
+      "summary": "Travel planning is a natural real-world task to test large language models' (LLMs) planning and tool-use abilities. Although prior work has studied LLM performance on travel planning, existing settings still differ from real-world needs, mainly due to limited domain coverage, insufficient modeling of users' implicit preferences in multi-turn conversations, and a lack of evaluation of agents' capability boundaries. To mitigate these gaps, we propose $\\textbf{TravelBench}$, a benchmark for $\\textit{truly real-world}$ travel planning. We collect user queries, user preferences, and tools from real scenarios, and construct three subtasks -- $\\textit{Single-Turn}$, $\\textit{Multi-Turn}$, and $\\textit{Unsolvable}$ -- to evaluate agents' three core capabilities in real settings: (1) solving problems independently, (2) interacting with users to elicit implicit preferences, and (3) recognizing the capability boundaries. To enable stable tool invocation and reproducible evaluation, we cache real tool-call results and build a sandbox environment which integrates ten travel-related tools, enabling agents to combine these tools to solve most practical travel planning problems. We evaluate multiple LLMs on TravelBench and find that even advanced models exhibit imbalanced performance across different capabilities. Our further systematic verification demonstrates the stability of the proposed benchmark. TravelBench provides a practical and reproducible benchmark to advance research on LLM agents for real-world travel planning.",
+      "published": 2025,
+      "published_date": "2025-12-27T18:25:14+00:00",
+      "url": "http://arxiv.org/abs/2512.22673v3",
+      "pdf_url": "https://arxiv.org/pdf/2512.22673v3",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "doi": null,
+      "abstract": "Travel planning is a natural real-world task to test large language models' (LLMs) planning and tool-use abilities. Although prior work has studied LLM performance on travel planning, existing settings still differ from real-world needs, mainly due to limited domain coverage, insufficient modeling of users' implicit preferences in multi-turn conversations, and a lack of evaluation of agents' capability boundaries. To mitigate these gaps, we propose $\\textbf{TravelBench}$, a benchmark for $\\textit{truly real-world}$ travel planning. We collect user queries, user preferences, and tools from real scenarios, and construct three subtasks -- $\\textit{Single-Turn}$, $\\textit{Multi-Turn}$, and $\\textit{Unsolvable}$ -- to evaluate agents' three core capabilities in real settings: (1) solving problems independently, (2) interacting with users to elicit implicit preferences, and (3) recognizing the capability boundaries. To enable stable tool invocation and reproducible evaluation, we cache real tool-call results and build a sandbox environment which integrates ten travel-related tools, enabling agents to combine these tools to solve most practical travel planning problems. We evaluate multiple LLMs on TravelBench and find that even advanced models exhibit imbalanced performance across different capabilities. Our further systematic verification demonstrates the stability of the proposed benchmark. TravelBench provides a practical and reproducible benchmark to advance research on LLM agents for real-world travel planning."
+    },
+    {
+      "paper_id": "2410.18792v2",
+      "title": "An LLM Agent for Automatic Geospatial Data Analysis",
+      "authors": [
+        "Yuxing Chen",
+        "Weijie Wang",
+        "Sylvain Lobry",
+        "Camille Kurtz"
+      ],
+      "summary": "Large language models (LLMs) are being used in data science code generation tasks, but they often struggle with complex sequential tasks, leading to logical errors. Their application to geospatial data processing is particularly challenging due to difficulties in incorporating complex data structures and spatial constraints, effectively utilizing diverse function calls, and the tendency to hallucinate less-used geospatial libraries. To tackle these problems, we introduce GeoAgent, a new interactive framework designed to help LLMs handle geospatial data processing more effectively. GeoAgent pioneers the integration of a code interpreter, static analysis, and Retrieval-Augmented Generation (RAG) techniques within a Monte Carlo Tree Search (MCTS) algorithm, offering a novel approach to geospatial data processing. In addition, we contribute a new benchmark specifically designed to evaluate the LLM-based approach in geospatial tasks. This benchmark leverages a variety of Python libraries and includes both single-turn and multi-turn tasks such as data acquisition, data analysis, and visualization. By offering a comprehensive evaluation among diverse geospatial contexts, this benchmark sets a new standard for developing LLM-based approaches in geospatial data analysis tasks. Our findings suggest that relying solely on knowledge of LLM is insufficient for accurate geospatial task programming, which requires coherent multi-step processes and multiple function calls. Compared to the baseline LLMs, the proposed GeoAgent has demonstrated superior performance, yielding notable improvements in function calls and task completion. In addition, these results offer valuable insights for the future development of LLM agents in automatic geospatial data analysis task programming.",
+      "published": 2024,
+      "published_date": "2024-10-24T14:47:25+00:00",
+      "url": "http://arxiv.org/abs/2410.18792v2",
+      "pdf_url": "https://arxiv.org/pdf/2410.18792v2",
+      "primary_category": "cs.CY",
+      "categories": [
+        "cs.CY",
+        "cs.CL"
+      ],
+      "doi": null,
+      "abstract": "Large language models (LLMs) are being used in data science code generation tasks, but they often struggle with complex sequential tasks, leading to logical errors. Their application to geospatial data processing is particularly challenging due to difficulties in incorporating complex data structures and spatial constraints, effectively utilizing diverse function calls, and the tendency to hallucinate less-used geospatial libraries. To tackle these problems, we introduce GeoAgent, a new interactive framework designed to help LLMs handle geospatial data processing more effectively. GeoAgent pioneers the integration of a code interpreter, static analysis, and Retrieval-Augmented Generation (RAG) techniques within a Monte Carlo Tree Search (MCTS) algorithm, offering a novel approach to geospatial data processing. In addition, we contribute a new benchmark specifically designed to evaluate the LLM-based approach in geospatial tasks. This benchmark leverages a variety of Python libraries and includes both single-turn and multi-turn tasks such as data acquisition, data analysis, and visualization. By offering a comprehensive evaluation among diverse geospatial contexts, this benchmark sets a new standard for developing LLM-based approaches in geospatial data analysis tasks. Our findings suggest that relying solely on knowledge of LLM is insufficient for accurate geospatial task programming, which requires coherent multi-step processes and multiple function calls. Compared to the baseline LLMs, the proposed GeoAgent has demonstrated superior performance, yielding notable improvements in function calls and task completion. In addition, these results offer valuable insights for the future development of LLM agents in automatic geospatial data analysis task programming."
+    },
+    {
+      "paper_id": "2605.01970v2",
+      "title": "Trojan Hippo: Weaponizing Agent Memory for Data Exfiltration",
+      "authors": [
+        "Debeshee Das",
+        "Julien Piet",
+        "Darya Kaviani",
+        "Luca Beurer-Kellner",
+        "Florian Tramèr",
+        "David Wagner"
+      ],
+      "summary": "Memory systems enable otherwise-stateless LLM agents to persist user information across sessions, but also introduce a new attack surface. We characterize the Trojan Hippo attack, a class of persistent memory attacks that operates in a more realistic threat model than prior memory poisoning work: the attacker plants a dormant payload into an agent's long-term memory via a single untrusted tool call (e.g., a crafted email), which activates only when the user later discusses sensitive topics such as finance, health, or identity, and exfiltrates high-value personal data to the attacker.\n  While anecdotal demonstrations of such attacks have appeared against deployed systems, no prior work systematically evaluates them across heterogeneous memory architectures and defenses. We introduce a dynamic evaluation framework comprising two components: (1) an OpenEvolve-based adaptive red-teaming benchmark that stress-tests defenses and memory backends against continuously refined attacks, and (2) the first capability-aware security/utility analysis for persistent memory systems, enabling principled reasoning about defense deployment across different usage profiles.\n  Instantiated on an email assistant across four memory backends (explicit tool memory, agentic memory, RAG, and sliding-window context), Trojan Hippo achieves up to 85-100% ASR against current frontier models from OpenAI and Google, with planted memories successfully activating even after 100 benign sessions. We evaluate four memory-system defenses inspired by basic security principles, finding they substantially reduce attack success rates (to as low as 0-5%), though at utility costs that vary widely with task requirements. Because of this substantial security-utility tradeoff, the effective real-world deployment of defenses remains an open challenge, which our evaluation framework is specifically designed to address.",
+      "published": 2026,
+      "published_date": "2026-05-03T17:07:20+00:00",
+      "url": "http://arxiv.org/abs/2605.01970v2",
+      "pdf_url": "https://arxiv.org/pdf/2605.01970v2",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "doi": null,
+      "abstract": "Memory systems enable otherwise-stateless LLM agents to persist user information across sessions, but also introduce a new attack surface. We characterize the Trojan Hippo attack, a class of persistent memory attacks that operates in a more realistic threat model than prior memory poisoning work: the attacker plants a dormant payload into an agent's long-term memory via a single untrusted tool call (e.g., a crafted email), which activates only when the user later discusses sensitive topics such as finance, health, or identity, and exfiltrates high-value personal data to the attacker.\n  While anecdotal demonstrations of such attacks have appeared against deployed systems, no prior work systematically evaluates them across heterogeneous memory architectures and defenses. We introduce a dynamic evaluation framework comprising two components: (1) an OpenEvolve-based adaptive red-teaming benchmark that stress-tests defenses and memory backends against continuously refined attacks, and (2) the first capability-aware security/utility analysis for persistent memory systems, enabling principled reasoning about defense deployment across different usage profiles.\n  Instantiated on an email assistant across four memory backends (explicit tool memory, agentic memory, RAG, and sliding-window context), Trojan Hippo achieves up to 85-100% ASR against current frontier models from OpenAI and Google, with planted memories successfully activating even after 100 benign sessions. We evaluate four memory-system defenses inspired by basic security principles, finding they substantially reduce attack success rates (to as low as 0-5%), though at utility costs that vary widely with task requirements. Because of this substantial security-utility tradeoff, the effective real-world deployment of defenses remains an open challenge, which our evaluation framework is specifically designed to address."
+    },
+    {
+      "paper_id": "2510.17235v1",
+      "title": "Coinvisor: An RL-Enhanced Chatbot Agent for Interactive Cryptocurrency Investment Analysis",
+      "authors": [
+        "Chong Chen",
+        "Ze Liu",
+        "Lingfeng Bao",
+        "Yanlin Wang",
+        "Ting Chen",
+        "Daoyuan Wu",
+        "Jiachi Chen"
+      ],
+      "summary": "The cryptocurrency market offers significant investment opportunities but faces challenges including high volatility and fragmented information. Data integration and analysis are essential for informed investment decisions. Currently, investors use three main approaches: (1) Manual analysis across various sources, which depends heavily on individual experience and is time-consuming and prone to bias; (2) Data aggregation platforms-limited in functionality and depth of analysis; (3) Large language model agents-based on static pretrained models, lacking real-time data integration and multi-step reasoning capabilities. To address these limitations, we present Coinvisor, a reinforcement learning-based chatbot that provides comprehensive analytical support for cryptocurrency investment through a multi-agent framework. Coinvisor integrates diverse analytical capabilities through specialized tools. Its key innovation is a reinforcement learning-based tool selection mechanism that enables multi-step planning and flexible integration of diverse data sources. This design supports real-time interaction and adaptive analysis of dynamic content, delivering accurate and actionable investment insights. We evaluated Coinvisor through automated benchmarks on tool calling accuracy and user studies with 20 cryptocurrency investors using our interface. Results show that Coinvisor improves recall by 40.7% and F1 score by 26.6% over the base model in tool orchestration. User studies show high satisfaction (4.64/5), with participants preferring Coinvisor to both general LLMs and existing crypto platforms (4.62/5).",
+      "published": 2025,
+      "published_date": "2025-10-20T07:23:49+00:00",
+      "url": "http://arxiv.org/abs/2510.17235v1",
+      "pdf_url": "https://arxiv.org/pdf/2510.17235v1",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "doi": null,
+      "abstract": "The cryptocurrency market offers significant investment opportunities but faces challenges including high volatility and fragmented information. Data integration and analysis are essential for informed investment decisions. Currently, investors use three main approaches: (1) Manual analysis across various sources, which depends heavily on individual experience and is time-consuming and prone to bias; (2) Data aggregation platforms-limited in functionality and depth of analysis; (3) Large language model agents-based on static pretrained models, lacking real-time data integration and multi-step reasoning capabilities. To address these limitations, we present Coinvisor, a reinforcement learning-based chatbot that provides comprehensive analytical support for cryptocurrency investment through a multi-agent framework. Coinvisor integrates diverse analytical capabilities through specialized tools. Its key innovation is a reinforcement learning-based tool selection mechanism that enables multi-step planning and flexible integration of diverse data sources. This design supports real-time interaction and adaptive analysis of dynamic content, delivering accurate and actionable investment insights. We evaluated Coinvisor through automated benchmarks on tool calling accuracy and user studies with 20 cryptocurrency investors using our interface. Results show that Coinvisor improves recall by 40.7% and F1 score by 26.6% over the base model in tool orchestration. User studies show high satisfaction (4.64/5), with participants preferring Coinvisor to both general LLMs and existing crypto platforms (4.62/5)."
+    },
+    {
+      "paper_id": "2604.25318v1",
+      "title": "Cutscene Agent: An LLM Agent Framework for Automated 3D Cutscene Generation",
+      "authors": [
+        "Lanshan He",
+        "Haozhou Pang",
+        "Qi Gan",
+        "Xin Shen",
+        "Ziwei Zhang",
+        "Yibo Liu",
+        "Gang Fang",
+        "Bo Liu",
+        "Kai Sheng",
+        "Shengfeng Zeng",
+        "Chaofan Li",
+        "Zhen Hui",
+        "Keer Zhou",
+        "Lan Zhou",
+        "Shujun Dai"
+      ],
+      "summary": "Cutscenes are carefully choreographed cinematic sequences embedded in video games and interactive media, serving as the primary vehicle for narrative delivery, character development, and emotional engagement. Producing cutscenes is inherently complex: it demands seamless coordination across screenwriting, cinematography, character animation, voice acting, and technical direction, often requiring days to weeks of collaborative effort from multidisciplinary teams to produce minutes of polished content. In this work, we present Cutscene Agent, an LLM agent framework for automated end-to-end cutscene generation. The framework makes three contributions: (1)~a Cutscene Toolkit built on the Model Context Protocol (MCP) that establishes \\emph{bidirectional} integration between LLM agents and the game engine -- agents not only invoke engine operations but continuously observe real-time scene state, enabling closed-loop generation of editable engine-native cinematic assets; (2)~a multi-agent system where a director agent orchestrates specialist subagents for animation, cinematography, and sound design, augmented by a visual reasoning feedback loop for perception-driven refinement; and (3)~CutsceneBench, a hierarchical evaluation benchmark for cutscene generation. Unlike typical tool-use benchmarks that evaluate short, isolated function calls, cutscene generation requires long-horizon, multi-step orchestration of dozens of interdependent tool invocations with strict ordering constraints -- a capability dimension that existing benchmarks do not cover. We evaluate a range of LLMs on CutsceneBench and analyze their performance across this challenging task.",
+      "published": 2026,
+      "published_date": "2026-04-28T07:28:14+00:00",
+      "url": "http://arxiv.org/abs/2604.25318v1",
+      "pdf_url": "https://arxiv.org/pdf/2604.25318v1",
+      "primary_category": "cs.GR",
+      "categories": [
+        "cs.GR",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "doi": null,
+      "abstract": "Cutscenes are carefully choreographed cinematic sequences embedded in video games and interactive media, serving as the primary vehicle for narrative delivery, character development, and emotional engagement. Producing cutscenes is inherently complex: it demands seamless coordination across screenwriting, cinematography, character animation, voice acting, and technical direction, often requiring days to weeks of collaborative effort from multidisciplinary teams to produce minutes of polished content. In this work, we present Cutscene Agent, an LLM agent framework for automated end-to-end cutscene generation. The framework makes three contributions: (1)~a Cutscene Toolkit built on the Model Context Protocol (MCP) that establishes \\emph{bidirectional} integration between LLM agents and the game engine -- agents not only invoke engine operations but continuously observe real-time scene state, enabling closed-loop generation of editable engine-native cinematic assets; (2)~a multi-agent system where a director agent orchestrates specialist subagents for animation, cinematography, and sound design, augmented by a visual reasoning feedback loop for perception-driven refinement; and (3)~CutsceneBench, a hierarchical evaluation benchmark for cutscene generation. Unlike typical tool-use benchmarks that evaluate short, isolated function calls, cutscene generation requires long-horizon, multi-step orchestration of dozens of interdependent tool invocations with strict ordering constraints -- a capability dimension that existing benchmarks do not cover. We evaluate a range of LLMs on CutsceneBench and analyze their performance across this challenging task."
+    },
+    {
+      "paper_id": "2605.15184v1",
+      "title": "Is Grep All You Need? How Agent Harnesses Reshape Agentic Search",
+      "authors": [
+        "Sahil Sen",
+        "Akhil Kasturi",
+        "Elias Lumer",
+        "Anmol Gulati",
+        "Vamse Kumar Subbiah"
+      ],
+      "summary": "Recent advances in Large Language Model (LLM) agents have enabled complex agentic workflows where models autonomously retrieve information, call tools, and reason over large corpora to complete tasks on behalf of users. Despite the growing adoption of retrieval-augmented generation (RAG) in agentic search systems, existing literature lacks a systematic comparison of how retrieval strategy choice interacts with agent architecture and tool-calling paradigm. Important practical dimensions, including how tool outputs are presented to the model and how performance changes when searches must cope with more irrelevant surrounding text, remain under-explored in agent loops. This paper reports an empirical study organized into two experiments. Experiment 1 compares grep and vector retrieval on a 116-question sample from LongMemEval, using a custom agent harness (Chronos) and provider-native CLI harnesses (Claude Code, Codex, and Gemini CLI), for both inline tool results and file-based tool results that the model reads separately. Experiment 2 compares grep-only and vector-only retrieval while progressively mixing in additional unrelated conversation history, so that each query is embedded in more distracting material alongside the passages that matter. Across Chronos and the provider CLIs, grep generally yields higher accuracy than vector retrieval in our comparisons in experiment 1; at the same time, overall scores still depend strongly on which harness and tool-calling style is used, even when the underlying conversation data are the same.",
+      "published": 2026,
+      "published_date": "2026-05-14T17:58:41+00:00",
+      "url": "http://arxiv.org/abs/2605.15184v1",
+      "pdf_url": "https://arxiv.org/pdf/2605.15184v1",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "doi": null,
+      "abstract": "Recent advances in Large Language Model (LLM) agents have enabled complex agentic workflows where models autonomously retrieve information, call tools, and reason over large corpora to complete tasks on behalf of users. Despite the growing adoption of retrieval-augmented generation (RAG) in agentic search systems, existing literature lacks a systematic comparison of how retrieval strategy choice interacts with agent architecture and tool-calling paradigm. Important practical dimensions, including how tool outputs are presented to the model and how performance changes when searches must cope with more irrelevant surrounding text, remain under-explored in agent loops. This paper reports an empirical study organized into two experiments. Experiment 1 compares grep and vector retrieval on a 116-question sample from LongMemEval, using a custom agent harness (Chronos) and provider-native CLI harnesses (Claude Code, Codex, and Gemini CLI), for both inline tool results and file-based tool results that the model reads separately. Experiment 2 compares grep-only and vector-only retrieval while progressively mixing in additional unrelated conversation history, so that each query is embedded in more distracting material alongside the passages that matter. Across Chronos and the provider CLIs, grep generally yields higher accuracy than vector retrieval in our comparisons in experiment 1; at the same time, overall scores still depend strongly on which harness and tool-calling style is used, even when the underlying conversation data are the same."
+    },
+    {
+      "paper_id": "2604.16205v1",
+      "title": "ChemGraph-XANES: An Agentic Framework for XANES Simulation and Analysis",
+      "authors": [
+        "Vitor F. Grizzi",
+        "Thang Duc Pham",
+        "Luke N. Pretzie",
+        "Jiayi Xu",
+        "Murat Keceli",
+        "Cong Liu"
+      ],
+      "summary": "Computational X-ray absorption near-edge structure (XANES) is widely used to probe local coordination environments, oxidation states, and electronic structure in chemically complex systems. However, the use of computational XANES at scale is constrained more by workflow complexity than by the underlying simulation method itself. To address this challenge, we present ChemGraph-XANES, an agentic framework for automated XANES simulation and analysis that unifies natural-language task specification, structure acquisition, FDMNES input generation, task-parallel execution, spectral normalization, and provenance-aware data curation. Built on ASE, FDMNES, Parsl, and a LangGraph/LangChain-based tool interface, the framework exposes XANES workflow operations as typed Python tools that can be orchestrated by large language model (LLM) agents. In multi-agent mode, a retrieval-augmented expert agent consults the FDMNES manual to ground parameter selection, while executor agents translate user requests into structured tool calls. We demonstrate documentation-grounded parameter retrieval and show that the same workflow supports both explicit structure-file inputs and chemistry-level natural-language requests. Because independent XANES calculations are naturally task-parallel, the framework is well suited for high-throughput deployment on high-performance computing (HPC) systems, enabling scalable XANES database generation for downstream analysis and machine-learning applications. ChemGraph-XANES thus provides a reproducible and extensible workflow layer for physics-based XANES simulation, spectral curation, and agent-compatible computational spectroscopy.",
+      "published": 2026,
+      "published_date": "2026-04-17T16:15:19+00:00",
+      "url": "http://arxiv.org/abs/2604.16205v1",
+      "pdf_url": "https://arxiv.org/pdf/2604.16205v1",
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "cs.AI",
+        "physics.chem-ph"
+      ],
+      "doi": null,
+      "abstract": "Computational X-ray absorption near-edge structure (XANES) is widely used to probe local coordination environments, oxidation states, and electronic structure in chemically complex systems. However, the use of computational XANES at scale is constrained more by workflow complexity than by the underlying simulation method itself. To address this challenge, we present ChemGraph-XANES, an agentic framework for automated XANES simulation and analysis that unifies natural-language task specification, structure acquisition, FDMNES input generation, task-parallel execution, spectral normalization, and provenance-aware data curation. Built on ASE, FDMNES, Parsl, and a LangGraph/LangChain-based tool interface, the framework exposes XANES workflow operations as typed Python tools that can be orchestrated by large language model (LLM) agents. In multi-agent mode, a retrieval-augmented expert agent consults the FDMNES manual to ground parameter selection, while executor agents translate user requests into structured tool calls. We demonstrate documentation-grounded parameter retrieval and show that the same workflow supports both explicit structure-file inputs and chemistry-level natural-language requests. Because independent XANES calculations are naturally task-parallel, the framework is well suited for high-throughput deployment on high-performance computing (HPC) systems, enabling scalable XANES database generation for downstream analysis and machine-learning applications. ChemGraph-XANES thus provides a reproducible and extensible workflow layer for physics-based XANES simulation, spectral curation, and agent-compatible computational spectroscopy."
+    },
+    {
+      "paper_id": "2502.07223v1",
+      "title": "Graph RAG-Tool Fusion",
+      "authors": [
+        "Elias Lumer",
+        "Pradeep Honaganahalli Basavaraju",
+        "Myles Mason",
+        "James A. Burke",
+        "Vamse Kumar Subbiah"
+      ],
+      "summary": "Recent developments in retrieval-augmented generation (RAG) for selecting relevant tools from a tool knowledge base enable LLM agents to scale their complex tool calling capabilities to hundreds or thousands of external tools, APIs, or agents-as-tools. However, traditional RAG-based tool retrieval fails to capture structured dependencies between tools, limiting the retrieval accuracy of a retrieved tool's dependencies. For example, among a vector database of tools, a \"get stock price\" API requires a \"stock ticker\" parameter from a \"get stock ticker\" API, and both depend on OS-level internet connectivity tools. In this paper, we address this limitation by introducing Graph RAG-Tool Fusion, a novel plug-and-play approach that combines the strengths of vector-based retrieval with efficient graph traversal to capture all relevant tools (nodes) along with any nested dependencies (edges) within the predefined tool knowledge graph. We also present ToolLinkOS, a new tool selection benchmark of 573 fictional tools, spanning over 15 industries, each with an average of 6.3 tool dependencies. We demonstrate that Graph RAG-Tool Fusion achieves absolute improvements of 71.7% and 22.1% over naïve RAG on ToolLinkOS and ToolSandbox benchmarks, respectively (mAP@10). ToolLinkOS dataset is available at https://github.com/EliasLumer/Graph-RAG-Tool-Fusion-ToolLinkOS",
+      "published": 2025,
+      "published_date": "2025-02-11T03:32:34+00:00",
+      "url": "http://arxiv.org/abs/2502.07223v1",
+      "pdf_url": "https://arxiv.org/pdf/2502.07223v1",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "doi": null,
+      "abstract": "Recent developments in retrieval-augmented generation (RAG) for selecting relevant tools from a tool knowledge base enable LLM agents to scale their complex tool calling capabilities to hundreds or thousands of external tools, APIs, or agents-as-tools. However, traditional RAG-based tool retrieval fails to capture structured dependencies between tools, limiting the retrieval accuracy of a retrieved tool's dependencies. For example, among a vector database of tools, a \"get stock price\" API requires a \"stock ticker\" parameter from a \"get stock ticker\" API, and both depend on OS-level internet connectivity tools. In this paper, we address this limitation by introducing Graph RAG-Tool Fusion, a novel plug-and-play approach that combines the strengths of vector-based retrieval with efficient graph traversal to capture all relevant tools (nodes) along with any nested dependencies (edges) within the predefined tool knowledge graph. We also present ToolLinkOS, a new tool selection benchmark of 573 fictional tools, spanning over 15 industries, each with an average of 6.3 tool dependencies. We demonstrate that Graph RAG-Tool Fusion achieves absolute improvements of 71.7% and 22.1% over naïve RAG on ToolLinkOS and ToolSandbox benchmarks, respectively (mAP@10). ToolLinkOS dataset is available at https://github.com/EliasLumer/Graph-RAG-Tool-Fusion-ToolLinkOS"
+    }
+  ]
+}

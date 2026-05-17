@@ -1,0 +1,23 @@
+{
+  "run_id": "49dd3546-29af-47dc-8709-e8b00ab6d663",
+  "current_step": "ExecutionState.REPORTING",
+  "max_papers": 50,
+  "has_plan": true,
+  "search_result_count": 16,
+  "filtered_paper_count": 16,
+  "extracted_paper_count": 0,
+  "evidence_item_count": 0,
+  "citation_ref_count": 0,
+  "written_section_count": 6,
+  "report_length": 18602,
+  "workflow_error_count": 2,
+  "boundary_check_keys": [
+    "search",
+    "reading",
+    "analyse",
+    "writing",
+    "report"
+  ],
+  "faithfulness_verdict": "pass",
+  "report_citation_verdict": null
+}

@@ -1,0 +1,42 @@
+{
+  "topic": "大语言模型智能体（LLM Agents）前沿架构、关键技术与发展挑战综述",
+  "expanded_keywords": [
+    "大语言模型智能体",
+    "工具与函数调用",
+    "多智能体协作与编排",
+    "思维规划与自我反思",
+    "长期记忆与状态管理",
+    "RAG与沙箱代码执行",
+    "智能体安全对齐",
+    "自动化评测基准"
+  ],
+  "related_terms": [
+    "具身智能",
+    "自主决策代理",
+    "工作流编排框架",
+    "大模型推理优化",
+    "多模态交互",
+    "可解释性与人机协同",
+    "强化学习与人类反馈(RLHF)",
+    "动态Prompt工程"
+  ],
+  "initial_findings": [
+    "工具调用机制已从静态API匹配演进为支持动态模式推断、参数校验与错误恢复的结构化交互范式，但在复杂异构系统对接时仍存在接口漂移问题。",
+    "多智能体系统正由预设工作流向角色自适应、动态协商与分层编排转变，显著提升了复杂任务分解与并行处理效率，但通信开销与一致性维护仍是难点。",
+    "ReAct、Tree-of-Thoughts等规划与反思机制有效缓解了单步推理错误累积，但引入的额外生成轮次导致计算延迟与Token成本大幅上升。",
+    "结合向量检索与摘要压缩的长期记忆架构初步实现了跨会话知识延续，但面临上下文窗口膨胀、无关信息干扰与记忆检索准确性下降的挑战。",
+    "与RAG及隔离代码执行环境的深度集成增强了外部知识实时调用与逻辑/数学任务求解能力，但沙箱权限管控、依赖解析失败率与环境状态同步仍需完善。",
+    "安全对齐与评测基准逐步从静态问答转向动态交互、多步任务链与红队对抗测试，但当前基准普遍缺乏统一标准，且易受模型已知数据污染影响。"
+  ],
+  "suggested_search_queries": [
+    "LLM agents tool use function calling survey",
+    "multi-agent collaboration orchestration LLM",
+    "planning reflection LLM agents ReAct Tree of Thoughts",
+    "long-term memory mechanisms LLM agents",
+    "LLM agents integration RAG code execution sandbox",
+    "AI agent safety alignment evaluation benchmark",
+    "autonomous large language model agents architecture review",
+    "agent reasoning decision making large language models"
+  ],
+  "notes": "该领域技术迭代迅速，文献检索建议限定近24个月，优先关注NeurIPS/ICLR/ACL顶会及arXiv预印本。技术报告撰写时需注意区分概念性框架提案与具备可复现实验验证的工程实现。当前部分评测基准存在指标碎片化与数据泄露风险，引用时建议交叉比对开源复现结果。多智能体通信协议、工具调用标准及记忆架构尚未统一，调研中应横向对比主流开源框架的设计取舍与适用边界。"
+}

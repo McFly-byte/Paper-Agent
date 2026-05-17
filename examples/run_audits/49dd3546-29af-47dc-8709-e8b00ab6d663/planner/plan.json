@@ -1,0 +1,203 @@
+{
+  "title": "大语言模型智能体（LLM Agents）前沿技术与发展挑战综述研究计划",
+  "thought": "本计划将调研范围解耦为工具与外部集成、多智能体与规划记忆、安全与评测三大检索簇，以应对该领域文献爆炸与概念重叠问题。检索策略优先限定arXiv近24个月预印本与顶会论文，通过严格的纳入/排除标准过滤纯概念性短文与缺乏实证的研究。阅读与分析阶段强调横向架构对比与开销/延迟指标提取，避免陷入单一框架的细节描述。写作阶段按技术模块、安全基准与挑战展望递进组织，确保技术报告具备工程可参考性与学术严谨性。",
+  "has_enough_context": true,
+  "search_tasks": [
+    {
+      "query": "LLM agents tool calling function calling RAG code execution sandbox",
+      "source": "arxiv",
+      "time_range": [
+        "2022-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "提出或改进大模型工具调用/函数调用机制",
+        "包含与RAG或代码沙箱环境集成的架构设计",
+        "提供实验验证或基准测试"
+      ],
+      "exclusion_criteria": [
+        "仅讨论纯文本生成或微调技术",
+        "缺乏具体实现细节或实验数据的概念性短文",
+        "非英文或中文文献"
+      ],
+      "top_k": 20
+    },
+    {
+      "query": "multi-agent LLM collaboration orchestration workflow framework",
+      "source": "arxiv",
+      "time_range": [
+        "2022-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "研究多智能体通信协议、角色分配或动态编排策略",
+        "包含复杂任务分解与并行处理的实证分析",
+        "开源框架或系统级实现"
+      ],
+      "exclusion_criteria": [
+        "仅聚焦单智能体内部优化",
+        "未涉及智能体间交互机制的综述",
+        "非学术性技术博客"
+      ],
+      "top_k": 20
+    },
+    {
+      "query": "LLM agent planning reflection ReAct Tree of Thoughts long-term memory",
+      "source": "arxiv",
+      "time_range": [
+        "2022-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "探讨ReAct/ToT等推理规划范式或记忆管理机制",
+        "分析计算开销、延迟或上下文窗口优化方案",
+        "提供跨会话或长程任务实验"
+      ],
+      "exclusion_criteria": [
+        "仅讨论基础Prompt Engineering技巧",
+        "未涉及状态管理或错误恢复机制",
+        "重复发表或预印本未更新版本"
+      ],
+      "top_k": 20
+    },
+    {
+      "query": "LLM agent safety alignment evaluation benchmark red teaming",
+      "source": "arxiv",
+      "time_range": [
+        "2022-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "构建或改进智能体安全对齐与动态评测基准",
+        "包含红队测试、多步任务链或数据污染分析",
+        "提供可复现的评测指标与结果"
+      ],
+      "exclusion_criteria": [
+        "仅针对静态问答或传统NLP任务的安全研究",
+        "缺乏明确评测协议或基线对比",
+        "商业宣传材料"
+      ],
+      "top_k": 20
+    }
+  ],
+  "reading_tasks": [
+    {
+      "focus": "提取工具调用接口设计、RAG/代码沙箱集成模式及错误恢复机制",
+      "required_fields": [
+        "architecture_diagram",
+        "tool_interface_spec",
+        "integration_method",
+        "latency_cost_metrics",
+        "failure_recovery_strategy"
+      ],
+      "extraction_schema_name": "AgentArchitectureSchema"
+    },
+    {
+      "focus": "梳理多智能体通信协议、规划反思算法与长期记忆架构的权衡",
+      "required_fields": [
+        "communication_protocol",
+        "planning_algorithm",
+        "memory_storage_type",
+        "consistency_mechanism",
+        "computational_overhead"
+      ],
+      "extraction_schema_name": "AgentCoordinationSchema"
+    },
+    {
+      "focus": "归纳安全对齐策略、动态评测基准设计、数据泄露风险及红队测试方法",
+      "required_fields": [
+        "safety_alignment_method",
+        "benchmark_name",
+        "evaluation_metrics",
+        "data_contamination_risk",
+        "red_teaming_protocol"
+      ],
+      "extraction_schema_name": "SafetyEvalSchema"
+    }
+  ],
+  "analysis_tasks": [
+    {
+      "name": "工具调用与外部集成架构对比",
+      "analysis_type": "method_comparison",
+      "target_dimensions": [
+        "接口标准化程度",
+        "错误恢复能力",
+        "计算延迟",
+        "沙箱隔离安全性"
+      ],
+      "description": "横向对比主流框架在函数调用、RAG检索与代码执行环境集成上的设计取舍与性能表现。"
+    },
+    {
+      "name": "智能体规划与记忆机制演进趋势",
+      "analysis_type": "trend_analysis",
+      "target_dimensions": [
+        "推理范式迭代",
+        "上下文管理策略",
+        "通信开销变化",
+        "任务成功率"
+      ],
+      "description": "追踪从单步Prompt到ReAct/ToT及长期记忆架构的技术演进路径与性能瓶颈。"
+    },
+    {
+      "name": "安全评测基准局限性与挑战总结",
+      "analysis_type": "limitation_summary",
+      "target_dimensions": [
+        "指标碎片化",
+        "数据污染风险",
+        "动态交互覆盖度",
+        "可复现性"
+      ],
+      "description": "系统归纳现有智能体安全对齐与自动化评测基准的共性缺陷与标准化缺失问题。"
+    }
+  ],
+  "writing_tasks": [
+    {
+      "section_title": "引言与核心架构范式",
+      "section_goal": "界定LLM智能体概念，概述系统级架构分类与核心组件交互逻辑",
+      "required_evidence_types": [
+        "abstract",
+        "architecture_overview",
+        "component_interaction"
+      ],
+      "expected_length": 1500
+    },
+    {
+      "section_title": "关键技术与集成机制",
+      "section_goal": "深度剖析工具调用、多智能体编排、规划反思、长期记忆及RAG/代码沙箱融合的技术细节与实证结果",
+      "required_evidence_types": [
+        "method",
+        "experiment_setup",
+        "result",
+        "ablation_study"
+      ],
+      "expected_length": 3500
+    },
+    {
+      "section_title": "安全对齐与自动化评测基准",
+      "section_goal": "梳理动态交互安全测试、红队对抗机制及主流评测基准的设计原则与数据污染挑战",
+      "required_evidence_types": [
+        "benchmark_description",
+        "safety_protocol",
+        "evaluation_metric",
+        "limitation"
+      ],
+      "expected_length": 2000
+    },
+    {
+      "section_title": "主要挑战与未来研究方向",
+      "section_goal": "综合技术瓶颈、标准化缺失与工程落地难点，提出可验证的演进路径",
+      "required_evidence_types": [
+        "discussion",
+        "future_work",
+        "synthesis"
+      ],
+      "expected_length": 1500
+    }
+  ],
+  "evaluation_criteria": [
+    "结构完整性：报告是否完整覆盖工具调用、多智能体、规划记忆、RAG集成与安全评测五大核心模块。",
+    "方法对比深度：关键技术章节是否包含至少3种主流架构/算法的横向对比，并附带明确的性能或开销指标。",
+    "局限性覆盖：是否系统归纳当前评测基准的数据污染风险、通信开销瓶颈及接口标准化缺失问题。",
+    "证据可追溯性：所有技术主张与数据结论是否均能对应至检索文献的具体实验设置或结果章节。"
+  ]
+}

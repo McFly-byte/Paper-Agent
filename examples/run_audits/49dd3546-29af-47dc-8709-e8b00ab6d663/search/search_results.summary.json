@@ -1,0 +1,133 @@
+{
+  "count": 16,
+  "sample": [
+    {
+      "title": "From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows",
+      "paper_id": "2506.23260v2",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2506.23260v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Beyond Max Tokens: Stealthy Resource Amplification via Tool Calling Chains in LLM Agents",
+      "paper_id": "2601.10955v2",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2601.10955v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases",
+      "paper_id": "2407.12784v1",
+      "published": 2024,
+      "url": "http://arxiv.org/abs/2407.12784v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Orchestral AI: A Framework for Agent Orchestration",
+      "paper_id": "2601.02577v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2601.02577v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "PHMForge: Evaluating LLM Agents on Industrial Prognostics through MCP-Native, Algorithm-Grounded Tools",
+      "paper_id": "2604.01532v2",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.01532v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Agentic Video Generation: From Text to Executable Event Graphs via Tool-Constrained LLM Planning",
+      "paper_id": "2604.10383v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.10383v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "RIVA: Leveraging LLM Agents for Reliable Configuration Drift Detection",
+      "paper_id": "2603.02345v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2603.02345v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "DeceptGuard :A Constitutional Oversight Framework For Detecting Deception in LLM Agents",
+      "paper_id": "2603.13791v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2603.13791v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Beyond Itinerary Planning-A Real-World Benchmark for Multi-Turn and Tool-Using Travel Tasks",
+      "paper_id": "2512.22673v3",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2512.22673v3",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "An LLM Agent for Automatic Geospatial Data Analysis",
+      "paper_id": "2410.18792v2",
+      "published": 2024,
+      "url": "http://arxiv.org/abs/2410.18792v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Trojan Hippo: Weaponizing Agent Memory for Data Exfiltration",
+      "paper_id": "2605.01970v2",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2605.01970v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Coinvisor: An RL-Enhanced Chatbot Agent for Interactive Cryptocurrency Investment Analysis",
+      "paper_id": "2510.17235v1",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2510.17235v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Cutscene Agent: An LLM Agent Framework for Automated 3D Cutscene Generation",
+      "paper_id": "2604.25318v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.25318v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Is Grep All You Need? How Agent Harnesses Reshape Agentic Search",
+      "paper_id": "2605.15184v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2605.15184v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "ChemGraph-XANES: An Agentic Framework for XANES Simulation and Analysis",
+      "paper_id": "2604.16205v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.16205v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Graph RAG-Tool Fusion",
+      "paper_id": "2502.07223v1",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2502.07223v1",
+      "score": null,
+      "reasons": null
+    }
+  ]
+}

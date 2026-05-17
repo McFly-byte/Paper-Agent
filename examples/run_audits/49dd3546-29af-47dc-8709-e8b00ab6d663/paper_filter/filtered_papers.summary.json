@@ -1,0 +1,133 @@
+{
+  "count": 16,
+  "sample": [
+    {
+      "paper_id": "2506.23260v2",
+      "title": "From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agents Workflows",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2506.23260v2",
+      "source": "arxiv",
+      "abstract_excerpt": "Autonomous AI agents powered by large language models (LLMs) with structured function-calling interfaces enable real-time data retrieval, computation, and multi-step orchestration. However, the rapid growth of plugins, connectors, and inter-agent protocols has outpaced security practices, leading to brittle integrations that rely on ad-hoc authentication, inconsistent schemas, and weak validation."
+    },
+    {
+      "paper_id": "2601.10955v2",
+      "title": "Beyond Max Tokens: Stealthy Resource Amplification via Tool Calling Chains in LLM Agents",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2601.10955v2",
+      "source": "arxiv",
+      "abstract_excerpt": "The agent--tool interaction loop is a critical attack surface for modern Large Language Model (LLM) agents. Existing denial-of-service (DoS) attacks typically function at the user-prompt or retrieval-augmented generation (RAG) context layer and are inherently single-turn in nature. This limitation restricts cost amplification and diminishes stealth in goal-oriented workflows. To address these issu"
+    },
+    {
+      "paper_id": "2407.12784v1",
+      "title": "AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases",
+      "published": "2024",
+      "url": "http://arxiv.org/abs/2407.12784v1",
+      "source": "arxiv",
+      "abstract_excerpt": "LLM agents have demonstrated remarkable performance across various applications, primarily due to their advanced capabilities in reasoning, utilizing external knowledge and tools, calling APIs, and executing actions to interact with environments. Current agents typically utilize a memory module or a retrieval-augmented generation (RAG) mechanism, retrieving past knowledge and instances with simila"
+    },
+    {
+      "paper_id": "2601.02577v1",
+      "title": "Orchestral AI: A Framework for Agent Orchestration",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2601.02577v1",
+      "source": "arxiv",
+      "abstract_excerpt": "The rapid proliferation of LLM agent frameworks has forced developers to choose between vendor lock-in through provider-specific SDKs and complex multi-package ecosystems that obscure control flow and hinder reproducibility. Integrating tool calling across multiple LLM providers remains a core engineering challenge due to fragmented APIs, incompatible message formats, and inconsistent streaming an"
+    },
+    {
+      "paper_id": "2604.01532v2",
+      "title": "PHMForge: Evaluating LLM Agents on Industrial Prognostics through MCP-Native, Algorithm-Grounded Tools",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.01532v2",
+      "source": "arxiv",
+      "abstract_excerpt": "LLM agents are beginning to invoke industrial asset-management tools through the Model Context Protocol (MCP), yet whether they can act reliably on this substrate for safety-critical \\emph{Prognostics and Health Management (PHM)} is unanswered. Prior benchmarks conflate protocol fluency with reasoning, instrumentation failures with agent failures, and tool use with tool retrieval. We introduce \\te"
+    },
+    {
+      "paper_id": "2604.10383v1",
+      "title": "Agentic Video Generation: From Text to Executable Event Graphs via Tool-Constrained LLM Planning",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.10383v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Existing multi-agent video generation systems use LLM agents to orchestrate neural video generators, producing visually impressive but semantically unreliable outputs with no ground truth annotations. We present an agentic system that inverts this paradigm: instead of generating pixels, the LLM constructs a formal Graph of Events in Space and Time (GEST) -- a structured specification of actors, ac"
+    },
+    {
+      "paper_id": "2603.02345v1",
+      "title": "RIVA: Leveraging LLM Agents for Reliable Configuration Drift Detection",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2603.02345v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Infrastructure as code (IaC) tools automate cloud provisioning but verifying that deployed systems remain consistent with the IaC specifications remains challenging. Such configuration drift occurs because of bugs in the IaC specification, manual changes, or system updates. Large language model (LLM)-based agentic AI systems can automate the analysis of large volumes of telemetry data, making them"
+    },
+    {
+      "paper_id": "2603.13791v1",
+      "title": "DeceptGuard :A Constitutional Oversight Framework For Detecting Deception in LLM Agents",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2603.13791v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Reliable detection of deceptive behavior in Large Language Model (LLM) agents is an essential prerequisite for safe deployment in high-stakes agentic contexts. Prior work on scheming detection has focused exclusively on black-box monitors that observe only externally visible tool calls and outputs, discarding potentially rich internal reasoning signals. We introduce DECEPTGUARD, a unified framewor"
+    },
+    {
+      "paper_id": "2512.22673v3",
+      "title": "Beyond Itinerary Planning-A Real-World Benchmark for Multi-Turn and Tool-Using Travel Tasks",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2512.22673v3",
+      "source": "arxiv",
+      "abstract_excerpt": "Travel planning is a natural real-world task to test large language models' (LLMs) planning and tool-use abilities. Although prior work has studied LLM performance on travel planning, existing settings still differ from real-world needs, mainly due to limited domain coverage, insufficient modeling of users' implicit preferences in multi-turn conversations, and a lack of evaluation of agents' capab"
+    },
+    {
+      "paper_id": "2410.18792v2",
+      "title": "An LLM Agent for Automatic Geospatial Data Analysis",
+      "published": "2024",
+      "url": "http://arxiv.org/abs/2410.18792v2",
+      "source": "arxiv",
+      "abstract_excerpt": "Large language models (LLMs) are being used in data science code generation tasks, but they often struggle with complex sequential tasks, leading to logical errors. Their application to geospatial data processing is particularly challenging due to difficulties in incorporating complex data structures and spatial constraints, effectively utilizing diverse function calls, and the tendency to halluci"
+    },
+    {
+      "paper_id": "2605.01970v2",
+      "title": "Trojan Hippo: Weaponizing Agent Memory for Data Exfiltration",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2605.01970v2",
+      "source": "arxiv",
+      "abstract_excerpt": "Memory systems enable otherwise-stateless LLM agents to persist user information across sessions, but also introduce a new attack surface. We characterize the Trojan Hippo attack, a class of persistent memory attacks that operates in a more realistic threat model than prior memory poisoning work: the attacker plants a dormant payload into an agent's long-term memory via a single untrusted tool cal"
+    },
+    {
+      "paper_id": "2510.17235v1",
+      "title": "Coinvisor: An RL-Enhanced Chatbot Agent for Interactive Cryptocurrency Investment Analysis",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2510.17235v1",
+      "source": "arxiv",
+      "abstract_excerpt": "The cryptocurrency market offers significant investment opportunities but faces challenges including high volatility and fragmented information. Data integration and analysis are essential for informed investment decisions. Currently, investors use three main approaches: (1) Manual analysis across various sources, which depends heavily on individual experience and is time-consuming and prone to bi"
+    },
+    {
+      "paper_id": "2604.25318v1",
+      "title": "Cutscene Agent: An LLM Agent Framework for Automated 3D Cutscene Generation",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.25318v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Cutscenes are carefully choreographed cinematic sequences embedded in video games and interactive media, serving as the primary vehicle for narrative delivery, character development, and emotional engagement. Producing cutscenes is inherently complex: it demands seamless coordination across screenwriting, cinematography, character animation, voice acting, and technical direction, often requiring d"
+    },
+    {
+      "paper_id": "2605.15184v1",
+      "title": "Is Grep All You Need? How Agent Harnesses Reshape Agentic Search",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2605.15184v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Recent advances in Large Language Model (LLM) agents have enabled complex agentic workflows where models autonomously retrieve information, call tools, and reason over large corpora to complete tasks on behalf of users. Despite the growing adoption of retrieval-augmented generation (RAG) in agentic search systems, existing literature lacks a systematic comparison of how retrieval strategy choice i"
+    },
+    {
+      "paper_id": "2604.16205v1",
+      "title": "ChemGraph-XANES: An Agentic Framework for XANES Simulation and Analysis",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.16205v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Computational X-ray absorption near-edge structure (XANES) is widely used to probe local coordination environments, oxidation states, and electronic structure in chemically complex systems. However, the use of computational XANES at scale is constrained more by workflow complexity than by the underlying simulation method itself. To address this challenge, we present ChemGraph-XANES, an agentic fra"
+    },
+    {
+      "paper_id": "2502.07223v1",
+      "title": "Graph RAG-Tool Fusion",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2502.07223v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Recent developments in retrieval-augmented generation (RAG) for selecting relevant tools from a tool knowledge base enable LLM agents to scale their complex tool calling capabilities to hundreds or thousands of external tools, APIs, or agents-as-tools. However, traditional RAG-based tool retrieval fails to capture structured dependencies between tools, limiting the retrieval accuracy of a retrieve"
+    }
+  ]
+}

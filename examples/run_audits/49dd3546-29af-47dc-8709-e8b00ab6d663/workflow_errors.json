@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "node": "evidence_index_node",
+      "phase": "evidence_index",
+      "warning": "no_extracted_data"
+    },
+    {
+      "node": "writing_node",
+      "phase": "evidence_bound",
+      "warning": "no_evidence_ledger_fallback_legacy_writing"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "querys": [
+    "(\"LLM agent\" OR \"large language model agent\") AND (\"tool calling\" OR \"function calling\" OR tool_use) AND (\"RAG\" OR retrieval_augmented_generation OR sandbox)",
+    "(\"multi-agent\" OR \"multi-agent system\") AND (collaboration OR orchestration OR coordination) AND (\"LLM agent\" OR \"large language model\")",
+    "(\"LLM agent\" OR \"large language model agent\") AND (planning OR reflection OR \"ReAct\" OR \"Tree of Thoughts\" OR \"Chain of Thought\") AND (memory OR long-term)",
+    "(\"LLM agent\" OR \"large language model agent\") AND (safety OR alignment OR benchmark OR evaluation OR \"red teaming\")"
+  ],
+  "start_date": "2022-01-01",
+  "end_date": "2026-12-31"
+}

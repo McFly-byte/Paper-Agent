@@ -1,0 +1,159 @@
+{
+  "search": {
+    "passed": true,
+    "score": 1.0,
+    "reasons": [],
+    "metrics": {
+      "query_count": 4,
+      "top_titles": [
+        "Cutscene Agent: An LLM Agent Framework for Automated 3D Cutscene Generation",
+        "RIVA: Leveraging LLM Agents for Reliable Configuration Drift Detection",
+        "Beyond Max Tokens: Stealthy Resource Amplification via Tool Calling Chains in LLM Agents",
+        "Graph RAG-Tool Fusion",
+        "Agentic Video Generation: From Text to Executable Event Graphs via Tool-Constrained LLM Planning"
+      ],
+      "raw_result_count": 16,
+      "dedup_count": 16,
+      "dedup_ratio": 1.0,
+      "requested_max_results": 50,
+      "avg_query_terms": 12.75,
+      "topic_token_overlap": "****",
+      "blocking_failure_count": 0,
+      "warning_count": 0
+    },
+    "next_action": "continue"
+  },
+  "reading": {
+    "passed": true,
+    "score": 0.94,
+    "reasons": [
+      "LlamaIndex 入库节点数为 0，写作阶段会降级依赖 legacy 临时库"
+    ],
+    "metrics": {
+      "input_paper_count": 16,
+      "parsed_paper_count": 16,
+      "parse_ratio": 1.0,
+      "avg_core_field_fill": 0.9125,
+      "kb_write_count": 16,
+      "metadata_field_coverage": {
+        "paper_id_or_id_or_arxiv_id": 1.0,
+        "title": 1.0,
+        "summary_or_abstract": 1.0,
+        "url_or_pdf_url_or_source": 1.0
+      },
+      "short_abstract_count": 0,
+      "prompt_injection_marker_count": 0,
+      "llamaindex_node_count": 0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "LlamaIndex 入库节点数为 0，写作阶段会降级依赖 legacy 临时库"
+      ]
+    },
+    "next_action": "continue"
+  },
+  "analyse": {
+    "passed": true,
+    "score": 0.94,
+    "reasons": [
+      "cluster_summaries 未提供代表论文，分析可追溯性偏弱"
+    ],
+    "metrics": {
+      "input_paper_count": 16,
+      "cluster_count": 2,
+      "deep_analysis_count": 2,
+      "global_analysis_length": 6484,
+      "cluster_sizes": [
+        10,
+        6
+      ],
+      "representative_paper_count": 0,
+      "global_module_hits": 6,
+      "cluster_to_paper_ratio": 0.125,
+      "cluster_paper_total": 16,
+      "cluster_size_balance": 0.6,
+      "reference_token_match_ratio": "****",
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "cluster_summaries 未提供代表论文，分析可追溯性偏弱"
+      ]
+    },
+    "next_action": "continue"
+  },
+  "writing": {
+    "passed": true,
+    "score": 0.88,
+    "reasons": [
+      "RAG 正向检索覆盖率偏低（0.00 < 0.50）"
+    ],
+    "metrics": {
+      "planned_sections": 6,
+      "written_sections_nonempty": 6,
+      "section_match_ratio": 1.0,
+      "section_lengths": [
+        2282,
+        2687,
+        2595,
+        3988,
+        2486,
+        3307
+      ],
+      "review_verdicts": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "section_evidence_hint_ratio": 0.8333,
+      "section_title_content_match_ratio": 1.0,
+      "rag_call_count": 0,
+      "rag_positive_call_count": 0,
+      "rag_positive_call_ratio": 0.0,
+      "review_pass_rate": 1.0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "RAG 正向检索覆盖率偏低（0.00 < 0.50）"
+      ]
+    },
+    "next_action": "continue"
+  },
+  "report": {
+    "passed": true,
+    "score": 0.95,
+    "reasons": [
+      "存在 1 个疑似空章节"
+    ],
+    "metrics": {
+      "final_length": 18602,
+      "planned_source_sections": 6,
+      "heading_count": 31,
+      "section_trigram_recalls": [
+        0.9935,
+        0.9934,
+        0.9934,
+        0.9969,
+        0.9921,
+        0.995
+      ],
+      "report_trigram_bucket_size": 10385,
+      "section_coverage_ratio": 1.0,
+      "has_intro": true,
+      "has_conclusion": true,
+      "has_body_analysis": true,
+      "has_source_or_reference_hint": true,
+      "placeholder_count": 0,
+      "empty_section_count": 1,
+      "duplicate_paragraph_ratio": 0.0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "存在 1 个疑似空章节"
+      ]
+    },
+    "next_action": "continue"
+  }
+}

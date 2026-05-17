@@ -1,0 +1,14 @@
+{
+  "original_query": "请围绕「大模型智能体（LLM Agents）的前沿研究」做调研：重点包括工具调用与函数调用、多智能体协作与编排、规划与反思（ReAct / Tree-of-Thoughts 等）、记忆与长期任务、与 RAG/代码执行环境的结合，以及安全对齐与评测基准方面的最新进展与主要挑战。",
+  "clarified_topic": "大语言模型智能体（LLM Agents）前沿技术与发展挑战综述",
+  "domain": null,
+  "task_type": "survey",
+  "target_audience": "technical_report",
+  "time_range": [
+    null,
+    null
+  ],
+  "language": "zh",
+  "clarification_needed": false,
+  "clarification_questions": []
+}
