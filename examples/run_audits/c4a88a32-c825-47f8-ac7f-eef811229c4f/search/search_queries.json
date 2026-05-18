@@ -1,0 +1,12 @@
+{
+  "querys": [
+    "(\"LLM agent\" OR \"language model agent\") AND (\"tool calling\" OR \"function calling\" OR API)",
+    "(\"multi-agent\" OR \"multi-agent system\") AND (\"orchestration\" OR \"coordination\" OR \"collaboration\")",
+    "(\"ReAct\" OR \"Tree-of-Thoughts\" OR \"Chain-of-Thought\" OR \"self-reflection\") AND (\"planning\" OR \"reasoning\")",
+    "(\"long-term memory\" OR \"episodic memory\" OR \"vector memory\") AND (\"RAG\" OR \"retrieval-augmented generation\")",
+    "(\"code execution\" OR \"sandbox\" OR \"interpreter\") AND (\"LLM agent\" OR \"autonomous agent\")",
+    "\"agent safety\" AND (\"alignment\" OR \"robustness\" OR \"benchmark\" OR \"evaluation\")"
+  ],
+  "start_date": "2023-01-01",
+  "end_date": "2026-12-31"
+}

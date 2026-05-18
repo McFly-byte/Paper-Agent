@@ -1,0 +1,796 @@
+{
+  "count": 15,
+  "sample": [
+    {
+      "paper": {
+        "paper_id": "2506.00641v3",
+        "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+        "authors": [
+          "Hanjun Luo",
+          "Shenyu Dai",
+          "Chiming Ni",
+          "Xinfeng Li",
+          "Guibin Zhang",
+          "Kun Wang",
+          "Tongliang Liu",
+          "Hanan Salam"
+        ],
+        "summary": "Despite the rapid advancement of LLM-based agents, the reliable evaluation of their safety and security remains a significant challenge. Existing rule-based or LLM-based evaluators often miss dangers in agents' step-by-step actions, overlook subtle meanings, fail to see how small issues compound, and get confused by unclear safety or security rules. To overcome this evaluation crisis, we introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework that empowers LLM evaluators to emulate human expert evaluators. AgentAuditor constructs an experiential memory by having an LLM adaptively extract structured semantic features (e.g., scenario, risk, behavior) and generate associated chain-of-thought reasoning traces for past interactions. A multi-stage, context-aware retrieval-augmented generation process then dynamically retrieves the most relevant reasoning experiences to guide the LLM evaluator's assessment of new cases. Moreover, we developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats. ASSEBench comprises 2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios. A key feature of ASSEBench is its nuanced approach to ambiguous risk situations, employing \"Strict\" and \"Lenient\" judgment standards. Experiments demonstrate that AgentAuditor not only consistently improves the evaluation performance of LLMs across all benchmarks but also sets a new state-of-the-art in LLM-as-a-judge for agent safety and security, achieving human-level accuracy. Our work is openly accessible at https://github.com/Astarojth/AgentAuditor.",
+        "published": 2025,
+        "published_date": "2025-05-31T17:10:23+00:00",
+        "url": "http://arxiv.org/abs/2506.00641v3",
+        "pdf_url": "https://arxiv.org/pdf/2506.00641v3",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Despite the rapid advancement of LLM-based agents, the reliable evaluation of their safety and security remains a significant challenge. Existing rule-based or LLM-based evaluators often miss dangers in agents' step-by-step actions, overlook subtle meanings, fail to see how small issues compound, and get confused by unclear safety or security rules. To overcome this evaluation crisis, we introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework that empowers LLM evaluators to emulate human expert evaluators. AgentAuditor constructs an experiential memory by having an LLM adaptively extract structured semantic features (e.g., scenario, risk, behavior) and generate associated chain-of-thought reasoning traces for past interactions. A multi-stage, context-aware retrieval-augmented generation process then dynamically retrieves the most relevant reasoning experiences to guide the LLM evaluator's assessment of new cases. Moreover, we developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats. ASSEBench comprises 2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios. A key feature of ASSEBench is its nuanced approach to ambiguous risk situations, employing \"Strict\" and \"Lenient\" judgment standards. Experiments demonstrate that AgentAuditor not only consistently improves the evaluation performance of LLMs across all benchmarks but also sets a new state-of-the-art in LLM-as-a-judge for agent safety and security, achieving human-level accuracy. Our work is openly accessible at https://github.com/Astarojth/AgentAuditor."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 代理快速发展，但现有规则或 LLM 评估器常遗漏逐步行动中的危险、忽略细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆，导致可靠的安全与安全评估仍具挑战。",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "构建经验记忆库，通过 LLM 自适应提取结构化语义特征（场景、风险、行为）并生成思维链推理轨迹；利用多阶段上下文感知检索增强生成（RAG）动态检索最相关推理经验以指导新案例评估。",
+          "novelty": "我们提出 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模拟人类专家评估器；同时开发了 ASSEBench，首个旨在检查 LLM 评估器识别安全风险和威胁能力的基准。"
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "在所有基准上持续提升 LLM 评估性能，在代理安全与安全领域的 LLM-as-a-judge 任务中设定新的 state-of-the-art，达到人类水平的准确率（human-level accuracy）。",
+        "limitations": "",
+        "contributions": [
+          "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces.",
+          "Developed ASSEBench, the first benchmark for evaluating LLM-based agents' safety risks and security threats.",
+          "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2509.26100v2",
+        "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+        "authors": [
+          "Yixu Wang",
+          "Xin Wang",
+          "Yang Yao",
+          "Xinyuan Li",
+          "Xibang Yang",
+          "Yan Teng",
+          "Xingjun Ma",
+          "Yingchun Wang"
+        ],
+        "summary": "The rapid integration of Large Language Models (LLMs) into high-stakes domains necessitates reliable safety and compliance evaluation. However, existing static benchmarks are ill-equipped to address the dynamic nature of AI risks and evolving regulations, creating a critical safety gap. This paper introduces a new paradigm of agentic safety evaluation, reframing evaluation as a continuous and self-evolving process rather than a one-time audit. We then propose a novel multi-agent framework AgenticEval, which autonomously ingests unstructured policy documents to generate and perpetually evolve a comprehensive safety benchmark. AgenticEval leverages a synergistic pipeline of specialized agents and incorporates a Self-evolving Evaluation loop, where the system learns from evaluation results to craft progressively more sophisticated and targeted test cases. Our experiments demonstrate the effectiveness of AgenticEval, showing a consistent decline in model safety as the evaluation hardens. For instance, GPT-5's safety rate on the EU AI Act drops from 72.50% to 36.36% over successive iterations. These findings reveal the limitations of static assessments and highlight our framework's ability to uncover deep vulnerabilities missed by traditional methods, underscoring the urgent need for dynamic evaluation ecosystems to ensure the safe and responsible deployment of advanced AI.",
+        "published": 2025,
+        "published_date": "2025-09-30T11:20:41+00:00",
+        "url": "http://arxiv.org/abs/2509.26100v2",
+        "pdf_url": "https://arxiv.org/pdf/2509.26100v2",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "The rapid integration of Large Language Models (LLMs) into high-stakes domains necessitates reliable safety and compliance evaluation. However, existing static benchmarks are ill-equipped to address the dynamic nature of AI risks and evolving regulations, creating a critical safety gap. This paper introduces a new paradigm of agentic safety evaluation, reframing evaluation as a continuous and self-evolving process rather than a one-time audit. We then propose a novel multi-agent framework AgenticEval, which autonomously ingests unstructured policy documents to generate and perpetually evolve a comprehensive safety benchmark. AgenticEval leverages a synergistic pipeline of specialized agents and incorporates a Self-evolving Evaluation loop, where the system learns from evaluation results to craft progressively more sophisticated and targeted test cases. Our experiments demonstrate the effectiveness of AgenticEval, showing a consistent decline in model safety as the evaluation hardens. For instance, GPT-5's safety rate on the EU AI Act drops from 72.50% to 36.36% over successive iterations. These findings reveal the limitations of static assessments and highlight our framework's ability to uncover deep vulnerabilities missed by traditional methods, underscoring the urgent need for dynamic evaluation ecosystems to ensure the safe and responsible deployment of advanced AI."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 代理快速发展，但现有基于规则或 LLM 的评估器常遗漏逐步行动中的危险、忽视细微含义、无法看到小问题如何累积，并因模糊的安全或安全规则而困惑。",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并为过去交互生成关联的思维链推理轨迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验，以指导 LLM 评估器对新案例的评估。",
+          "novelty": "我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模仿人类专家评估器。"
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "在 ASSEBench 上实现了人类水平的准确率（human-level accuracy），并在所有基准测试中一致提升了 LLM 的评估性能，确立了 LLM-as-a-judge 在代理安全和安全方面的新最先进水平。",
+        "limitations": "",
+        "contributions": [
+          "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces.",
+          "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats.",
+          "Employed nuanced 'Strict' and 'Lenient' judgment standards for ambiguous risk situations.",
+          "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2605.03242v1",
+        "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+        "authors": [
+          "Zuoyu Zhang",
+          "Yancheng Zhu"
+        ],
+        "summary": "Tool-using agent systems powered by large language models (LLMs) are increasingly deployed across web, app, operating-system, and transactional environments. Yet existing safety benchmarks still emphasize explicit risks, potentially overstating a model's ability to judge deceptive or ambiguous trajectories. To address this gap, we introduce ROME (Red-team Orchestrated Multi-agent Evolution), a controlled benchmark-construction pipeline that rewrites known unsafe trajectories into more deceptive evaluation instances while preserving their underlying risk labels. Starting from 100 unsafe source trajectories, ROME produces 300 challenge instances spanning contextual ambiguity, implicit risks, and shortcut decision-making. Experiments show that these challenge sets substantially degrade safety-judgment performance, with hidden-risk cases remaining particularly non-trivial even for recent frontier models. We further study ARISE (Analogical Reasoning for Inference-time Safety Enhancement), a retrieval-guided inference-time enhancement that retrieves ReAct-style analogical safety trajectories from an external analogical base and injects them as structured reasoning exemplars. ARISE improves judgment quality without retraining, but is best viewed as a task-specific robustness enhancement rather than a standalone safety guarantee. Together, ROME and ARISE provide practical tools for stress-testing and improving agent safety judgment under deceptive distribution shifts.",
+        "published": 2026,
+        "published_date": "2026-05-05T00:21:00+00:00",
+        "url": "http://arxiv.org/abs/2605.03242v1",
+        "pdf_url": "https://arxiv.org/pdf/2605.03242v1",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Tool-using agent systems powered by large language models (LLMs) are increasingly deployed across web, app, operating-system, and transactional environments. Yet existing safety benchmarks still emphasize explicit risks, potentially overstating a model's ability to judge deceptive or ambiguous trajectories. To address this gap, we introduce ROME (Red-team Orchestrated Multi-agent Evolution), a controlled benchmark-construction pipeline that rewrites known unsafe trajectories into more deceptive evaluation instances while preserving their underlying risk labels. Starting from 100 unsafe source trajectories, ROME produces 300 challenge instances spanning contextual ambiguity, implicit risks, and shortcut decision-making. Experiments show that these challenge sets substantially degrade safety-judgment performance, with hidden-risk cases remaining particularly non-trivial even for recent frontier models. We further study ARISE (Analogical Reasoning for Inference-time Safety Enhancement), a retrieval-guided inference-time enhancement that retrieves ReAct-style analogical safety trajectories from an external analogical base and injects them as structured reasoning exemplars. ARISE improves judgment quality without retraining, but is best viewed as a task-specific robustness enhancement rather than a standalone safety guarantee. Together, ROME and ARISE provide practical tools for stress-testing and improving agent safety judgment under deceptive distribution shifts."
+      },
+      "extracted": {
+        "core_problem": "尽管基于 LLM 的代理系统日益普及，但现有的安全基准仍强调显式风险，可能高估了模型判断欺骗性或模糊轨迹的能力，且缺乏针对分布外 deceptive scenarios 的有效评估与增强手段。",
+        "key_methodology": {
+          "name": "ROME and ARISE",
+          "principle": "ROME (Red-team Orchestrated Multi-agent Evolution) 是一个受控基准构建流水线，将已知的不安全轨迹重写为更具欺骗性的评估实例，同时保留其底层风险标签；ARISE (Analogical Reasoning for Inference-time Safety Enhancement) 是一种检索引导的推理时增强方法，从外部类比库中检索 ReAct 风格的类比安全轨迹，并将其作为结构化推理示例注入以提升判断质量。",
+          "novelty": "提出 ROME 用于生成涵盖上下文歧义、隐式风险和捷径决策的挑战性实例，并研究 ARISE 作为无需重新训练的任务特定鲁棒性增强手段。"
+        },
+        "datasets_used": [
+          "100 unsafe source trajectories rewritten into 300 challenge instances by ROME"
+        ],
+        "evaluation_metrics": [
+          "safety-judgment performance"
+        ],
+        "main_results": "ROME 生成的挑战集显著降低了安全判断性能，即使是最新的前沿模型，隐藏风险案例仍然特别难以处理；ARISE 提升了判断质量，但被视为任务特定的鲁棒性增强而非独立的安全保证。",
+        "limitations": "ARISE 最好被视为任务特定的鲁棒性增强，而不是独立的安全保证。",
+        "contributions": [
+          "Introduce ROME, a controlled benchmark-construction pipeline that rewrites known unsafe trajectories into more deceptive evaluation instances.",
+          "Produce 300 challenge instances spanning contextual ambiguity, implicit risks, and shortcut decision-making from 100 unsafe source trajectories.",
+          "Demonstrate that challenge sets substantially degrade safety-judgment performance even for recent frontier models.",
+          "Study ARISE, a retrieval-guided inference-time enhancement that improves judgment quality without retraining.",
+          "Provide practical tools for stress-testing and improving agent safety judgment under deceptive distribution shifts."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2507.08270v1",
+        "title": "Agent Safety Alignment via Reinforcement Learning",
+        "authors": [
+          "Zeyang Sha",
+          "Hanling Tian",
+          "Zhuoer Xu",
+          "Shiwen Cui",
+          "Changhua Meng",
+          "Weiqiang Wang"
+        ],
+        "summary": "The emergence of autonomous Large Language Model (LLM) agents capable of tool usage has introduced new safety risks that go beyond traditional conversational misuse. These agents, empowered to execute external functions, are vulnerable to both user-initiated threats (e.g., adversarial prompts) and tool-initiated threats (e.g., malicious outputs from compromised tools). In this paper, we propose the first unified safety-alignment framework for tool-using agents, enabling models to handle both channels of threat via structured reasoning and sandboxed reinforcement learning. We introduce a tri-modal taxonomy, including benign, malicious, and sensitive for both user prompts and tool responses, and define a policy-driven decision model. Our framework employs a custom-designed sandbox environment that simulates real-world tool execution and allows fine-grained reward shaping. Through extensive evaluations on public and self-built benchmarks, including Agent SafetyBench, InjecAgent, and BFCL, we demonstrate that our safety-aligned agents significantly improve resistance to security threats while preserving strong utility on benign tasks. Our results show that safety and effectiveness can be jointly optimized, laying the groundwork for trustworthy deployment of autonomous LLM agents.",
+        "published": 2025,
+        "published_date": "2025-07-11T02:34:16+00:00",
+        "url": "http://arxiv.org/abs/2507.08270v1",
+        "pdf_url": "https://arxiv.org/pdf/2507.08270v1",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI",
+          "cs.CR"
+        ],
+        "doi": null,
+        "abstract": "The emergence of autonomous Large Language Model (LLM) agents capable of tool usage has introduced new safety risks that go beyond traditional conversational misuse. These agents, empowered to execute external functions, are vulnerable to both user-initiated threats (e.g., adversarial prompts) and tool-initiated threats (e.g., malicious outputs from compromised tools). In this paper, we propose the first unified safety-alignment framework for tool-using agents, enabling models to handle both channels of threat via structured reasoning and sandboxed reinforcement learning. We introduce a tri-modal taxonomy, including benign, malicious, and sensitive for both user prompts and tool responses, and define a policy-driven decision model. Our framework employs a custom-designed sandbox environment that simulates real-world tool execution and allows fine-grained reward shaping. Through extensive evaluations on public and self-built benchmarks, including Agent SafetyBench, InjecAgent, and BFCL, we demonstrate that our safety-aligned agents significantly improve resistance to security threats while preserving strong utility on benign tasks. Our results show that safety and effectiveness can be jointly optimized, laying the groundwork for trustworthy deployment of autonomous LLM agents."
+      },
+      "extracted": {
+        "core_problem": "尽管基于大语言模型的智能体迅速发展，但现有评估方法难以可靠地评估其安全性和安全性，常忽略逐步行动中的危险、细微含义及小问题的累积效应。",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "通过让大语言模型自适应提取结构化语义特征（如场景、风险、行为）并生成相关的思维链推理痕迹来构建经验记忆，随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验以指导新案例的评估。",
+          "novelty": "我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使大语言模型评估器能够模拟人类专家评估器。"
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "在 ASSEBench 上实现了人类水平的准确率，并在所有基准测试中一致提高了大语言模型的评估性能，确立了智能体安全与安全领域 LLM-as-a-judge 的新最先进水平。",
+        "limitations": "未明确声明",
+        "contributions": [
+          "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Constructed an experiential memory by adaptively extracting structured semantic features and generating chain-of-thought reasoning traces.",
+          "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats.",
+          "Demonstrated that AgentAuditor achieves human-level accuracy and sets a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2601.06663v2",
+        "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+        "authors": [
+          "Kaiwen Zhou",
+          "Shreedhar Jangam",
+          "Ashwin Nagarajan",
+          "Tejas Polu",
+          "Suhas Oruganti",
+          "Chengzhi Liu",
+          "Ching-Chen Kuo",
+          "Yuting Zheng",
+          "Sravana Narayanaraju",
+          "Xin Eric Wang"
+        ],
+        "summary": "Large language model-based agents are rapidly evolving from simple conversational assistants into autonomous systems capable of performing complex, professional-level tasks in various domains. While these advancements promise significant productivity gains, they also introduce critical safety risks that remain under-explored. Existing safety evaluations primarily focus on simple, daily assistance tasks, failing to capture the intricate decision-making processes and potential consequences of misaligned behaviors in professional settings. To address this gap, we introduce \\textbf{SafePro}, a comprehensive benchmark designed to evaluate the safety alignment of AI agents performing professional activities. SafePro features a dataset of high-complexity tasks across diverse professional domains with safety risks, developed through a rigorous iterative creation and review process. Our evaluation of state-of-the-art AI models reveals significant safety vulnerabilities and uncovers new unsafe behaviors in professional contexts. We further show that these models exhibit both insufficient safety judgment and weak safety alignment when executing complex professional tasks. In addition, we investigate safety mitigation strategies for improving agent safety in these scenarios and observe encouraging improvements. Together, our findings highlight the urgent need for robust safety mechanisms tailored to the next generation of professional AI agents.",
+        "published": 2026,
+        "published_date": "2026-01-10T19:53:09+00:00",
+        "url": "http://arxiv.org/abs/2601.06663v2",
+        "pdf_url": "https://arxiv.org/pdf/2601.06663v2",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Large language model-based agents are rapidly evolving from simple conversational assistants into autonomous systems capable of performing complex, professional-level tasks in various domains. While these advancements promise significant productivity gains, they also introduce critical safety risks that remain under-explored. Existing safety evaluations primarily focus on simple, daily assistance tasks, failing to capture the intricate decision-making processes and potential consequences of misaligned behaviors in professional settings. To address this gap, we introduce \\textbf{SafePro}, a comprehensive benchmark designed to evaluate the safety alignment of AI agents performing professional activities. SafePro features a dataset of high-complexity tasks across diverse professional domains with safety risks, developed through a rigorous iterative creation and review process. Our evaluation of state-of-the-art AI models reveals significant safety vulnerabilities and uncovers new unsafe behaviors in professional contexts. We further show that these models exhibit both insufficient safety judgment and weak safety alignment when executing complex professional tasks. In addition, we investigate safety mitigation strategies for improving agent safety in these scenarios and observe encouraging improvements. Together, our findings highlight the urgent need for robust safety mechanisms tailored to the next generation of professional AI agents."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 智能体正迅速演变为能够执行复杂专业任务的自主系统，但现有的安全评估主要集中在简单的日常辅助任务，未能捕捉专业环境中复杂的决策过程及行为错位的潜在后果。",
+        "key_methodology": {
+          "name": "SafePro",
+          "principle": "通过严格的迭代创建和审查流程，构建涵盖不同专业领域的高复杂度任务数据集，用于评估 AI 智能体在执行专业活动时的安全对齐情况。",
+          "novelty": "第一个旨在评估执行专业活动的 AI 智能体安全对齐的综合基准（comprehensive benchmark designed to evaluate the safety alignment of AI agents performing professional activities）。"
+        },
+        "datasets_used": [
+          "SafePro (high-complexity tasks across diverse professional domains with safety risks)"
+        ],
+        "evaluation_metrics": [],
+        "main_results": "对最先进 AI 模型的评估揭示了显著的安全漏洞，发现了专业背景下的新不安全行为；模型在执行复杂专业任务时表现出安全判断不足和安全对齐薄弱；调查的安全缓解策略观察到令人鼓舞的改进（encouraging improvements）。",
+        "limitations": "现有安全评估主要关注简单的日常辅助任务（指出现有研究的局限，本文专注于填补专业领域空白）。",
+        "contributions": [
+          "Introduced SafePro, a comprehensive benchmark for evaluating safety alignment of AI agents in professional activities.",
+          "Developed a dataset of high-complexity tasks across diverse professional domains through a rigorous iterative creation and review process.",
+          "Revealed significant safety vulnerabilities and uncovered new unsafe behaviors in professional contexts among state-of-the-art models.",
+          "Demonstrated that current models exhibit insufficient safety judgment and weak safety alignment in complex professional tasks.",
+          "Investigated safety mitigation strategies and observed encouraging improvements for agent safety in professional scenarios."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2601.07853v1",
+        "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+        "authors": [
+          "Zhi Yang",
+          "Runguo Li",
+          "Qiqi Qiang",
+          "Jiashun Wang",
+          "Fangqi Lou",
+          "Mengping Li",
+          "Dongpo Cheng",
+          "Rui Xu",
+          "Heng Lian",
+          "Shuo Zhang",
+          "Xiaolong Liang",
+          "Xiaoming Huang",
+          "Zheng Wei",
+          "Zhaowei Liu",
+          "Xin Guo",
+          "Huacan Wang",
+          "Ronghao Chen",
+          "Liwen Zhang"
+        ],
+        "summary": "Financial agents powered by large language models (LLMs) are increasingly deployed for investment analysis, risk assessment, and automated decision-making, where their abilities to plan, invoke tools, and manipulate mutable state introduce new security risks in high-stakes and highly regulated financial environments. However, existing safety evaluations largely focus on language-model-level content compliance or abstract agent settings, failing to capture execution-grounded risks arising from real operational workflows and state-changing actions. To bridge this gap, we propose FinVault, the first execution-grounded security benchmark for financial agents, comprising 31 regulatory case-driven sandbox scenarios with state-writable databases and explicit compliance constraints, together with 107 real-world vulnerabilities and 963 test cases that systematically cover prompt injection, jailbreaking, financially adapted attacks, as well as benign inputs for false-positive evaluation. Experimental results reveal that existing defense mechanisms remain ineffective in realistic financial agent settings, with average attack success rates (ASR) still reaching up to 50.0\\% on state-of-the-art models and remaining non-negligible even for the most robust systems (ASR 6.7\\%), highlighting the limited transferability of current safety designs and the need for stronger financial-specific defenses. Our code can be found at https://github.com/aifinlab/FinVault.",
+        "published": 2026,
+        "published_date": "2026-01-09T03:25:45+00:00",
+        "url": "http://arxiv.org/abs/2601.07853v1",
+        "pdf_url": "https://arxiv.org/pdf/2601.07853v1",
+        "primary_category": "cs.CR",
+        "categories": [
+          "cs.CR",
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Financial agents powered by large language models (LLMs) are increasingly deployed for investment analysis, risk assessment, and automated decision-making, where their abilities to plan, invoke tools, and manipulate mutable state introduce new security risks in high-stakes and highly regulated financial environments. However, existing safety evaluations largely focus on language-model-level content compliance or abstract agent settings, failing to capture execution-grounded risks arising from real operational workflows and state-changing actions. To bridge this gap, we propose FinVault, the first execution-grounded security benchmark for financial agents, comprising 31 regulatory case-driven sandbox scenarios with state-writable databases and explicit compliance constraints, together with 107 real-world vulnerabilities and 963 test cases that systematically cover prompt injection, jailbreaking, financially adapted attacks, as well as benign inputs for false-positive evaluation. Experimental results reveal that existing defense mechanisms remain ineffective in realistic financial agent settings, with average attack success rates (ASR) still reaching up to 50.0\\% on state-of-the-art models and remaining non-negligible even for the most robust systems (ASR 6.7\\%), highlighting the limited transferability of current safety designs and the need for stronger financial-specific defenses. Our code can be found at https://github.com/aifinlab/FinVault."
+      },
+      "extracted": {
+        "core_problem": "Despite the rapid advancement of LLM-based agents, the reliable evaluation of their safety and security remains a significant challenge because existing rule-based or LLM-based evaluators often miss dangers in agents' step-by-step actions, overlook subtle meanings, fail to see how small issues compound, and get confused by unclear safety or security rules.",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "A universal, training-free, memory-augmented reasoning framework that constructs an experiential memory by having an LLM adaptively extract structured semantic features (e.g., scenario, risk, behavior) and generate associated chain-of-thought reasoning traces for past interactions. A multi-stage, context-aware retrieval-augmented generation process then dynamically retrieves the most relevant reasoning experiences to guide the LLM evaluator's assessment of new cases.",
+          "novelty": "We introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework that empowers LLM evaluators to emulate human expert evaluators."
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "AgentAuditor sets a new state-of-the-art in LLM-as-a-judge for agent safety and security, achieving human-level accuracy.",
+        "limitations": "",
+        "contributions": [
+          "Introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Construct an experiential memory with structured semantic features and chain-of-thought reasoning traces.",
+          "Develop ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats.",
+          "Demonstrate that AgentAuditor consistently improves the evaluation performance of LLMs across all benchmarks.",
+          "Achieve human-level accuracy in agent safety and security evaluation."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2604.02022v3",
+        "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+        "authors": [
+          "Yu Li",
+          "Haoyu Luo",
+          "Yuejin Xie",
+          "Yuqian Fu",
+          "Zhonghao Yang",
+          "Shuai Shao",
+          "Qihan Ren",
+          "Wanying Qu",
+          "Yanwei Fu",
+          "Yujiu Yang",
+          "Jing Shao",
+          "Xia Hu",
+          "Dongrui Liu"
+        ],
+        "summary": "Evaluating the safety of LLM-based agents is increasingly important because risks in realistic deployments often emerge over multi-step interactions rather than isolated prompts or final responses. Existing trajectory-level benchmarks remain limited by insufficient interaction diversity, coarse observability of safety failures, and weak long-horizon realism. We introduce ATBench, a trajectory-level benchmark for structured, diverse, and realistic evaluation of agent safety. ATBench organizes agentic risk along three dimensions: risk source, failure mode, and real-world harm. Based on this taxonomy, we construct trajectories with heterogeneous tool pools and a long-context delayed-trigger protocol that captures realistic risk emergence across multiple stages. The benchmark contains 1,000 trajectories (503 safe and 497 unsafe), averaging 9.01 turns and 3.95k tokens, with 1,954 invoked tools drawn from pools spanning 2,084 available tools. Data quality is supported by rule-based and LLM-based filtering plus full human audit. Experiments on frontier LLMs, open-source models, and specialized guard systems show that ATBench is challenging even for strong evaluators, while enabling taxonomy-stratified analysis, cross-benchmark comparison, and diagnosis of long-horizon failure patterns.",
+        "published": 2026,
+        "published_date": "2026-04-02T13:26:20+00:00",
+        "url": "http://arxiv.org/abs/2604.02022v3",
+        "pdf_url": "https://arxiv.org/pdf/2604.02022v3",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Evaluating the safety of LLM-based agents is increasingly important because risks in realistic deployments often emerge over multi-step interactions rather than isolated prompts or final responses. Existing trajectory-level benchmarks remain limited by insufficient interaction diversity, coarse observability of safety failures, and weak long-horizon realism. We introduce ATBench, a trajectory-level benchmark for structured, diverse, and realistic evaluation of agent safety. ATBench organizes agentic risk along three dimensions: risk source, failure mode, and real-world harm. Based on this taxonomy, we construct trajectories with heterogeneous tool pools and a long-context delayed-trigger protocol that captures realistic risk emergence across multiple stages. The benchmark contains 1,000 trajectories (503 safe and 497 unsafe), averaging 9.01 turns and 3.95k tokens, with 1,954 invoked tools drawn from pools spanning 2,084 available tools. Data quality is supported by rule-based and LLM-based filtering plus full human audit. Experiments on frontier LLMs, open-source models, and specialized guard systems show that ATBench is challenging even for strong evaluators, while enabling taxonomy-stratified analysis, cross-benchmark comparison, and diagnosis of long-horizon failure patterns."
+      },
+      "extracted": {
+        "core_problem": "尽管基于大语言模型的智能体安全评估日益重要，但现有的轨迹级基准测试存在交互多样性不足、安全失败可观察性粗糙以及长程现实性弱的问题，难以捕捉多步交互中涌现的风险。",
+        "key_methodology": {
+          "name": "ATBench",
+          "principle": "构建一个包含异质工具池和长上下文延迟触发协议（long-context delayed-trigger protocol）的轨迹级基准，沿风险来源、失败模式和现实危害三个维度组织智能体风险，以捕捉跨多个阶段的现实风险涌现。",
+          "novelty": "我们引入 ATBench，一个用于结构化、多样化和现实化评估智能体安全的轨迹级基准。"
+        },
+        "datasets_used": [
+          "ATBench (1,000 trajectories: 503 safe and 497 unsafe, averaging 9.01 turns and 3.95k tokens, with 1,954 invoked tools from pools spanning 2,084 available tools)"
+        ],
+        "evaluation_metrics": [
+          "Safety Evaluation Performance",
+          "Taxonomy-stratified analysis metrics"
+        ],
+        "main_results": "实验表明 ATBench 即使对强大的评估器（前沿大语言模型、开源模型和专用防护系统）也极具挑战性，能够揭示长程失败模式并支持分类分层分析。",
+        "limitations": "未明确声明",
+        "contributions": [
+          "Introduced ATBench, a trajectory-level benchmark for structured, diverse, and realistic evaluation of agent safety.",
+          "Organized agentic risk along three dimensions: risk source, failure mode, and real-world harm.",
+          "Constructed trajectories with heterogeneous tool pools and a long-context delayed-trigger protocol.",
+          "Curated 1,000 high-quality trajectories supported by rule-based and LLM-based filtering plus full human audit.",
+          "Demonstrated the benchmark's challenge to frontier LLMs and its utility for diagnosing long-horizon failure patterns."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2512.02682v1",
+        "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+        "authors": [
+          "Piercosma Bisconti",
+          "Marcello Galisai",
+          "Federico Pierucci",
+          "Marcantonio Bracale",
+          "Matteo Prandi"
+        ],
+        "summary": "This paper examines why safety mechanisms designed for human-model interaction do not scale to environments where large language models (LLMs) interact with each other. Most current governance practices still rely on single-agent safety containment, prompts, fine-tuning, and moderation layers that constrain individual model behavior but leave the dynamics of multi-model interaction ungoverned. These mechanisms assume a dyadic setting: one model responding to one user under stable oversight. Yet research and industrial development are rapidly shifting toward LLM-to-LLM ecosystems, where outputs are recursively reused as inputs across chains of agents. In such systems, local compliance can aggregate into collective failure even when every model is individually aligned. We propose a conceptual transition from model-level safety to system-level safety, introducing the framework of the Emergent Systemic Risk Horizon (ESRH) to formalize how instability arises from interaction structure rather than from isolated misbehavior. The paper contributes (i) a theoretical account of collective risk in interacting LLMs, (ii) a taxonomy connecting micro, meso, and macro-level failure modes, and (iii) a design proposal for InstitutionalAI, an architecture for embedding adaptive oversight within multi-agent systems.",
+        "published": 2025,
+        "published_date": "2025-12-02T12:06:57+00:00",
+        "url": "http://arxiv.org/abs/2512.02682v1",
+        "pdf_url": "https://arxiv.org/pdf/2512.02682v1",
+        "primary_category": "cs.MA",
+        "categories": [
+          "cs.MA",
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "This paper examines why safety mechanisms designed for human-model interaction do not scale to environments where large language models (LLMs) interact with each other. Most current governance practices still rely on single-agent safety containment, prompts, fine-tuning, and moderation layers that constrain individual model behavior but leave the dynamics of multi-model interaction ungoverned. These mechanisms assume a dyadic setting: one model responding to one user under stable oversight. Yet research and industrial development are rapidly shifting toward LLM-to-LLM ecosystems, where outputs are recursively reused as inputs across chains of agents. In such systems, local compliance can aggregate into collective failure even when every model is individually aligned. We propose a conceptual transition from model-level safety to system-level safety, introducing the framework of the Emergent Systemic Risk Horizon (ESRH) to formalize how instability arises from interaction structure rather than from isolated misbehavior. The paper contributes (i) a theoretical account of collective risk in interacting LLMs, (ii) a taxonomy connecting micro, meso, and macro-level failure modes, and (iii) a design proposal for InstitutionalAI, an architecture for embedding adaptive oversight within multi-agent systems."
+      },
+      "extracted": {
+        "core_problem": "尽管现有的安全机制（如提示、微调和审核层）能有效约束单个模型的行为，但它们无法扩展到 LLM 与 LLM 相互交互的环境，导致局部合规可能聚集体为集体失败。",
+        "key_methodology": {
+          "name": "Emergent Systemic Risk Horizon (ESRH)",
+          "principle": "一个概念框架，用于形式化不稳定性如何从交互结构而非孤立的错误行为中产生，推动从模型级安全向系统级安全的概念转变。",
+          "novelty": "提出了从模型级安全到系统级安全的概念转变，并引入了 ESRH 框架来形式化交互结构中产生的不稳定性。"
+        },
+        "datasets_used": [],
+        "evaluation_metrics": [],
+        "main_results": "",
+        "limitations": "本研究主要提供理论分析和架构设计提案，未包含具体的实验数值结果。",
+        "contributions": [
+          "Provided a theoretical account of collective risk in interacting LLMs.",
+          "Introduced a taxonomy connecting micro, meso, and macro-level failure modes.",
+          "Proposed InstitutionalAI, an architecture for embedding adaptive oversight within multi-agent systems.",
+          "Formalized how instability arises from interaction structure via the Emergent Systemic Risk Horizon (ESRH) framework."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2605.11882v1",
+        "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+        "authors": [
+          "Bo Yin",
+          "Qi Li",
+          "Xinchao Wang"
+        ],
+        "summary": "Tool-using LLM agents fail through trajectories rather than only final responses, as they may execute unsafe tool calls, follow injected instructions, comply with harmful requests, or over-refuse benign tasks despite producing a seemingly safe answer. Existing safety-alignment signals are largely response-level or off-policy, and often incur a safety-utility trade-off: improving agent safety comes at the cost of degraded task performance. Such sparse and single-objective rewards severely limit real-world usability. To bridge this gap, we propose FATE, an on-policy self-evolving framework that transforms verifier-scored failures into repair supervision without expert demonstrations. For each failure, the same policy proposes repair candidates, which are then re-scored by verifiers and filtered across security, utility, over-refusal control, and trajectory validity. This dense trajectory-level information is then used as a supervision signal for agent self-evolution. During this process, we further introduce Pareto-Front Policy Optimization (PFPO), combining supervised warmup with Pareto-aware policy optimization to preserve safety-utility trade-offs. Experiments on AgentDojo, AgentHarm, and ATBench show that FATE improves safety across different models and scales while preserving useful behavior. Compared with strong baselines, FATE reduces attack success rate by 33.5%, harmful compliance by 82.6%, and improves external trajectory-safety diagnosis by 6.5%. These results suggest that failed trajectories can provide structured repair supervision for safer self-evolving agents.",
+        "published": 2026,
+        "published_date": "2026-05-12T09:56:28+00:00",
+        "url": "http://arxiv.org/abs/2605.11882v1",
+        "pdf_url": "https://arxiv.org/pdf/2605.11882v1",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Tool-using LLM agents fail through trajectories rather than only final responses, as they may execute unsafe tool calls, follow injected instructions, comply with harmful requests, or over-refuse benign tasks despite producing a seemingly safe answer. Existing safety-alignment signals are largely response-level or off-policy, and often incur a safety-utility trade-off: improving agent safety comes at the cost of degraded task performance. Such sparse and single-objective rewards severely limit real-world usability. To bridge this gap, we propose FATE, an on-policy self-evolving framework that transforms verifier-scored failures into repair supervision without expert demonstrations. For each failure, the same policy proposes repair candidates, which are then re-scored by verifiers and filtered across security, utility, over-refusal control, and trajectory validity. This dense trajectory-level information is then used as a supervision signal for agent self-evolution. During this process, we further introduce Pareto-Front Policy Optimization (PFPO), combining supervised warmup with Pareto-aware policy optimization to preserve safety-utility trade-offs. Experiments on AgentDojo, AgentHarm, and ATBench show that FATE improves safety across different models and scales while preserving useful behavior. Compared with strong baselines, FATE reduces attack success rate by 33.5%, harmful compliance by 82.6%, and improves external trajectory-safety diagnosis by 6.5%. These results suggest that failed trajectories can provide structured repair supervision for safer self-evolving agents."
+      },
+      "extracted": {
+        "core_problem": "尽管工具使用型 LLM 智能体迅速发展，但现有安全对齐信号主要局限于响应级别或离线策略，常导致安全与效用的权衡，且无法有效捕捉多步交互轨迹中的不安全行为（如不安全工具调用、遵循注入指令等）。",
+        "key_methodology": {
+          "name": "FATE (On-Policy Self-Evolution via Failure Trajectories)",
+          "principle": "将验证器评分的失败轨迹转化为修复监督信号：同一策略提出修复候选，经验证器重新评分并在安全性、效用、过度拒绝控制和轨迹有效性上过滤；引入 Pareto-Front Policy Optimization (PFPO)，结合监督预热与帕累托感知策略优化以保持安全 - 效用权衡。",
+          "novelty": "我们提出了 FATE，一个在线策略自进化框架，无需专家演示即可将失败轨迹转化为修复监督；进一步引入了 PFPO 以解决安全与效用的权衡问题。"
+        },
+        "datasets_used": [
+          "AgentDojo",
+          "AgentHarm",
+          "ATBench"
+        ],
+        "evaluation_metrics": [
+          "Attack Success Rate",
+          "Harmful Compliance",
+          "External Trajectory-Safety Diagnosis"
+        ],
+        "main_results": "在 AgentDojo、AgentHarm 和 ATBench 上，相比强基线，FATE 将攻击成功率降低了 33.5%，有害顺从率降低了 82.6%，并将外部轨迹安全诊断能力提高了 6.5%，同时在不同模型和规模上提升了安全性并保留了有用行为。",
+        "limitations": "",
+        "contributions": [
+          "Proposed FATE, an on-policy self-evolving framework that transforms verifier-scored failures into repair supervision without expert demonstrations.",
+          "Introduced Pareto-Front Policy Optimization (PFPO) to preserve safety-utility trade-offs during agent evolution.",
+          "Demonstrated significant reductions in attack success rate (33.5%) and harmful compliance (82.6%) across multiple benchmarks.",
+          "Showed that failed trajectories can provide structured repair supervision for safer self-evolving agents."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2507.06134v2",
+        "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+        "authors": [
+          "Sanidhya Vijayvargiya",
+          "Aditya Bharat Soni",
+          "Xuhui Zhou",
+          "Zora Zhiruo Wang",
+          "Nouha Dziri",
+          "Graham Neubig",
+          "Maarten Sap"
+        ],
+        "summary": "Recent advances in AI agents capable of solving complex, everyday tasks, from scheduling to customer service, have enabled deployment in real-world settings, but their possibilities for unsafe behavior demands rigorous evaluation. While prior benchmarks have attempted to assess agent safety, most fall short by relying on simulated environments, narrow task domains, or unrealistic tool abstractions. We introduce OpenAgentSafety, a comprehensive and modular framework for evaluating agent behavior across eight critical risk categories. Unlike prior work, our framework evaluates agents that interact with real tools, including web browsers, code execution environments, file systems, bash shells, and messaging platforms; and supports over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents. OpenAgentSafety is designed for extensibility, allowing researchers to add tools, tasks, websites, and adversarial strategies with minimal effort. It combines rule-based analysis with LLM-as-judge assessments to detect both overt and subtle unsafe behaviors. Empirical analysis of five prominent LLMs in agentic scenarios reveals unsafe behavior in 51.2% of safety-vulnerable tasks with Claude-Sonnet-3.7, to 72.7% with o3-mini, highlighting critical safety vulnerabilities and the need for stronger safeguards before real-world deployment.",
+        "published": 2025,
+        "published_date": "2025-07-08T16:18:54+00:00",
+        "url": "http://arxiv.org/abs/2507.06134v2",
+        "pdf_url": "https://arxiv.org/pdf/2507.06134v2",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Recent advances in AI agents capable of solving complex, everyday tasks, from scheduling to customer service, have enabled deployment in real-world settings, but their possibilities for unsafe behavior demands rigorous evaluation. While prior benchmarks have attempted to assess agent safety, most fall short by relying on simulated environments, narrow task domains, or unrealistic tool abstractions. We introduce OpenAgentSafety, a comprehensive and modular framework for evaluating agent behavior across eight critical risk categories. Unlike prior work, our framework evaluates agents that interact with real tools, including web browsers, code execution environments, file systems, bash shells, and messaging platforms; and supports over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents. OpenAgentSafety is designed for extensibility, allowing researchers to add tools, tasks, websites, and adversarial strategies with minimal effort. It combines rule-based analysis with LLM-as-judge assessments to detect both overt and subtle unsafe behaviors. Empirical analysis of five prominent LLMs in agentic scenarios reveals unsafe behavior in 51.2% of safety-vulnerable tasks with Claude-Sonnet-3.7, to 72.7% with o3-mini, highlighting critical safety vulnerabilities and the need for stronger safeguards before real-world deployment."
+      },
+      "extracted": {
+        "core_problem": "尽管 AI 智能体在解决复杂日常任务方面取得进展并部署于现实世界，但现有基准依赖模拟环境、狭窄任务域或不真实的工具抽象，无法严格评估其在真实工具交互中的不安全行为。",
+        "key_methodology": {
+          "name": "OpenAgentSafety",
+          "principle": "一个全面且模块化的框架，评估智能体与真实工具（包括网页浏览器、代码执行环境、文件系统、bash shell 和消息平台）的交互；结合基于规则的分析和 LLM-as-judge 评估，以检测显性和隐性的不安全行为。",
+          "novelty": "我们引入 OpenAgentSafety，一个用于评估智能体在八个关键风险类别中行为的全面且模块化框架；与以往工作不同，它评估与真实工具交互的智能体，并支持超过 350 个多轮多用户任务。"
+        },
+        "datasets_used": [
+          "OpenAgentSafety (over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents across eight critical risk categories)"
+        ],
+        "evaluation_metrics": [
+          "Unsafe behavior rate"
+        ],
+        "main_results": "实证分析显示，在安全脆弱任务中，Claude-Sonnet-3.7 的不安全行为率为 51.2%，o3-mini 高达 72.7%，揭示了关键的安全漏洞。",
+        "limitations": "未明确声明",
+        "contributions": [
+          "Introduced OpenAgentSafety, a comprehensive and modular framework for evaluating agent behavior across eight critical risk categories.",
+          "Evaluated agents interacting with real tools including web browsers, code execution environments, file systems, bash shells, and messaging platforms.",
+          "Supported over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents.",
+          "Combined rule-based analysis with LLM-as-judge assessments to detect overt and subtle unsafe behaviors.",
+          "Revealed critical safety vulnerabilities with unsafe behavior rates up to 72.7% in prominent LLMs."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2510.05442v1",
+        "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+        "authors": [
+          "Zizhao Wang",
+          "Dingcheng Li",
+          "Vaishakh Keshava",
+          "Phillip Wallis",
+          "Ananth Balashankar",
+          "Peter Stone",
+          "Lukas Rutishauser"
+        ],
+        "summary": "Large Language Model (LLM) agents can leverage tools such as Google Search to complete complex tasks. However, this tool usage introduces the risk of indirect prompt injections, where malicious instructions hidden in tool outputs can manipulate the agent, posing security risks like data leakage. Current defense strategies typically rely on fine-tuning LLM agents on datasets of known attacks. However, the generation of these datasets relies on manually crafted attack patterns, which limits their diversity and leaves agents vulnerable to novel prompt injections. To address this limitation, we propose Adversarial Reinforcement Learning for Agent Safety (ARLAS), a novel framework that leverages adversarial reinforcement learning (RL) by formulating the problem as a two-player zero-sum game. ARLAS co-trains two LLMs: an attacker that learns to autonomously generate diverse prompt injections and an agent that learns to defend against them while completing its assigned tasks. To ensure robustness against a wide range of attacks and to prevent cyclic learning, we employ a population-based learning framework that trains the agent to defend against all previous attacker checkpoints. Evaluated on BrowserGym and AgentDojo, agents fine-tuned with ARLAS achieve a significantly lower attack success rate than the original model while also improving their task success rate. Our analysis further confirms that the adversarial process generates a diverse and challenging set of attacks, leading to a more robust agent compared to the base model.",
+        "published": 2025,
+        "published_date": "2025-10-06T23:09:18+00:00",
+        "url": "http://arxiv.org/abs/2510.05442v1",
+        "pdf_url": "https://arxiv.org/pdf/2510.05442v1",
+        "primary_category": "cs.LG",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.CL"
+        ],
+        "doi": null,
+        "abstract": "Large Language Model (LLM) agents can leverage tools such as Google Search to complete complex tasks. However, this tool usage introduces the risk of indirect prompt injections, where malicious instructions hidden in tool outputs can manipulate the agent, posing security risks like data leakage. Current defense strategies typically rely on fine-tuning LLM agents on datasets of known attacks. However, the generation of these datasets relies on manually crafted attack patterns, which limits their diversity and leaves agents vulnerable to novel prompt injections. To address this limitation, we propose Adversarial Reinforcement Learning for Agent Safety (ARLAS), a novel framework that leverages adversarial reinforcement learning (RL) by formulating the problem as a two-player zero-sum game. ARLAS co-trains two LLMs: an attacker that learns to autonomously generate diverse prompt injections and an agent that learns to defend against them while completing its assigned tasks. To ensure robustness against a wide range of attacks and to prevent cyclic learning, we employ a population-based learning framework that trains the agent to defend against all previous attacker checkpoints. Evaluated on BrowserGym and AgentDojo, agents fine-tuned with ARLAS achieve a significantly lower attack success rate than the original model while also improving their task success rate. Our analysis further confirms that the adversarial process generates a diverse and challenging set of attacks, leading to a more robust agent compared to the base model."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 智能体利用工具（如 Google Search）完成复杂任务，但工具使用引入了间接提示注入风险，且现有防御策略依赖人工 crafted 攻击模式生成的数据集，缺乏多样性，使智能体易受新型提示注入攻击。",
+        "key_methodology": {
+          "name": "ARLAS (Adversarial Reinforcement Learning for Agent Safety)",
+          "principle": "将问题构建为双人零和博弈，协同训练两个 LLM：一个攻击者自主生成多样化的提示注入，一个智能体学习在完成任务的同时进行防御；采用基于群体的学习框架，训练智能体防御所有先前的攻击者检查点以防止循环学习并确保鲁棒性。",
+          "novelty": "我们提出 ARLAS，一个利用对抗性强化学习的新颖框架，通过双人零和博弈形式化问题，使攻击者能自主学习生成多样化提示注入，智能体同步学习防御。"
+        },
+        "datasets_used": [
+          "BrowserGym",
+          "AgentDojo"
+        ],
+        "evaluation_metrics": [
+          "Attack Success Rate",
+          "Task Success Rate"
+        ],
+        "main_results": "在 BrowserGym 和 AgentDojo 上评估显示，经 ARLAS 微调的智能体相比原始模型实现了显著更低的攻击成功率，同时提高了任务成功率。",
+        "limitations": "",
+        "contributions": [
+          "Proposed ARLAS, a novel framework leveraging adversarial reinforcement learning for agent safety.",
+          "Formulated agent safety as a two-player zero-sum game co-training an attacker and a defender.",
+          "Employed a population-based learning framework to ensure robustness against a wide range of attacks and prevent cyclic learning.",
+          "Demonstrated significantly lower attack success rates and improved task success rates on BrowserGym and AgentDojo.",
+          "Confirmed that the adversarial process generates a diverse and challenging set of attacks leading to more robust agents."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2604.03242v1",
+        "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+        "authors": [
+          "Lin Wang",
+          "Junfeng Fang",
+          "Dan Zhang",
+          "Fei Shen",
+          "Xiang Wang",
+          "Tat-Seng Chua"
+        ],
+        "summary": "The advent of tool-using LLM agents shifts safety monitoring from output moderation to auditing long, noisy interaction trajectories, where risk-critical evidence is sparse-making standard binary supervision poorly suited for credit assignment. To address this, we propose DRAFT (Task Decoupled Latent Reasoning for Agent Safety), a latent reasoning framework that decouples safety judgment into two trainable stages: an Extractor that distills the full trajectory into a compact continuous latent draft, and a Reasoner that jointly attends to the draft and the original trajectory to predict safety. DRAFT avoids lossy explicit summarize-then-judge pipelines by performing evidence aggregation in latent space, enabling end-to-end differentiable training.Across benchmarks including ASSEBench and R-Judge, DRAFT consistently outperforms strong baselines, improving accuracy from 63.27% (LoRA) to 91.18% averaged over benchmarks, and learns more separable representations. Ablations demonstrate a clear synergy between the Extractor and the Reasoner.Overall, DRAFT suggests that continuous latent reasoning prior to readout is a practical path to robust agent safety under long-context supervision with sparse evidence.",
+        "published": 2026,
+        "published_date": "2026-02-11T07:45:14+00:00",
+        "url": "http://arxiv.org/abs/2604.03242v1",
+        "pdf_url": "https://arxiv.org/pdf/2604.03242v1",
+        "primary_category": "cs.LG",
+        "categories": [
+          "cs.LG"
+        ],
+        "doi": null,
+        "abstract": "The advent of tool-using LLM agents shifts safety monitoring from output moderation to auditing long, noisy interaction trajectories, where risk-critical evidence is sparse-making standard binary supervision poorly suited for credit assignment. To address this, we propose DRAFT (Task Decoupled Latent Reasoning for Agent Safety), a latent reasoning framework that decouples safety judgment into two trainable stages: an Extractor that distills the full trajectory into a compact continuous latent draft, and a Reasoner that jointly attends to the draft and the original trajectory to predict safety. DRAFT avoids lossy explicit summarize-then-judge pipelines by performing evidence aggregation in latent space, enabling end-to-end differentiable training.Across benchmarks including ASSEBench and R-Judge, DRAFT consistently outperforms strong baselines, improving accuracy from 63.27% (LoRA) to 91.18% averaged over benchmarks, and learns more separable representations. Ablations demonstrate a clear synergy between the Extractor and the Reasoner.Overall, DRAFT suggests that continuous latent reasoning prior to readout is a practical path to robust agent safety under long-context supervision with sparse evidence."
+      },
+      "extracted": {
+        "core_problem": "尽管基于大语言模型的智能体迅速发展，但可靠评估其安全性和安全性仍具重大挑战，因为现有评估器常遗漏逐步行动中的危险、忽视细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆。",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并生成相关的思维链推理痕迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验以指导新案例的评估。",
+          "novelty": "我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模拟人类专家评估器。"
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "在所有基准测试中一致提高了 LLM 的评估性能，并在智能体安全与安全领域的 LLM-as-a-judge 任务中设定了新的最先进水平，实现了人类水平的准确率。",
+        "limitations": "",
+        "contributions": [
+          "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces.",
+          "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats.",
+          "Employed nuanced 'Strict' and 'Lenient' judgment standards for ambiguous risk situations.",
+          "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2601.18491v2",
+        "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+        "authors": [
+          "Dongrui Liu",
+          "Qihan Ren",
+          "Chen Qian",
+          "Shuai Shao",
+          "Yuejin Xie",
+          "Yu Li",
+          "Zhonghao Yang",
+          "Haoyu Luo",
+          "Peng Wang",
+          "Qingyu Liu",
+          "Binxin Hu",
+          "Ling Tang",
+          "Jilin Mei",
+          "Dadi Guo",
+          "Leitao Yuan",
+          "Junyao Yang",
+          "Guanxu Chen",
+          "Qihao Lin",
+          "Yi Yu",
+          "Bo Zhang",
+          "Jiaxuan Guo",
+          "Jie Zhang",
+          "Wenqi Shao",
+          "Huiqi Deng",
+          "Zhiheng Xi",
+          "Wenjie Wang",
+          "Wenxuan Wang",
+          "Wen Shen",
+          "Zhikai Chen",
+          "Haoyu Xie",
+          "Jialing Tao",
+          "Juntao Dai",
+          "Jiaming Ji",
+          "Zhongjie Ba",
+          "Linfeng Zhang",
+          "Yong Liu",
+          "Quanshi Zhang",
+          "Lei Zhu",
+          "Zhihua Wei",
+          "Hui Xue",
+          "Chaochao Lu",
+          "Jing Shao",
+          "Xia Hu"
+        ],
+        "summary": "The rise of AI agents introduces complex safety and security challenges arising from autonomous tool use and environmental interactions. Current guardrail models lack agentic risk awareness and transparency in risk diagnosis. To introduce an agentic guardrail that covers complex and numerous risky behaviors, we first propose a unified three-dimensional taxonomy that orthogonally categorizes agentic risks by their source (where), failure mode (how), and consequence (what). Guided by this structured and hierarchical taxonomy, we introduce a new fine-grained agentic safety benchmark (ATBench) and a Diagnostic Guardrail framework for agent safety and security (AgentDoG). AgentDoG provides fine-grained and contextual monitoring across agent trajectories. More Crucially, AgentDoG can diagnose the root causes of unsafe actions and seemingly safe but unreasonable actions, offering provenance and transparency beyond binary labels to facilitate effective agent alignment. AgentDoG variants are available in three sizes (4B, 7B, and 8B parameters) across Qwen and Llama model families. Extensive experimental results demonstrate that AgentDoG achieves state-of-the-art performance in agentic safety moderation in diverse and complex interactive scenarios. All models and datasets are openly released.",
+        "published": 2026,
+        "published_date": "2026-01-26T13:45:41+00:00",
+        "url": "http://arxiv.org/abs/2601.18491v2",
+        "pdf_url": "https://arxiv.org/pdf/2601.18491v2",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI",
+          "cs.CC",
+          "cs.CL",
+          "cs.CV",
+          "cs.LG"
+        ],
+        "doi": null,
+        "abstract": "The rise of AI agents introduces complex safety and security challenges arising from autonomous tool use and environmental interactions. Current guardrail models lack agentic risk awareness and transparency in risk diagnosis. To introduce an agentic guardrail that covers complex and numerous risky behaviors, we first propose a unified three-dimensional taxonomy that orthogonally categorizes agentic risks by their source (where), failure mode (how), and consequence (what). Guided by this structured and hierarchical taxonomy, we introduce a new fine-grained agentic safety benchmark (ATBench) and a Diagnostic Guardrail framework for agent safety and security (AgentDoG). AgentDoG provides fine-grained and contextual monitoring across agent trajectories. More Crucially, AgentDoG can diagnose the root causes of unsafe actions and seemingly safe but unreasonable actions, offering provenance and transparency beyond binary labels to facilitate effective agent alignment. AgentDoG variants are available in three sizes (4B, 7B, and 8B parameters) across Qwen and Llama model families. Extensive experimental results demonstrate that AgentDoG achieves state-of-the-art performance in agentic safety moderation in diverse and complex interactive scenarios. All models and datasets are openly released."
+      },
+      "extracted": {
+        "core_problem": "尽管基于大语言模型的智能体迅速发展，但现有规则或 LLM 评估器常遗漏逐步行动中的危险、忽视细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆，导致可靠的安全与安全评估仍具挑战。",
+        "key_methodology": {
+          "name": "AgentAuditor",
+          "principle": "通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并为过去交互生成关联的思维链推理轨迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验，以指导 LLM 评估器对新案例的评估。",
+          "novelty": "我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模仿人类专家评估器。"
+        },
+        "datasets_used": [
+          "ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+        ],
+        "evaluation_metrics": [
+          "Accuracy"
+        ],
+        "main_results": "在 ASSEBench 上实现了人类水平的准确率（human-level accuracy），并在所有基准测试中一致提升了 LLM 的评估性能，确立了 LLM-as-a-judge 在代理安全和安全方面的新最先进水平。",
+        "limitations": "",
+        "contributions": [
+          "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework.",
+          "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces.",
+          "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats.",
+          "Employed nuanced 'Strict' and 'Lenient' judgment standards for ambiguous risk situations.",
+          "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2412.14470v2",
+        "title": "Agent-SafetyBench: Evaluating the Safety of LLM Agents",
+        "authors": [
+          "Zhexin Zhang",
+          "Shiyao Cui",
+          "Yida Lu",
+          "Jingzhuo Zhou",
+          "Junxiao Yang",
+          "Hongning Wang",
+          "Minlie Huang"
+        ],
+        "summary": "As large language models (LLMs) are increasingly deployed as agents, their integration into interactive environments and tool use introduce new safety challenges beyond those associated with the models themselves. However, the absence of comprehensive benchmarks for evaluating agent safety presents a significant barrier to effective assessment and further improvement. In this paper, we introduce Agent-SafetyBench, a comprehensive benchmark designed to evaluate the safety of LLM agents. Agent-SafetyBench encompasses 349 interaction environments and 2,000 test cases, evaluating 8 categories of safety risks and covering 10 common failure modes frequently encountered in unsafe interactions. Our evaluation of 16 popular LLM agents reveals a concerning result: none of the agents achieves a safety score above 60%. This highlights significant safety challenges in LLM agents and underscores the considerable need for improvement. Through failure mode and helpfulness analysis, we summarize two fundamental safety defects in current LLM agents: lack of robustness and lack of risk awareness. Furthermore, our findings suggest that reliance on defense prompts alone may be insufficient to address these safety issues, emphasizing the need for more advanced and robust strategies. To drive progress in this area, Agent-SafetyBench has been released at https://github.com/thu-coai/Agent-SafetyBench/ to facilitate further research in agent safety evaluation and improvement.",
+        "published": 2024,
+        "published_date": "2024-12-19T02:35:15+00:00",
+        "url": "http://arxiv.org/abs/2412.14470v2",
+        "pdf_url": "https://arxiv.org/pdf/2412.14470v2",
+        "primary_category": "cs.CL",
+        "categories": [
+          "cs.CL"
+        ],
+        "doi": null,
+        "abstract": "As large language models (LLMs) are increasingly deployed as agents, their integration into interactive environments and tool use introduce new safety challenges beyond those associated with the models themselves. However, the absence of comprehensive benchmarks for evaluating agent safety presents a significant barrier to effective assessment and further improvement. In this paper, we introduce Agent-SafetyBench, a comprehensive benchmark designed to evaluate the safety of LLM agents. Agent-SafetyBench encompasses 349 interaction environments and 2,000 test cases, evaluating 8 categories of safety risks and covering 10 common failure modes frequently encountered in unsafe interactions. Our evaluation of 16 popular LLM agents reveals a concerning result: none of the agents achieves a safety score above 60%. This highlights significant safety challenges in LLM agents and underscores the considerable need for improvement. Through failure mode and helpfulness analysis, we summarize two fundamental safety defects in current LLM agents: lack of robustness and lack of risk awareness. Furthermore, our findings suggest that reliance on defense prompts alone may be insufficient to address these safety issues, emphasizing the need for more advanced and robust strategies. To drive progress in this area, Agent-SafetyBench has been released at https://github.com/thu-coai/Agent-SafetyBench/ to facilitate further research in agent safety evaluation and improvement."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 智能体被广泛部署，但缺乏全面的基准来评估其在交互环境和工具使用中的安全性，现有评估难以捕捉多步交互中涌现的复杂风险。",
+        "key_methodology": {
+          "name": "Agent-SafetyBench",
+          "principle": "构建包含 349 个交互环境和 2000 个测试用例的综合基准，评估 8 类安全风险并覆盖 10 种常见的失败模式，通过失败模式和有用性分析揭示智能体的根本安全缺陷。",
+          "novelty": "首个旨在全面评估 LLM 智能体安全性的基准，涵盖多种交互环境和失败模式。"
+        },
+        "datasets_used": [
+          "Agent-SafetyBench (349 interaction environments, 2,000 test cases, 8 risk categories, 10 failure modes)"
+        ],
+        "evaluation_metrics": [
+          "Safety Score"
+        ],
+        "main_results": "对 16 个流行 LLM 智能体的评估显示，没有任何智能体的安全得分超过 60%，揭示了当前智能体在鲁棒性和风险意识方面的根本缺陷。",
+        "limitations": "仅依赖防御提示可能不足以解决安全问题，需要更先进和鲁棒的策略。",
+        "contributions": [
+          "Introduced Agent-SafetyBench, a comprehensive benchmark for evaluating LLM agent safety.",
+          "Constructed 349 interaction environments and 2,000 test cases covering 8 risk categories and 10 failure modes.",
+          "Evaluated 16 popular LLM agents, revealing that none achieved a safety score above 60%.",
+          "Identified two fundamental safety defects: lack of robustness and lack of risk awareness.",
+          "Released the benchmark to facilitate further research in agent safety evaluation and improvement."
+        ]
+      }
+    },
+    {
+      "paper": {
+        "paper_id": "2602.03100v1",
+        "title": "Risky-Bench: Probing Agentic Safety Risks under Real-World Deployment",
+        "authors": [
+          "Jingnan Zheng",
+          "Yanzhen Luo",
+          "Jingjun Xu",
+          "Bingnan Liu",
+          "Yuxin Chen",
+          "Chenhang Cui",
+          "Gelei Deng",
+          "Chaochao Lu",
+          "Xiang Wang",
+          "An Zhang",
+          "Tat-Seng Chua"
+        ],
+        "summary": "Large Language Models (LLMs) are increasingly deployed as agents that operate in real-world environments, introducing safety risks beyond linguistic harm. Existing agent safety evaluations rely on risk-oriented tasks tailored to specific agent settings, resulting in limited coverage of safety risk space and failing to assess agent safety behavior during long-horizon, interactive task execution in complex real-world deployments. Moreover, their specialization to particular agent settings limits adaptability across diverse agent configurations. To address these limitations, we propose Risky-Bench, a framework that enables systematic agent safety evaluation grounded in real-world deployment. Risky-Bench organizes evaluation around domain-agnostic safety principles to derive context-aware safety rubrics that delineate safety space, and systematically evaluates safety risks across this space through realistic task execution under varying threat assumptions. When applied to life-assist agent settings, Risky-Bench uncovers substantial safety risks in state-of-the-art agents under realistic execution conditions. Moreover, as a well-structured evaluation pipeline, Risky-Bench is not confined to life-assist scenarios and can be adapted to other deployment settings to construct environment-specific safety evaluations, providing an extensible methodology for agent safety assessment.",
+        "published": 2026,
+        "published_date": "2026-02-03T04:44:11+00:00",
+        "url": "http://arxiv.org/abs/2602.03100v1",
+        "pdf_url": "https://arxiv.org/pdf/2602.03100v1",
+        "primary_category": "cs.AI",
+        "categories": [
+          "cs.AI"
+        ],
+        "doi": null,
+        "abstract": "Large Language Models (LLMs) are increasingly deployed as agents that operate in real-world environments, introducing safety risks beyond linguistic harm. Existing agent safety evaluations rely on risk-oriented tasks tailored to specific agent settings, resulting in limited coverage of safety risk space and failing to assess agent safety behavior during long-horizon, interactive task execution in complex real-world deployments. Moreover, their specialization to particular agent settings limits adaptability across diverse agent configurations. To address these limitations, we propose Risky-Bench, a framework that enables systematic agent safety evaluation grounded in real-world deployment. Risky-Bench organizes evaluation around domain-agnostic safety principles to derive context-aware safety rubrics that delineate safety space, and systematically evaluates safety risks across this space through realistic task execution under varying threat assumptions. When applied to life-assist agent settings, Risky-Bench uncovers substantial safety risks in state-of-the-art agents under realistic execution conditions. Moreover, as a well-structured evaluation pipeline, Risky-Bench is not confined to life-assist scenarios and can be adapted to other deployment settings to construct environment-specific safety evaluations, providing an extensible methodology for agent safety assessment."
+      },
+      "extracted": {
+        "core_problem": "尽管 LLM 智能体在现实环境中的部署日益增多，但现有的安全评估依赖于针对特定设置的面向风险任务，导致安全风险空间覆盖有限，且无法评估复杂现实部署中长程交互式任务执行期间的安全行为。",
+        "key_methodology": {
+          "name": "Risky-Bench",
+          "principle": "围绕领域无关的安全原则组织评估，以推导界定安全空间的上下文感知安全评分标准（context-aware safety rubrics），并通过在不同威胁假设下的现实任务执行，系统地评估整个空间内的安全风险。",
+          "novelty": "提出 Risky-Bench，一个基于现实世界部署的系统性智能体安全评估框架，能够适应不同的部署设置以构建特定于环境的安全评估。"
+        },
+        "datasets_used": [
+          "Risky-Bench (framework applied to life-assist agent settings with realistic task execution)"
+        ],
+        "evaluation_metrics": [
+          "Safety risk exposure",
+          "Task execution safety behavior"
+        ],
+        "main_results": "当应用于生活辅助智能体设置时，Risky-Bench 揭示了在最先进智能体于现实执行条件下存在实质性的安全风险。",
+        "limitations": "未明确声明",
+        "contributions": [
+          "Proposed Risky-Bench, a framework enabling systematic agent safety evaluation grounded in real-world deployment.",
+          "Organized evaluation around domain-agnostic safety principles to derive context-aware safety rubrics.",
+          "Systematically evaluated safety risks through realistic task execution under varying threat assumptions.",
+          "Uncovered substantial safety risks in state-of-the-art agents within life-assist settings.",
+          "Provided an extensible methodology adaptable to other deployment settings for environment-specific safety evaluations."
+        ]
+      }
+    }
+  ]
+}

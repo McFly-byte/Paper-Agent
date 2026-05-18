@@ -1,0 +1,125 @@
+{
+  "count": 15,
+  "sample": [
+    {
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2506.00641v3",
+      "source": "arxiv",
+      "abstract_excerpt": "Despite the rapid advancement of LLM-based agents, the reliable evaluation of their safety and security remains a significant challenge. Existing rule-based or LLM-based evaluators often miss dangers in agents' step-by-step actions, overlook subtle meanings, fail to see how small issues compound, and get confused by unclear safety or security rules. To overcome this evaluation crisis, we introduce"
+    },
+    {
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2509.26100v2",
+      "source": "arxiv",
+      "abstract_excerpt": "The rapid integration of Large Language Models (LLMs) into high-stakes domains necessitates reliable safety and compliance evaluation. However, existing static benchmarks are ill-equipped to address the dynamic nature of AI risks and evolving regulations, creating a critical safety gap. This paper introduces a new paradigm of agentic safety evaluation, reframing evaluation as a continuous and self"
+    },
+    {
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2605.03242v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Tool-using agent systems powered by large language models (LLMs) are increasingly deployed across web, app, operating-system, and transactional environments. Yet existing safety benchmarks still emphasize explicit risks, potentially overstating a model's ability to judge deceptive or ambiguous trajectories. To address this gap, we introduce ROME (Red-team Orchestrated Multi-agent Evolution), a con"
+    },
+    {
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2507.08270v1",
+      "source": "arxiv",
+      "abstract_excerpt": "The emergence of autonomous Large Language Model (LLM) agents capable of tool usage has introduced new safety risks that go beyond traditional conversational misuse. These agents, empowered to execute external functions, are vulnerable to both user-initiated threats (e.g., adversarial prompts) and tool-initiated threats (e.g., malicious outputs from compromised tools). In this paper, we propose th"
+    },
+    {
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2601.06663v2",
+      "source": "arxiv",
+      "abstract_excerpt": "Large language model-based agents are rapidly evolving from simple conversational assistants into autonomous systems capable of performing complex, professional-level tasks in various domains. While these advancements promise significant productivity gains, they also introduce critical safety risks that remain under-explored. Existing safety evaluations primarily focus on simple, daily assistance "
+    },
+    {
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2601.07853v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Financial agents powered by large language models (LLMs) are increasingly deployed for investment analysis, risk assessment, and automated decision-making, where their abilities to plan, invoke tools, and manipulate mutable state introduce new security risks in high-stakes and highly regulated financial environments. However, existing safety evaluations largely focus on language-model-level conten"
+    },
+    {
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.02022v3",
+      "source": "arxiv",
+      "abstract_excerpt": "Evaluating the safety of LLM-based agents is increasingly important because risks in realistic deployments often emerge over multi-step interactions rather than isolated prompts or final responses. Existing trajectory-level benchmarks remain limited by insufficient interaction diversity, coarse observability of safety failures, and weak long-horizon realism. We introduce ATBench, a trajectory-leve"
+    },
+    {
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2512.02682v1",
+      "source": "arxiv",
+      "abstract_excerpt": "This paper examines why safety mechanisms designed for human-model interaction do not scale to environments where large language models (LLMs) interact with each other. Most current governance practices still rely on single-agent safety containment, prompts, fine-tuning, and moderation layers that constrain individual model behavior but leave the dynamics of multi-model interaction ungoverned. The"
+    },
+    {
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2605.11882v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Tool-using LLM agents fail through trajectories rather than only final responses, as they may execute unsafe tool calls, follow injected instructions, comply with harmful requests, or over-refuse benign tasks despite producing a seemingly safe answer. Existing safety-alignment signals are largely response-level or off-policy, and often incur a safety-utility trade-off: improving agent safety comes"
+    },
+    {
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2507.06134v2",
+      "source": "arxiv",
+      "abstract_excerpt": "Recent advances in AI agents capable of solving complex, everyday tasks, from scheduling to customer service, have enabled deployment in real-world settings, but their possibilities for unsafe behavior demands rigorous evaluation. While prior benchmarks have attempted to assess agent safety, most fall short by relying on simulated environments, narrow task domains, or unrealistic tool abstractions"
+    },
+    {
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "published": "2025",
+      "url": "http://arxiv.org/abs/2510.05442v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Large Language Model (LLM) agents can leverage tools such as Google Search to complete complex tasks. However, this tool usage introduces the risk of indirect prompt injections, where malicious instructions hidden in tool outputs can manipulate the agent, posing security risks like data leakage. Current defense strategies typically rely on fine-tuning LLM agents on datasets of known attacks. Howev"
+    },
+    {
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2604.03242v1",
+      "source": "arxiv",
+      "abstract_excerpt": "The advent of tool-using LLM agents shifts safety monitoring from output moderation to auditing long, noisy interaction trajectories, where risk-critical evidence is sparse-making standard binary supervision poorly suited for credit assignment. To address this, we propose DRAFT (Task Decoupled Latent Reasoning for Agent Safety), a latent reasoning framework that decouples safety judgment into two "
+    },
+    {
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2601.18491v2",
+      "source": "arxiv",
+      "abstract_excerpt": "The rise of AI agents introduces complex safety and security challenges arising from autonomous tool use and environmental interactions. Current guardrail models lack agentic risk awareness and transparency in risk diagnosis. To introduce an agentic guardrail that covers complex and numerous risky behaviors, we first propose a unified three-dimensional taxonomy that orthogonally categorizes agenti"
+    },
+    {
+      "paper_id": "2412.14470v2",
+      "title": "Agent-SafetyBench: Evaluating the Safety of LLM Agents",
+      "published": "2024",
+      "url": "http://arxiv.org/abs/2412.14470v2",
+      "source": "arxiv",
+      "abstract_excerpt": "As large language models (LLMs) are increasingly deployed as agents, their integration into interactive environments and tool use introduce new safety challenges beyond those associated with the models themselves. However, the absence of comprehensive benchmarks for evaluating agent safety presents a significant barrier to effective assessment and further improvement. In this paper, we introduce A"
+    },
+    {
+      "paper_id": "2602.03100v1",
+      "title": "Risky-Bench: Probing Agentic Safety Risks under Real-World Deployment",
+      "published": "2026",
+      "url": "http://arxiv.org/abs/2602.03100v1",
+      "source": "arxiv",
+      "abstract_excerpt": "Large Language Models (LLMs) are increasingly deployed as agents that operate in real-world environments, introducing safety risks beyond linguistic harm. Existing agent safety evaluations rely on risk-oriented tasks tailored to specific agent settings, resulting in limited coverage of safety risk space and failing to assess agent safety behavior during long-horizon, interactive task execution in "
+    }
+  ]
+}

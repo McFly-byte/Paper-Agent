@@ -1,0 +1,25 @@
+{
+  "run_id": "c4a88a32-c825-47f8-ac7f-eef811229c4f",
+  "current_step": "ExecutionState.REPORTING",
+  "max_papers": 50,
+  "has_plan": true,
+  "search_result_count": 15,
+  "filtered_paper_count": 15,
+  "extracted_paper_count": 15,
+  "evidence_item_count": 146,
+  "citation_ref_count": 15,
+  "written_section_count": 7,
+  "report_length": 25911,
+  "workflow_error_count": 0,
+  "boundary_check_keys": [
+    "search",
+    "reading",
+    "analyse",
+    "writing",
+    "report"
+  ],
+  "faithfulness_verdict": "warning",
+  "report_citation_verdict": "pass",
+  "evidence_chain_status": "ok",
+  "citation_chain_status": "ok"
+}

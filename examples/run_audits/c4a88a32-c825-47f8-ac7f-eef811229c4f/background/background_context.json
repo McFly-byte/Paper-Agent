@@ -1,0 +1,53 @@
+{
+  "topic": "大模型智能体（LLM Agents）前沿研究：核心机制、系统集成与安全评测进展",
+  "expanded_keywords": [
+    "LLM智能体",
+    "工具调用与函数调用",
+    "多智能体协作",
+    "智能体编排框架",
+    "规划与反思机制",
+    "长期记忆与上下文管理",
+    "RAG与代码执行集成",
+    "智能体安全对齐",
+    "评测基准与指标",
+    "长程任务分解"
+  ],
+  "related_terms": [
+    "Autonomous AI Agents",
+    "Tool-Augmented Language Models",
+    "Function Calling & API Routing",
+    "Multi-Agent Orchestration",
+    "Reasoning & Planning (ReAct, ToT, GoT)",
+    "Self-Reflection & Critique Loops",
+    "Memory-Augmented Generation",
+    "Vector & Knowledge Graph Memory",
+    "Sandboxed Code Execution",
+    "Retrieval-Augmented Agents",
+    "Agent Safety & Robustness",
+    "Benchmarking LLM Agents",
+    "Long-Horizon Task Execution",
+    "Decentralized Agent Communication",
+    "Tool Misuse & Permission Alignment"
+  ],
+  "initial_findings": [
+    "工具调用与函数调用已从早期提示词工程演变为基于结构化JSON Schema与动态路由的标准范式，但在复杂API组合、参数模糊解析及错误恢复方面仍存在可靠性瓶颈。",
+    "多智能体协作研究正从中心化工作流向去中心化消息传递与角色自适应分配过渡，通信开销控制、冲突消解与任务死锁预防是当前系统架构的核心挑战。",
+    "规划与反思机制（如ReAct、Tree/Graph-of-Thoughts）显著提升了推理链的可追溯性与逻辑严密性，但长周期任务中的错误累积效应与高昂的计算推理成本限制了其实际部署。",
+    "记忆架构普遍采用向量检索结合摘要压缩或知识图谱的策略，以突破上下文窗口限制；如何在有限带宽下实现高相关度召回与遗忘机制的平衡仍是开放问题。",
+    "与RAG及代码执行环境的深度融合增强了智能体的事实锚定与自动化操作能力，但引入了检索延迟、沙箱逃逸风险及生成代码自我调试的稳定性难题。",
+    "安全对齐与评测体系正从静态问答准确率转向动态交互指标（如越权操作防护、工具滥用拦截、长程规划鲁棒性），但缺乏跨框架、可复现的标准化基准平台。"
+  ],
+  "suggested_search_queries": [
+    "LLM agents tool calling function calling survey",
+    "multi-agent orchestration frameworks LLM",
+    "LLM planning and reasoning ReAct tree of thoughts",
+    "long-term memory architectures for autonomous agents",
+    "RAG integration code execution LLM agents",
+    "LLM agent safety alignment evaluation benchmarks",
+    "self-reflection error correction in language model agents",
+    "benchmarking long-horizon tasks for AI agents",
+    "multi-agent communication protocols tool use",
+    "robust tool selection and API routing for LLMs"
+  ],
+  "notes": "调研应聚焦于智能体核心架构范式与系统级集成方案，避免过度关注单一Prompt调优技巧。\\n需严格区分中心化工作流调度与真正具备去中心化协商能力的多智能体系统。\\n当前评测基准多依赖合成任务，对开放域、长程交互及真实环境泛化能力的评估仍存在显著空白。\\n开源工程框架的迭代速度常快于学术发表，建议结合主流Agent开发框架的技术文档进行交叉验证。\\n安全研究需重点关注工具调用引发的权限越界、环境破坏风险及多智能体协作中的对齐退化问题。"
+}

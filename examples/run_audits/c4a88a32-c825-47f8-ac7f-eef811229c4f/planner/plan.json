@@ -1,0 +1,254 @@
+{
+  "title": "大模型智能体（LLM Agents）前沿研究：核心机制、系统集成与安全评测进展",
+  "thought": "本计划将调研范围划分为核心推理机制、多智能体协同架构、外部系统集成（RAG/代码）以及安全评测四大模块。鉴于该领域迭代极快，检索将优先聚焦近两年的arXiv预印本与顶会论文，并严格区分学术范式与工程框架实现。阅读与分析任务将侧重于提取架构设计模式、性能指标对比及已知局限性，以支撑最终技术报告的结构化撰写。计划通过模块化检索降低单次查询的信息噪声，并通过聚类与对比分析确保技术路线的清晰呈现。",
+  "has_enough_context": true,
+  "search_tasks": [
+    {
+      "query": "LLM agent tool calling function calling API routing survey",
+      "source": "arxiv",
+      "time_range": [
+        "2023-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "Focuses on structured tool/function calling mechanisms",
+        "Discusses API routing, parameter parsing, or error recovery",
+        "Includes empirical evaluation or architectural design"
+      ],
+      "exclusion_criteria": [
+        "Pure prompt engineering without tool integration",
+        "Focuses solely on single-task chatbots",
+        "Pre-2023 foundational LLM papers without agent context"
+      ],
+      "top_k": 15
+    },
+    {
+      "query": "multi-agent orchestration frameworks communication protocols decentralized",
+      "source": "arxiv",
+      "time_range": [
+        "2023-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "Covers multi-agent collaboration or orchestration architectures",
+        "Addresses communication protocols, conflict resolution, or role assignment",
+        "Provides system-level evaluation"
+      ],
+      "exclusion_criteria": [
+        "Single-agent simulations",
+        "Theoretical game theory without LLM implementation",
+        "Non-peer-reviewed blog posts"
+      ],
+      "top_k": 15
+    },
+    {
+      "query": "LLM planning reasoning ReAct tree of thoughts self-reflection",
+      "source": "arxiv",
+      "time_range": [
+        "2023-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "Explores planning, reasoning chains, or self-reflection loops",
+        "Compares ReAct, ToT, GoT, or similar paradigms",
+        "Analyzes computational cost or error accumulation"
+      ],
+      "exclusion_criteria": [
+        "Basic chain-of-thought prompting without agent loop",
+        "Non-LLM traditional planning algorithms",
+        "Papers lacking experimental validation"
+      ],
+      "top_k": 15
+    },
+    {
+      "query": "LLM agent long-term memory RAG code execution sandbox integration",
+      "source": "arxiv",
+      "time_range": [
+        "2023-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "Integrates vector/graph memory, RAG, or code execution environments",
+        "Addresses context window limits or retrieval latency",
+        "Discusses sandbox security or code debugging"
+      ],
+      "exclusion_criteria": [
+        "Standard RAG without agent loop",
+        "Memory systems not applied to autonomous agents",
+        "Hardware-level optimization papers"
+      ],
+      "top_k": 15
+    },
+    {
+      "query": "LLM agent safety alignment evaluation benchmarks robustness tool misuse",
+      "source": "arxiv",
+      "time_range": [
+        "2023-01-01",
+        null
+      ],
+      "inclusion_criteria": [
+        "Proposes or evaluates safety/alignment benchmarks for agents",
+        "Covers tool misuse, permission escalation, or robustness testing",
+        "Includes dynamic interaction metrics"
+      ],
+      "exclusion_criteria": [
+        "Static LLM safety benchmarks (e.g., MMLU)",
+        "Pure policy papers without technical evaluation",
+        "Non-agent specific alignment studies"
+      ],
+      "top_k": 15
+    }
+  ],
+  "reading_tasks": [
+    {
+      "focus": "工具调用与规划反思机制的架构设计与性能瓶颈",
+      "required_fields": [
+        "architecture_diagram",
+        "tool_selection_algorithm",
+        "reasoning_paradigm",
+        "error_handling_mechanism",
+        "computational_overhead"
+      ],
+      "extraction_schema_name": "AgentCoreMechanism"
+    },
+    {
+      "focus": "多智能体协作模式与通信开销控制策略",
+      "required_fields": [
+        "orchestration_topology",
+        "communication_protocol",
+        "conflict_resolution_method",
+        "scalability_metrics",
+        "deadlock_prevention"
+      ],
+      "extraction_schema_name": "MultiAgentSystem"
+    },
+    {
+      "focus": "记忆架构、RAG与代码执行环境的集成方案",
+      "required_fields": [
+        "memory_type",
+        "retrieval_strategy",
+        "code_execution_sandbox",
+        "latency_impact",
+        "context_management"
+      ],
+      "extraction_schema_name": "SystemIntegration"
+    },
+    {
+      "focus": "智能体安全对齐风险与动态评测基准设计",
+      "required_fields": [
+        "threat_model",
+        "safety_metric",
+        "benchmark_dataset",
+        "evaluation_protocol",
+        "alignment_degradation_cause"
+      ],
+      "extraction_schema_name": "SafetyBenchmark"
+    }
+  ],
+  "analysis_tasks": [
+    {
+      "name": "核心推理与工具调用范式对比",
+      "analysis_type": "method_comparison",
+      "target_dimensions": [
+        "tool_selection_accuracy",
+        "reasoning_depth",
+        "computational_cost",
+        "error_recovery_rate"
+      ],
+      "description": "横向对比不同规划机制（ReAct/ToT等）与工具调用策略在复杂任务中的表现与资源消耗。"
+    },
+    {
+      "name": "多智能体架构与记忆系统集成聚类",
+      "analysis_type": "clustering",
+      "target_dimensions": [
+        "centralization_level",
+        "communication_pattern",
+        "memory_persistence",
+        "integration_complexity"
+      ],
+      "description": "将现有系统按中心化/去中心化程度及记忆集成方式进行聚类，识别主流架构范式。"
+    },
+    {
+      "name": "安全评测指标演进与局限性总结",
+      "analysis_type": "limitation_summary",
+      "target_dimensions": [
+        "benchmark_coverage",
+        "dynamic_interaction_capability",
+        "real_world_generalization",
+        "standardization_gap"
+      ],
+      "description": "归纳当前评测基准在开放域、长程交互及真实环境泛化方面的不足，提炼安全对齐的核心挑战。"
+    },
+    {
+      "name": "RAG与代码执行集成趋势分析",
+      "analysis_type": "trend_analysis",
+      "target_dimensions": [
+        "retrieval_latency",
+        "sandbox_security",
+        "code_self_debugging",
+        "fact_grounding_accuracy"
+      ],
+      "description": "追踪智能体与外部知识/执行环境结合的技术演进路径，评估延迟与稳定性权衡趋势。"
+    }
+  ],
+  "writing_tasks": [
+    {
+      "section_title": "引言与智能体架构演进概述",
+      "section_goal": "界定LLM智能体概念，梳理从提示工程到自主智能体的技术演进脉络。",
+      "required_evidence_types": [
+        "background",
+        "taxonomy",
+        "evolution_timeline"
+      ],
+      "expected_length": 800
+    },
+    {
+      "section_title": "核心机制：工具调用、规划与反思",
+      "section_goal": "深入剖析函数调用范式、推理链规划（ReAct/ToT）及自我反思循环的设计原理与性能瓶颈。",
+      "required_evidence_types": [
+        "method",
+        "architecture",
+        "result",
+        "limitation"
+      ],
+      "expected_length": 1500
+    },
+    {
+      "section_title": "系统集成：多智能体协作、记忆与RAG/代码环境",
+      "section_goal": "探讨多智能体编排协议、长期记忆架构及与外部知识/执行沙箱的深度融合方案。",
+      "required_evidence_types": [
+        "system_design",
+        "integration_pattern",
+        "performance_metric",
+        "case_study"
+      ],
+      "expected_length": 1500
+    },
+    {
+      "section_title": "安全对齐与动态评测基准",
+      "section_goal": "分析工具滥用、权限越界等安全风险，评估现有动态交互基准的覆盖度与标准化缺口。",
+      "required_evidence_types": [
+        "threat_model",
+        "benchmark_result",
+        "evaluation_protocol",
+        "safety_metric"
+      ],
+      "expected_length": 1200
+    },
+    {
+      "section_title": "挑战总结与未来研究方向",
+      "section_goal": "综合前述分析，提炼长程任务可靠性、跨框架标准化及真实场景泛化等关键挑战，提出研究建议。",
+      "required_evidence_types": [
+        "limitation_summary",
+        "future_direction",
+        "synthesis"
+      ],
+      "expected_length": 800
+    }
+  ],
+  "evaluation_criteria": [
+    "报告是否完整覆盖工具调用、多智能体、规划反思、记忆/RAG集成及安全评测五大核心模块。",
+    "方法对比部分是否提供至少三种主流规划/工具调用范式的定量或定性指标对比。",
+    "安全与评测章节是否明确指出现有基准在动态交互与真实环境泛化方面的具体局限性。"
+  ]
+}

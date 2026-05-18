@@ -1,0 +1,40 @@
+{
+  "item_count": 146,
+  "total_items": 146,
+  "paper_count": 15,
+  "section_counts": {
+    "introduction": 15,
+    "method": 15,
+    "experiment": 27,
+    "result": 14,
+    "conclusion": 71,
+    "limitation": 4
+  },
+  "argument_counts": {
+    "problem": 15,
+    "method": 15,
+    "dataset": 14,
+    "metric": 13,
+    "result": 14,
+    "contribution": 71,
+    "limitation": 4
+  },
+  "by_section_type": {
+    "introduction": 15,
+    "method": 15,
+    "experiment": 27,
+    "result": 14,
+    "conclusion": 71,
+    "limitation": 4
+  },
+  "by_argument": {
+    "problem": 15,
+    "method": 15,
+    "dataset": 14,
+    "metric": 13,
+    "result": 14,
+    "contribution": 71,
+    "limitation": 4
+  },
+  "avg_confidence": 0.7774
+}

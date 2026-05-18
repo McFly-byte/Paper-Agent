@@ -1,0 +1,177 @@
+{
+  "search": {
+    "passed": true,
+    "score": 1.0,
+    "reasons": [],
+    "metrics": {
+      "query_count": 6,
+      "top_titles": [
+        "SkillSafetyBench: Evaluating Agent Safety under Skill-Facing Attack Surfaces",
+        "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+        "How Brittle is Agent Safety? Rethinking Agent Risk under Intent Concealment and Task Complexity",
+        "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+        "Risky-Bench: Probing Agentic Safety Risks under Real-World Deployment"
+      ],
+      "raw_result_count": 25,
+      "dedup_count": 25,
+      "dedup_ratio": 1.0,
+      "requested_max_results": 50,
+      "avg_query_terms": 7.5,
+      "topic_token_overlap": "****",
+      "blocking_failure_count": 0,
+      "warning_count": 0
+    },
+    "next_action": "continue"
+  },
+  "reading": {
+    "passed": true,
+    "score": 0.94,
+    "reasons": [
+      "LlamaIndex 入库节点数为 0，写作阶段会降级依赖 legacy 临时库"
+    ],
+    "metrics": {
+      "input_paper_count": 15,
+      "parsed_paper_count": 15,
+      "parse_ratio": 1.0,
+      "avg_core_field_fill": 0.8933,
+      "kb_write_count": 15,
+      "metadata_field_coverage": {
+        "paper_id_or_id_or_arxiv_id": 1.0,
+        "title": 1.0,
+        "summary_or_abstract": 1.0,
+        "url_or_pdf_url_or_source": 1.0
+      },
+      "short_abstract_count": 0,
+      "prompt_injection_marker_count": 0,
+      "llamaindex_node_count": 0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "LlamaIndex 入库节点数为 0，写作阶段会降级依赖 legacy 临时库"
+      ]
+    },
+    "next_action": "continue"
+  },
+  "analyse": {
+    "passed": true,
+    "score": 0.94,
+    "reasons": [
+      "cluster_summaries 未提供代表论文，分析可追溯性偏弱"
+    ],
+    "metrics": {
+      "input_paper_count": 15,
+      "cluster_count": 2,
+      "deep_analysis_count": 2,
+      "global_analysis_length": 6162,
+      "cluster_sizes": [
+        8,
+        7
+      ],
+      "representative_paper_count": 0,
+      "global_module_hits": 6,
+      "cluster_to_paper_ratio": 0.1333,
+      "cluster_paper_total": 15,
+      "cluster_size_balance": 0.875,
+      "reference_token_match_ratio": "****",
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "cluster_summaries 未提供代表论文，分析可追溯性偏弱"
+      ],
+      "plan_analysis_task_coverage_ratio": 0.0,
+      "plan_writing_task_coverage_ratio": 0.6,
+      "missing_plan_dimensions": {
+        "analysis_tasks": [
+          "核心推理与工具调用范式对比",
+          "多智能体架构与记忆系统集成聚类",
+          "安全评测指标演进与局限性总结",
+          "RAG与代码执行集成趋势分析"
+        ],
+        "writing_tasks": [
+          "安全对齐与动态评测基准",
+          "挑战总结与未来研究方向"
+        ]
+      }
+    },
+    "next_action": "continue"
+  },
+  "writing": {
+    "passed": true,
+    "score": 0.88,
+    "reasons": [
+      "RAG 正向检索覆盖率偏低（0.00 < 0.50）"
+    ],
+    "metrics": {
+      "planned_sections": 7,
+      "written_sections_nonempty": 7,
+      "section_match_ratio": 1.0,
+      "section_lengths": [
+        2178,
+        3073,
+        2959,
+        3298,
+        3918,
+        2966,
+        3259
+      ],
+      "review_verdicts": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "section_evidence_hint_ratio": 1.0,
+      "section_title_content_match_ratio": 0.8571,
+      "rag_call_count": 0,
+      "rag_positive_call_count": 0,
+      "rag_positive_call_ratio": 0.0,
+      "review_pass_rate": 1.0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "RAG 正向检索覆盖率偏低（0.00 < 0.50）"
+      ]
+    },
+    "next_action": "continue"
+  },
+  "report": {
+    "passed": true,
+    "score": 0.95,
+    "reasons": [
+      "存在 3 个疑似空章节"
+    ],
+    "metrics": {
+      "final_length": 25911,
+      "planned_source_sections": 7,
+      "heading_count": 36,
+      "section_trigram_recalls": [
+        1.0,
+        0.9923,
+        0.9979,
+        0.9914,
+        0.99,
+        0.9978,
+        0.9945
+      ],
+      "report_trigram_bucket_size": 13489,
+      "section_coverage_ratio": 1.0,
+      "has_intro": true,
+      "has_conclusion": true,
+      "has_body_analysis": true,
+      "has_source_or_reference_hint": true,
+      "placeholder_count": 0,
+      "empty_section_count": 3,
+      "duplicate_paragraph_ratio": 0.0,
+      "blocking_failure_count": 0,
+      "warning_count": 1,
+      "warnings": [
+        "存在 3 个疑似空章节"
+      ],
+      "citation_validation_verdict": "pass"
+    },
+    "next_action": "continue"
+  }
+}

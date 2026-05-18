@@ -1,0 +1,515 @@
+{
+  "input_count": 25,
+  "normalized_count": 25,
+  "deduplicated_count": 25,
+  "output_count": 15,
+  "min_score": 0.05,
+  "warnings": [],
+  "plan_task_coverage": {
+    "0": 15,
+    "1": 15,
+    "2": 15,
+    "3": 15,
+    "4": 15
+  },
+  "selected_summary": [
+    {
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents"
+    },
+    {
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models"
+    },
+    {
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios"
+    },
+    {
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning"
+    },
+    {
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents"
+    },
+    {
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments"
+    },
+    {
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis"
+    },
+    {
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions"
+    },
+    {
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment"
+    },
+    {
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety"
+    },
+    {
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety"
+    },
+    {
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety"
+    },
+    {
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security"
+    },
+    {
+      "paper_id": "2412.14470v2",
+      "title": "Agent-SafetyBench: Evaluating the Safety of LLM Agents"
+    },
+    {
+      "paper_id": "2602.03100v1",
+      "title": "Risky-Bench: Probing Agentic Safety Risks under Real-World Deployment"
+    }
+  ],
+  "rejected_summary": [
+    {
+      "paper_id": "2604.18658v1",
+      "title": "Owner-Harm: A Missing Threat Model for AI Agent Safety",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3226630434782609
+    },
+    {
+      "paper_id": "2507.14944v2",
+      "title": "LEKIA: Expert-Aligned AI Behavior Design for High-Risk Human-AI Interactions",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3216358695652174
+    },
+    {
+      "paper_id": "2602.03224v1",
+      "title": "TAME: A Trustworthy Test-Time Evolution of Agent Memory with Systematic Benchmarking",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.32070652173913045
+    },
+    {
+      "paper_id": "2602.00061v1",
+      "title": "Simple Role Assignment is Extraordinarily Effective for Safety Alignment",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.31958152173913046
+    },
+    {
+      "paper_id": "2602.11749v1",
+      "title": "AIR: Improving Agent Safety through Incident Response",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3193858695652174
+    },
+    {
+      "paper_id": "2604.13954v1",
+      "title": "HINTBench: Horizon-agent Intrinsic Non-attack Trajectory Benchmark",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3193858695652174
+    },
+    {
+      "paper_id": "2605.01644v1",
+      "title": "Toward a Principled Framework for Agent Safety Measurement",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3173315217391305
+    },
+    {
+      "paper_id": "2605.06992v1",
+      "title": "Why Does Agentic Safety Fail to Generalize Across Tasks?",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.31630434782608696
+    },
+    {
+      "paper_id": "2605.12015v1",
+      "title": "SkillSafetyBench: Evaluating Agent Safety under Skill-Facing Attack Surfaces",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.3161086956521739
+    },
+    {
+      "paper_id": "2511.08487v1",
+      "title": "How Brittle is Agent Safety? Rethinking Agent Risk under Intent Concealment and Task Complexity",
+      "reason": "below_threshold_or_not_in_top_k",
+      "score": 0.31434782608695655
+    }
+  ],
+  "scores": [
+    {
+      "paper_id": "2506.00641v3",
+      "relevance_score": 0.3385,
+      "keyword_score": 0.1188,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2509.26100v2",
+      "relevance_score": 0.3354,
+      "keyword_score": 0.112,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2605.03242v1",
+      "relevance_score": 0.3331,
+      "keyword_score": 0.107,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2507.08270v1",
+      "relevance_score": 0.3318,
+      "keyword_score": 0.104,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2601.06663v2",
+      "relevance_score": 0.331,
+      "keyword_score": 0.1022,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2601.07853v1",
+      "relevance_score": 0.3288,
+      "keyword_score": 0.0974,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2604.02022v3",
+      "relevance_score": 0.3278,
+      "keyword_score": 0.0951,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2512.02682v1",
+      "relevance_score": 0.3278,
+      "keyword_score": 0.0951,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2605.11882v1",
+      "relevance_score": 0.3269,
+      "keyword_score": 0.093,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2507.06134v2",
+      "relevance_score": 0.3268,
+      "keyword_score": 0.0928,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2510.05442v1",
+      "relevance_score": 0.3247,
+      "keyword_score": 0.0883,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2604.03242v1",
+      "relevance_score": 0.3238,
+      "keyword_score": 0.0862,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2601.18491v2",
+      "relevance_score": 0.3237,
+      "keyword_score": 0.086,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2412.14470v2",
+      "relevance_score": 0.3236,
+      "keyword_score": 0.0858,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2602.03100v1",
+      "relevance_score": 0.3234,
+      "keyword_score": 0.0853,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2604.18658v1",
+      "relevance_score": 0.3227,
+      "keyword_score": 0.0837,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2507.14944v2",
+      "relevance_score": 0.3216,
+      "keyword_score": 0.0814,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2602.03224v1",
+      "relevance_score": 0.3207,
+      "keyword_score": 0.0793,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2602.00061v1",
+      "relevance_score": 0.3196,
+      "keyword_score": 0.0768,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2602.11749v1",
+      "relevance_score": 0.3194,
+      "keyword_score": 0.0764,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2604.13954v1",
+      "relevance_score": 0.3194,
+      "keyword_score": 0.0764,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2605.01644v1",
+      "relevance_score": 0.3173,
+      "keyword_score": 0.0718,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2605.06992v1",
+      "relevance_score": 0.3163,
+      "keyword_score": 0.0696,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2605.12015v1",
+      "relevance_score": 0.3161,
+      "keyword_score": 0.0691,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "paper_id": "2511.08487v1",
+      "relevance_score": 0.3143,
+      "keyword_score": 0.0652,
+      "inclusion_score": 0.0,
+      "plan_task_score": 1.0,
+      "metadata_score": 0.85,
+      "matched_plan_tasks": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ]
+}

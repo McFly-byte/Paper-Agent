@@ -1,0 +1,966 @@
+{
+  "total": 146,
+  "exported": 120,
+  "items": [
+    {
+      "evidence_id": "2506.00641v3:problem:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管 LLM 代理快速发展，但现有规则或 LLM 评估器常遗漏逐步行动中的危险、忽略细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆，导致可靠的安全与安全评估仍具挑战。"
+    },
+    {
+      "evidence_id": "2506.00641v3:method:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: 构建经验记忆库，通过 LLM 自适应提取结构化语义特征（场景、风险、行为）并生成思维链推理轨迹；利用多阶段上下文感知检索增强生成（RAG）动态检索最相关推理经验以指导新案例评估。. Novelty: 我们提出 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模拟人类专家评估器；同时开发了 ASSEBench，首个旨在检查 LLM 评估器识别安全风险和威胁能力的基准。"
+    },
+    {
+      "evidence_id": "2506.00641v3:dataset:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2506.00641v3:metric:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2506.00641v3:result:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在所有基准上持续提升 LLM 评估性能，在代理安全与安全领域的 LLM-as-a-judge 任务中设定新的 state-of-the-art，达到人类水平的准确率（human-level accuracy）。"
+    },
+    {
+      "evidence_id": "2506.00641v3:contribution:0",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework."
+    },
+    {
+      "evidence_id": "2506.00641v3:contribution:1",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces."
+    },
+    {
+      "evidence_id": "2506.00641v3:contribution:2",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Developed ASSEBench, the first benchmark for evaluating LLM-based agents' safety risks and security threats."
+    },
+    {
+      "evidence_id": "2506.00641v3:contribution:3",
+      "paper_id": "2506.00641v3",
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety."
+    },
+    {
+      "evidence_id": "2509.26100v2:problem:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管 LLM 代理快速发展，但现有基于规则或 LLM 的评估器常遗漏逐步行动中的危险、忽视细微含义、无法看到小问题如何累积，并因模糊的安全或安全规则而困惑。"
+    },
+    {
+      "evidence_id": "2509.26100v2:method:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: 通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并为过去交互生成关联的思维链推理轨迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验，以指导 LLM 评估器对新案例的评估。. Novelty: 我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模仿人类专家评估器。"
+    },
+    {
+      "evidence_id": "2509.26100v2:dataset:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2509.26100v2:metric:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2509.26100v2:result:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在 ASSEBench 上实现了人类水平的准确率（human-level accuracy），并在所有基准测试中一致提升了 LLM 的评估性能，确立了 LLM-as-a-judge 在代理安全和安全方面的新最先进水平。"
+    },
+    {
+      "evidence_id": "2509.26100v2:contribution:0",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework."
+    },
+    {
+      "evidence_id": "2509.26100v2:contribution:1",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces."
+    },
+    {
+      "evidence_id": "2509.26100v2:contribution:2",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats."
+    },
+    {
+      "evidence_id": "2509.26100v2:contribution:3",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Employed nuanced 'Strict' and 'Lenient' judgment standards for ambiguous risk situations."
+    },
+    {
+      "evidence_id": "2509.26100v2:contribution:4",
+      "paper_id": "2509.26100v2",
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+    },
+    {
+      "evidence_id": "2605.03242v1:problem:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管基于 LLM 的代理系统日益普及，但现有的安全基准仍强调显式风险，可能高估了模型判断欺骗性或模糊轨迹的能力，且缺乏针对分布外 deceptive scenarios 的有效评估与增强手段。"
+    },
+    {
+      "evidence_id": "2605.03242v1:method:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "ROME and ARISE: ROME (Red-team Orchestrated Multi-agent Evolution) 是一个受控基准构建流水线，将已知的不安全轨迹重写为更具欺骗性的评估实例，同时保留其底层风险标签；ARISE (Analogical Reasoning for Inference-time Safety Enhancement) 是一种检索引导的推理时增强方法，从外部类比库中检索 ReAct 风格的类比安全轨迹，并将其作为结构化推理示例注入以提升判断质量。. Novelty: 提出 ROME 用于生成涵盖上下文歧义、隐式风险和捷径决策的挑战性实例，并研究 ARISE 作为无需重新训练的任务特定鲁棒性增强手段。"
+    },
+    {
+      "evidence_id": "2605.03242v1:dataset:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: 100 unsafe source trajectories rewritten into 300 challenge instances by ROME"
+    },
+    {
+      "evidence_id": "2605.03242v1:metric:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: safety-judgment performance"
+    },
+    {
+      "evidence_id": "2605.03242v1:result:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "ROME 生成的挑战集显著降低了安全判断性能，即使是最新的前沿模型，隐藏风险案例仍然特别难以处理；ARISE 提升了判断质量，但被视为任务特定的鲁棒性增强而非独立的安全保证。"
+    },
+    {
+      "evidence_id": "2605.03242v1:limitation:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "limitation",
+      "confidence": 0.65,
+      "claim": "ARISE 最好被视为任务特定的鲁棒性增强，而不是独立的安全保证。"
+    },
+    {
+      "evidence_id": "2605.03242v1:contribution:0",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduce ROME, a controlled benchmark-construction pipeline that rewrites known unsafe trajectories into more deceptive evaluation instances."
+    },
+    {
+      "evidence_id": "2605.03242v1:contribution:1",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Produce 300 challenge instances spanning contextual ambiguity, implicit risks, and shortcut decision-making from 100 unsafe source trajectories."
+    },
+    {
+      "evidence_id": "2605.03242v1:contribution:2",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrate that challenge sets substantially degrade safety-judgment performance even for recent frontier models."
+    },
+    {
+      "evidence_id": "2605.03242v1:contribution:3",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Study ARISE, a retrieval-guided inference-time enhancement that improves judgment quality without retraining."
+    },
+    {
+      "evidence_id": "2605.03242v1:contribution:4",
+      "paper_id": "2605.03242v1",
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Provide practical tools for stress-testing and improving agent safety judgment under deceptive distribution shifts."
+    },
+    {
+      "evidence_id": "2507.08270v1:problem:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管基于大语言模型的智能体迅速发展，但现有评估方法难以可靠地评估其安全性和安全性，常忽略逐步行动中的危险、细微含义及小问题的累积效应。"
+    },
+    {
+      "evidence_id": "2507.08270v1:method:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: 通过让大语言模型自适应提取结构化语义特征（如场景、风险、行为）并生成相关的思维链推理痕迹来构建经验记忆，随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验以指导新案例的评估。. Novelty: 我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使大语言模型评估器能够模拟人类专家评估器。"
+    },
+    {
+      "evidence_id": "2507.08270v1:dataset:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2507.08270v1:metric:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2507.08270v1:result:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在 ASSEBench 上实现了人类水平的准确率，并在所有基准测试中一致提高了大语言模型的评估性能，确立了智能体安全与安全领域 LLM-as-a-judge 的新最先进水平。"
+    },
+    {
+      "evidence_id": "2507.08270v1:contribution:0",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework."
+    },
+    {
+      "evidence_id": "2507.08270v1:contribution:1",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Constructed an experiential memory by adaptively extracting structured semantic features and generating chain-of-thought reasoning traces."
+    },
+    {
+      "evidence_id": "2507.08270v1:contribution:2",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats."
+    },
+    {
+      "evidence_id": "2507.08270v1:contribution:3",
+      "paper_id": "2507.08270v1",
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrated that AgentAuditor achieves human-level accuracy and sets a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+    },
+    {
+      "evidence_id": "2601.06663v2:problem:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管 LLM 智能体正迅速演变为能够执行复杂专业任务的自主系统，但现有的安全评估主要集中在简单的日常辅助任务，未能捕捉专业环境中复杂的决策过程及行为错位的潜在后果。"
+    },
+    {
+      "evidence_id": "2601.06663v2:method:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "SafePro: 通过严格的迭代创建和审查流程，构建涵盖不同专业领域的高复杂度任务数据集，用于评估 AI 智能体在执行专业活动时的安全对齐情况。. Novelty: 第一个旨在评估执行专业活动的 AI 智能体安全对齐的综合基准（comprehensive benchmark designed to evaluate the safety alignment of AI agents performing professional activities）。"
+    },
+    {
+      "evidence_id": "2601.06663v2:dataset:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: SafePro (high-complexity tasks across diverse professional domains with safety risks)"
+    },
+    {
+      "evidence_id": "2601.06663v2:result:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "对最先进 AI 模型的评估揭示了显著的安全漏洞，发现了专业背景下的新不安全行为；模型在执行复杂专业任务时表现出安全判断不足和安全对齐薄弱；调查的安全缓解策略观察到令人鼓舞的改进（encouraging improvements）。"
+    },
+    {
+      "evidence_id": "2601.06663v2:limitation:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "limitation",
+      "confidence": 0.65,
+      "claim": "现有安全评估主要关注简单的日常辅助任务（指出现有研究的局限，本文专注于填补专业领域空白）。"
+    },
+    {
+      "evidence_id": "2601.06663v2:contribution:0",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced SafePro, a comprehensive benchmark for evaluating safety alignment of AI agents in professional activities."
+    },
+    {
+      "evidence_id": "2601.06663v2:contribution:1",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Developed a dataset of high-complexity tasks across diverse professional domains through a rigorous iterative creation and review process."
+    },
+    {
+      "evidence_id": "2601.06663v2:contribution:2",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Revealed significant safety vulnerabilities and uncovered new unsafe behaviors in professional contexts among state-of-the-art models."
+    },
+    {
+      "evidence_id": "2601.06663v2:contribution:3",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrated that current models exhibit insufficient safety judgment and weak safety alignment in complex professional tasks."
+    },
+    {
+      "evidence_id": "2601.06663v2:contribution:4",
+      "paper_id": "2601.06663v2",
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Investigated safety mitigation strategies and observed encouraging improvements for agent safety in professional scenarios."
+    },
+    {
+      "evidence_id": "2601.07853v1:problem:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "Despite the rapid advancement of LLM-based agents, the reliable evaluation of their safety and security remains a significant challenge because existing rule-based or LLM-based evaluators often miss dangers in agents' step-by-step actions, overlook subtle meanings, fail to see how small issues compound, and get confused by unclear safety or security rules."
+    },
+    {
+      "evidence_id": "2601.07853v1:method:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: A universal, training-free, memory-augmented reasoning framework that constructs an experiential memory by having an LLM adaptively extract structured semantic features (e.g., scenario, risk, behavior) and generate associated chain-of-thought reasoning traces for past interactions. A multi-stage, context-aware retrieval-augmented generation process then dynamically retrieves the most relevant reasoning experiences to guide the LLM evaluator's assessment of new cases.. Novelty: We introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework that empowers LLM evaluators to emulate human expert evaluators."
+    },
+    {
+      "evidence_id": "2601.07853v1:dataset:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2601.07853v1:metric:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2601.07853v1:result:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "AgentAuditor sets a new state-of-the-art in LLM-as-a-judge for agent safety and security, achieving human-level accuracy."
+    },
+    {
+      "evidence_id": "2601.07853v1:contribution:0",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduce AgentAuditor, a universal, training-free, memory-augmented reasoning framework."
+    },
+    {
+      "evidence_id": "2601.07853v1:contribution:1",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Construct an experiential memory with structured semantic features and chain-of-thought reasoning traces."
+    },
+    {
+      "evidence_id": "2601.07853v1:contribution:2",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Develop ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats."
+    },
+    {
+      "evidence_id": "2601.07853v1:contribution:3",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrate that AgentAuditor consistently improves the evaluation performance of LLMs across all benchmarks."
+    },
+    {
+      "evidence_id": "2601.07853v1:contribution:4",
+      "paper_id": "2601.07853v1",
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Achieve human-level accuracy in agent safety and security evaluation."
+    },
+    {
+      "evidence_id": "2604.02022v3:problem:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管基于大语言模型的智能体安全评估日益重要，但现有的轨迹级基准测试存在交互多样性不足、安全失败可观察性粗糙以及长程现实性弱的问题，难以捕捉多步交互中涌现的风险。"
+    },
+    {
+      "evidence_id": "2604.02022v3:method:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "ATBench: 构建一个包含异质工具池和长上下文延迟触发协议（long-context delayed-trigger protocol）的轨迹级基准，沿风险来源、失败模式和现实危害三个维度组织智能体风险，以捕捉跨多个阶段的现实风险涌现。. Novelty: 我们引入 ATBench，一个用于结构化、多样化和现实化评估智能体安全的轨迹级基准。"
+    },
+    {
+      "evidence_id": "2604.02022v3:dataset:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ATBench (1,000 trajectories: 503 safe and 497 unsafe, averaging 9.01 turns and 3.95k tokens, with 1,954 invoked tools from pools spanning 2,084 available tools)"
+    },
+    {
+      "evidence_id": "2604.02022v3:metric:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Safety Evaluation Performance; Taxonomy-stratified analysis metrics"
+    },
+    {
+      "evidence_id": "2604.02022v3:result:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "实验表明 ATBench 即使对强大的评估器（前沿大语言模型、开源模型和专用防护系统）也极具挑战性，能够揭示长程失败模式并支持分类分层分析。"
+    },
+    {
+      "evidence_id": "2604.02022v3:contribution:0",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced ATBench, a trajectory-level benchmark for structured, diverse, and realistic evaluation of agent safety."
+    },
+    {
+      "evidence_id": "2604.02022v3:contribution:1",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Organized agentic risk along three dimensions: risk source, failure mode, and real-world harm."
+    },
+    {
+      "evidence_id": "2604.02022v3:contribution:2",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Constructed trajectories with heterogeneous tool pools and a long-context delayed-trigger protocol."
+    },
+    {
+      "evidence_id": "2604.02022v3:contribution:3",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Curated 1,000 high-quality trajectories supported by rule-based and LLM-based filtering plus full human audit."
+    },
+    {
+      "evidence_id": "2604.02022v3:contribution:4",
+      "paper_id": "2604.02022v3",
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrated the benchmark's challenge to frontier LLMs and its utility for diagnosing long-horizon failure patterns."
+    },
+    {
+      "evidence_id": "2512.02682v1:problem:0",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管现有的安全机制（如提示、微调和审核层）能有效约束单个模型的行为，但它们无法扩展到 LLM 与 LLM 相互交互的环境，导致局部合规可能聚集体为集体失败。"
+    },
+    {
+      "evidence_id": "2512.02682v1:method:0",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "Emergent Systemic Risk Horizon (ESRH): 一个概念框架，用于形式化不稳定性如何从交互结构而非孤立的错误行为中产生，推动从模型级安全向系统级安全的概念转变。. Novelty: 提出了从模型级安全到系统级安全的概念转变，并引入了 ESRH 框架来形式化交互结构中产生的不稳定性。"
+    },
+    {
+      "evidence_id": "2512.02682v1:limitation:0",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "limitation",
+      "confidence": 0.65,
+      "claim": "本研究主要提供理论分析和架构设计提案，未包含具体的实验数值结果。"
+    },
+    {
+      "evidence_id": "2512.02682v1:contribution:0",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Provided a theoretical account of collective risk in interacting LLMs."
+    },
+    {
+      "evidence_id": "2512.02682v1:contribution:1",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced a taxonomy connecting micro, meso, and macro-level failure modes."
+    },
+    {
+      "evidence_id": "2512.02682v1:contribution:2",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Proposed InstitutionalAI, an architecture for embedding adaptive oversight within multi-agent systems."
+    },
+    {
+      "evidence_id": "2512.02682v1:contribution:3",
+      "paper_id": "2512.02682v1",
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Formalized how instability arises from interaction structure via the Emergent Systemic Risk Horizon (ESRH) framework."
+    },
+    {
+      "evidence_id": "2605.11882v1:problem:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管工具使用型 LLM 智能体迅速发展，但现有安全对齐信号主要局限于响应级别或离线策略，常导致安全与效用的权衡，且无法有效捕捉多步交互轨迹中的不安全行为（如不安全工具调用、遵循注入指令等）。"
+    },
+    {
+      "evidence_id": "2605.11882v1:method:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "FATE (On-Policy Self-Evolution via Failure Trajectories): 将验证器评分的失败轨迹转化为修复监督信号：同一策略提出修复候选，经验证器重新评分并在安全性、效用、过度拒绝控制和轨迹有效性上过滤；引入 Pareto-Front Policy Optimization (PFPO)，结合监督预热与帕累托感知策略优化以保持安全 - 效用权衡。. Novelty: 我们提出了 FATE，一个在线策略自进化框架，无需专家演示即可将失败轨迹转化为修复监督；进一步引入了 PFPO 以解决安全与效用的权衡问题。"
+    },
+    {
+      "evidence_id": "2605.11882v1:dataset:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: AgentDojo; AgentHarm; ATBench"
+    },
+    {
+      "evidence_id": "2605.11882v1:metric:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Attack Success Rate; Harmful Compliance; External Trajectory-Safety Diagnosis"
+    },
+    {
+      "evidence_id": "2605.11882v1:result:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在 AgentDojo、AgentHarm 和 ATBench 上，相比强基线，FATE 将攻击成功率降低了 33.5%，有害顺从率降低了 82.6%，并将外部轨迹安全诊断能力提高了 6.5%，同时在不同模型和规模上提升了安全性并保留了有用行为。"
+    },
+    {
+      "evidence_id": "2605.11882v1:contribution:0",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Proposed FATE, an on-policy self-evolving framework that transforms verifier-scored failures into repair supervision without expert demonstrations."
+    },
+    {
+      "evidence_id": "2605.11882v1:contribution:1",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced Pareto-Front Policy Optimization (PFPO) to preserve safety-utility trade-offs during agent evolution."
+    },
+    {
+      "evidence_id": "2605.11882v1:contribution:2",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrated significant reductions in attack success rate (33.5%) and harmful compliance (82.6%) across multiple benchmarks."
+    },
+    {
+      "evidence_id": "2605.11882v1:contribution:3",
+      "paper_id": "2605.11882v1",
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Showed that failed trajectories can provide structured repair supervision for safer self-evolving agents."
+    },
+    {
+      "evidence_id": "2507.06134v2:problem:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管 AI 智能体在解决复杂日常任务方面取得进展并部署于现实世界，但现有基准依赖模拟环境、狭窄任务域或不真实的工具抽象，无法严格评估其在真实工具交互中的不安全行为。"
+    },
+    {
+      "evidence_id": "2507.06134v2:method:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "OpenAgentSafety: 一个全面且模块化的框架，评估智能体与真实工具（包括网页浏览器、代码执行环境、文件系统、bash shell 和消息平台）的交互；结合基于规则的分析和 LLM-as-judge 评估，以检测显性和隐性的不安全行为。. Novelty: 我们引入 OpenAgentSafety，一个用于评估智能体在八个关键风险类别中行为的全面且模块化框架；与以往工作不同，它评估与真实工具交互的智能体，并支持超过 350 个多轮多用户任务。"
+    },
+    {
+      "evidence_id": "2507.06134v2:dataset:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: OpenAgentSafety (over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents across eight critical risk categories)"
+    },
+    {
+      "evidence_id": "2507.06134v2:metric:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Unsafe behavior rate"
+    },
+    {
+      "evidence_id": "2507.06134v2:result:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "实证分析显示，在安全脆弱任务中，Claude-Sonnet-3.7 的不安全行为率为 51.2%，o3-mini 高达 72.7%，揭示了关键的安全漏洞。"
+    },
+    {
+      "evidence_id": "2507.06134v2:contribution:0",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced OpenAgentSafety, a comprehensive and modular framework for evaluating agent behavior across eight critical risk categories."
+    },
+    {
+      "evidence_id": "2507.06134v2:contribution:1",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Evaluated agents interacting with real tools including web browsers, code execution environments, file systems, bash shells, and messaging platforms."
+    },
+    {
+      "evidence_id": "2507.06134v2:contribution:2",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Supported over 350 multi-turn, multi-user tasks spanning both benign and adversarial user intents."
+    },
+    {
+      "evidence_id": "2507.06134v2:contribution:3",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Combined rule-based analysis with LLM-as-judge assessments to detect overt and subtle unsafe behaviors."
+    },
+    {
+      "evidence_id": "2507.06134v2:contribution:4",
+      "paper_id": "2507.06134v2",
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Revealed critical safety vulnerabilities with unsafe behavior rates up to 72.7% in prominent LLMs."
+    },
+    {
+      "evidence_id": "2510.05442v1:problem:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管 LLM 智能体利用工具（如 Google Search）完成复杂任务，但工具使用引入了间接提示注入风险，且现有防御策略依赖人工 crafted 攻击模式生成的数据集，缺乏多样性，使智能体易受新型提示注入攻击。"
+    },
+    {
+      "evidence_id": "2510.05442v1:method:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "ARLAS (Adversarial Reinforcement Learning for Agent Safety): 将问题构建为双人零和博弈，协同训练两个 LLM：一个攻击者自主生成多样化的提示注入，一个智能体学习在完成任务的同时进行防御；采用基于群体的学习框架，训练智能体防御所有先前的攻击者检查点以防止循环学习并确保鲁棒性。. Novelty: 我们提出 ARLAS，一个利用对抗性强化学习的新颖框架，通过双人零和博弈形式化问题，使攻击者能自主学习生成多样化提示注入，智能体同步学习防御。"
+    },
+    {
+      "evidence_id": "2510.05442v1:dataset:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: BrowserGym; AgentDojo"
+    },
+    {
+      "evidence_id": "2510.05442v1:metric:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Attack Success Rate; Task Success Rate"
+    },
+    {
+      "evidence_id": "2510.05442v1:result:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在 BrowserGym 和 AgentDojo 上评估显示，经 ARLAS 微调的智能体相比原始模型实现了显著更低的攻击成功率，同时提高了任务成功率。"
+    },
+    {
+      "evidence_id": "2510.05442v1:contribution:0",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Proposed ARLAS, a novel framework leveraging adversarial reinforcement learning for agent safety."
+    },
+    {
+      "evidence_id": "2510.05442v1:contribution:1",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Formulated agent safety as a two-player zero-sum game co-training an attacker and a defender."
+    },
+    {
+      "evidence_id": "2510.05442v1:contribution:2",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Employed a population-based learning framework to ensure robustness against a wide range of attacks and prevent cyclic learning."
+    },
+    {
+      "evidence_id": "2510.05442v1:contribution:3",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Demonstrated significantly lower attack success rates and improved task success rates on BrowserGym and AgentDojo."
+    },
+    {
+      "evidence_id": "2510.05442v1:contribution:4",
+      "paper_id": "2510.05442v1",
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Confirmed that the adversarial process generates a diverse and challenging set of attacks leading to more robust agents."
+    },
+    {
+      "evidence_id": "2604.03242v1:problem:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管基于大语言模型的智能体迅速发展，但可靠评估其安全性和安全性仍具重大挑战，因为现有评估器常遗漏逐步行动中的危险、忽视细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆。"
+    },
+    {
+      "evidence_id": "2604.03242v1:method:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: 通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并生成相关的思维链推理痕迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验以指导新案例的评估。. Novelty: 我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模拟人类专家评估器。"
+    },
+    {
+      "evidence_id": "2604.03242v1:dataset:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2604.03242v1:metric:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2604.03242v1:result:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在所有基准测试中一致提高了 LLM 的评估性能，并在智能体安全与安全领域的 LLM-as-a-judge 任务中设定了新的最先进水平，实现了人类水平的准确率。"
+    },
+    {
+      "evidence_id": "2604.03242v1:contribution:0",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Introduced AgentAuditor, a universal, training-free, memory-augmented reasoning framework."
+    },
+    {
+      "evidence_id": "2604.03242v1:contribution:1",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Empowered LLM evaluators to emulate human expert evaluators via experiential memory and chain-of-thought traces."
+    },
+    {
+      "evidence_id": "2604.03242v1:contribution:2",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Developed ASSEBench, the first benchmark designed to check how well LLM-based evaluators can spot both safety risks and security threats."
+    },
+    {
+      "evidence_id": "2604.03242v1:contribution:3",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Employed nuanced 'Strict' and 'Lenient' judgment standards for ambiguous risk situations."
+    },
+    {
+      "evidence_id": "2604.03242v1:contribution:4",
+      "paper_id": "2604.03242v1",
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "section_type": "conclusion",
+      "confidence": 0.75,
+      "claim": "Achieved human-level accuracy and set a new state-of-the-art in LLM-as-a-judge for agent safety and security."
+    },
+    {
+      "evidence_id": "2601.18491v2:problem:0",
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "section_type": "introduction",
+      "confidence": 0.85,
+      "claim": "尽管基于大语言模型的智能体迅速发展，但现有规则或 LLM 评估器常遗漏逐步行动中的危险、忽视细微含义、无法察觉小问题累积效应，且易被模糊的安全规则混淆，导致可靠的安全与安全评估仍具挑战。"
+    },
+    {
+      "evidence_id": "2601.18491v2:method:0",
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "section_type": "method",
+      "confidence": 0.85,
+      "claim": "AgentAuditor: 通过让 LLM 自适应提取结构化语义特征（如场景、风险、行为）并为过去交互生成关联的思维链推理轨迹来构建经验记忆；随后利用多阶段、上下文感知的检索增强生成过程动态检索最相关的推理经验，以指导 LLM 评估器对新案例的评估。. Novelty: 我们引入 AgentAuditor，一个通用的、无需训练的、记忆增强的推理框架，使 LLM 评估器能够模仿人类专家评估器。"
+    },
+    {
+      "evidence_id": "2601.18491v2:dataset:0",
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Datasets used: ASSEBench (2293 meticulously annotated interaction records, covering 15 risk types across 29 application scenarios)"
+    },
+    {
+      "evidence_id": "2601.18491v2:metric:0",
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "section_type": "experiment",
+      "confidence": 0.75,
+      "claim": "Evaluation metrics: Accuracy"
+    },
+    {
+      "evidence_id": "2601.18491v2:result:0",
+      "paper_id": "2601.18491v2",
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "section_type": "result",
+      "confidence": 0.85,
+      "claim": "在 ASSEBench 上实现了人类水平的准确率（human-level accuracy），并在所有基准测试中一致提升了 LLM 的评估性能，确立了 LLM-as-a-judge 在代理安全和安全方面的新最先进水平。"
+    }
+  ]
+}

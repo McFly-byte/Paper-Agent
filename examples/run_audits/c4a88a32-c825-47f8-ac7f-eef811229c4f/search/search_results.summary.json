@@ -1,0 +1,125 @@
+{
+  "count": 15,
+  "sample": [
+    {
+      "title": "AgentAuditor: Human-Level Safety and Security Evaluation for LLM Agents",
+      "paper_id": "2506.00641v3",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2506.00641v3",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "AgenticEval: Toward Agentic and Self-Evolving Safety Evaluation of Large Language Models",
+      "paper_id": "2509.26100v2",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2509.26100v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Enhancing Agent Safety Judgment: Controlled Benchmark Rewriting and Analogical Reasoning for Deceptive Out-of-Distribution Scenarios",
+      "paper_id": "2605.03242v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2605.03242v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Agent Safety Alignment via Reinforcement Learning",
+      "paper_id": "2507.08270v1",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2507.08270v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "SafePro: Evaluating the Safety of Professional-Level AI Agents",
+      "paper_id": "2601.06663v2",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2601.06663v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "FinVault: Benchmarking Financial Agent Safety in Execution-Grounded Environments",
+      "paper_id": "2601.07853v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2601.07853v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "ATBench: A Diverse and Realistic Agent Trajectory Benchmark for Safety Evaluation and Diagnosis",
+      "paper_id": "2604.02022v3",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.02022v3",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Beyond Single-Agent Safety: A Taxonomy of Risks in LLM-to-LLM Interactions",
+      "paper_id": "2512.02682v1",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2512.02682v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "On-Policy Self-Evolution via Failure Trajectories for Agentic Safety Alignment",
+      "paper_id": "2605.11882v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2605.11882v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "OpenAgentSafety: A Comprehensive Framework for Evaluating Real-World AI Agent Safety",
+      "paper_id": "2507.06134v2",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2507.06134v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Adversarial Reinforcement Learning for Large Language Model Agent Safety",
+      "paper_id": "2510.05442v1",
+      "published": 2025,
+      "url": "http://arxiv.org/abs/2510.05442v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "DRAFT: Task Decoupled Latent Reasoning for Agent Safety",
+      "paper_id": "2604.03242v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2604.03242v1",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "AgentDoG: A Diagnostic Guardrail Framework for AI Agent Safety and Security",
+      "paper_id": "2601.18491v2",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2601.18491v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Agent-SafetyBench: Evaluating the Safety of LLM Agents",
+      "paper_id": "2412.14470v2",
+      "published": 2024,
+      "url": "http://arxiv.org/abs/2412.14470v2",
+      "score": null,
+      "reasons": null
+    },
+    {
+      "title": "Risky-Bench: Probing Agentic Safety Risks under Real-World Deployment",
+      "paper_id": "2602.03100v1",
+      "published": 2026,
+      "url": "http://arxiv.org/abs/2602.03100v1",
+      "score": null,
+      "reasons": null
+    }
+  ]
+}
