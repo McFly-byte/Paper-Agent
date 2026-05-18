@@ -155,53 +155,52 @@ async def report_node(state: State, runtime: Runtime[PaperRunContext]) -> State:
                 cmap_for_val = CitationMap.model_validate(cmap_dict)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("[工作流·报告] CitationMap 校验前解析失败: %s", exc)
-        if cmap_for_val and cmap_for_val.refs:
-            val = validate_report_citations(
-                md_final,
-                cmap_for_val,
-                require_references_section=True,
-                allow_unused_references=True,
+        val = validate_report_citations(
+            md_final,
+            cmap_for_val,
+            require_references_section=True,
+            allow_unused_references=True,
+        )
+        current_state.config["report_citation_validation"] = val.model_dump(mode="json")
+        try:
+            await put_json(current_state, KEY_REPORT_CITATION_VALIDATION, val.model_dump(mode="json"))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[工作流·报告] 写入 KEY_REPORT_CITATION_VALIDATION 失败: %s", exc)
+        await state_queue.put(
+            BackToFrontData(
+                step=ExecutionState.REPORTING,
+                state="citation_validated",
+                data={
+                    "verdict": val.verdict,
+                    "citation_marker_count": val.citation_marker_count,
+                    "reference_count": val.reference_count,
+                    "unknown_markers": val.unknown_markers,
+                    "unused_references": val.unused_references[:10],
+                },
+            ),
+        )
+        if val.verdict == "fail":
+            append_workflow_error(
+                current_state,
+                {
+                    "node": "report_node",
+                    "phase": "report_citation_validation",
+                    "verdict": val.verdict,
+                    "summary": val.summary,
+                    "unknown_markers": val.unknown_markers,
+                },
             )
-            current_state.config["report_citation_validation"] = val.model_dump(mode="json")
-            try:
-                await put_json(current_state, KEY_REPORT_CITATION_VALIDATION, val.model_dump(mode="json"))
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("[工作流·报告] 写入 KEY_REPORT_CITATION_VALIDATION 失败: %s", exc)
-            await state_queue.put(
-                BackToFrontData(
-                    step=ExecutionState.REPORTING,
-                    state="citation_validated",
-                    data={
-                        "verdict": val.verdict,
-                        "citation_marker_count": val.citation_marker_count,
-                        "reference_count": val.reference_count,
-                        "unknown_markers": val.unknown_markers,
-                        "unused_references": val.unused_references[:10],
-                    },
-                ),
-            )
-            if val.verdict == "fail":
-                append_workflow_error(
-                    current_state,
-                    {
-                        "node": "report_node",
-                        "phase": "report_citation_validation",
-                        "verdict": val.verdict,
-                        "summary": val.summary,
-                        "unknown_markers": val.unknown_markers,
-                    },
+            if config.get_bool("workflow_v2.enable_strict_report_citation_validation", False):
+                current_state.error.report_node_error = (val.summary or "report_citation_validation_fail")[:2000]
+                set_recovery_target(current_state, "report")
+                await state_queue.put(
+                    BackToFrontData(
+                        step=ExecutionState.REPORTING,
+                        state="error",
+                        data=(val.summary or "citation_validation_fail")[:800],
+                    ),
                 )
-                if config.get_bool("workflow_v2.enable_strict_report_citation_validation", False):
-                    current_state.error.report_node_error = (val.summary or "report_citation_validation_fail")[:2000]
-                    set_recovery_target(current_state, "report")
-                    await state_queue.put(
-                        BackToFrontData(
-                            step=ExecutionState.REPORTING,
-                            state="error",
-                            data=(val.summary or "citation_validation_fail")[:800],
-                        ),
-                    )
-                    return {"value": current_state}
+                return {"value": current_state}
         kb_label = current_state.config.get("knowledge_base_label")
 
         repg = gate_report(

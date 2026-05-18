@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F9FBFA"/>
+      <stop offset="100%" stop-color="#EEF5F1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#183B35" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#2F6B62"/>
+    </marker>
+    <style>
+      .title{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:42px;font-weight:800;fill:#17322E}
+      .subtitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:20px;fill:#516C66}
+      .h{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:22px;font-weight:800;fill:#143831}
+      .t{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:16px;fill:#4E6962}
+      .small{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:14px;fill:#5F7771}
+      .box{fill:#FFFFFF;stroke:#CFE1DA;stroke-width:2;filter:url(#shadow)}
+      .guard{fill:#FFF6E7;stroke:#E6CC91;stroke-width:2;filter:url(#shadow)}
+      .line{stroke:#2F6B62;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#8BB5A9;stroke-width:2;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="72" y="82" class="title">证据约束与引用闭环</text>
+  <text x="74" y="118" class="subtitle">把“论文内容”变成可追踪证据，再把证据变成可校验引用，降低报告幻觉风险</text>
+
+  <g transform="translate(90,200)">
+    <rect class="box" x="0" y="0" width="220" height="130" rx="20"/>
+    <text x="110" y="42" text-anchor="middle" class="h">论文候选</text>
+    <text x="110" y="75" text-anchor="middle" class="t">标准化元数据</text>
+    <text x="110" y="101" text-anchor="middle" class="small">标题 / 摘要 / URL / 年份</text>
+  </g>
+  <g transform="translate(380,200)">
+    <rect class="box" x="0" y="0" width="250" height="130" rx="20"/>
+    <text x="125" y="38" text-anchor="middle" class="h">结构化阅读</text>
+    <text x="125" y="72" text-anchor="middle" class="t">抽取核心字段</text>
+    <text x="125" y="98" text-anchor="middle" class="small">问题 / 方法 / 数据集 / 结果 / 局限</text>
+  </g>
+  <g transform="translate(715,180)">
+    <rect class="box" x="0" y="0" width="280" height="170" rx="22"/>
+    <text x="140" y="42" text-anchor="middle" class="h">证据账本</text>
+    <text x="140" y="76" text-anchor="middle" class="t">EvidenceLedger</text>
+    <text x="140" y="104" text-anchor="middle" class="small">每条 EvidenceItem 绑定论文</text>
+    <text x="140" y="128" text-anchor="middle" class="small">claim / argument / confidence</text>
+  </g>
+  <g transform="translate(1080,200)">
+    <rect class="box" x="0" y="0" width="240" height="130" rx="20"/>
+    <text x="120" y="42" text-anchor="middle" class="h">引用映射</text>
+    <text x="120" y="75" text-anchor="middle" class="t">CitationMap</text>
+    <text x="120" y="101" text-anchor="middle" class="small">EvidenceID → [C1]</text>
+  </g>
+
+  <path class="line" d="M310,265 C340,265 350,265 380,265"/>
+  <path class="line" d="M630,265 C670,265 675,265 715,265"/>
+  <path class="line" d="M995,265 C1030,265 1045,265 1080,265"/>
+
+  <g transform="translate(103,455)">
+    <rect class="box" x="0" y="0" width="290" height="145" rx="22"/>
+    <text x="145" y="42" text-anchor="middle" class="h">章节证据上下文</text>
+    <text x="145" y="77" text-anchor="middle" class="t">按章节目标选择证据</text>
+    <text x="145" y="104" text-anchor="middle" class="small">优先匹配方法、结果、局限等论证类型</text>
+  </g>
+  <g transform="translate(475,455)">
+    <rect class="box" x="0" y="0" width="290" height="145" rx="22"/>
+    <text x="145" y="42" text-anchor="middle" class="h">证据约束写作</text>
+    <text x="145" y="77" text-anchor="middle" class="t">关键事实后附 [C编号]</text>
+    <text x="145" y="104" text-anchor="middle" class="small">证据不足时记录 warning，而非隐藏问题</text>
+  </g>
+  <g transform="translate(847,455)">
+    <rect class="guard" x="0" y="0" width="290" height="145" rx="22"/>
+    <text x="145" y="42" text-anchor="middle" class="h">忠实度审查</text>
+    <text x="145" y="77" text-anchor="middle" class="t">检查 unsupported claims</text>
+    <text x="145" y="104" text-anchor="middle" class="small">未知引用 / 缺失引用 / 非证据型标记</text>
+  </g>
+  <g transform="translate(1219,455)">
+    <rect class="guard" x="0" y="0" width="290" height="145" rx="22"/>
+    <text x="145" y="42" text-anchor="middle" class="h">终稿引用校验</text>
+    <text x="145" y="77" text-anchor="middle" class="t">正文引用与 References 对齐</text>
+    <text x="145" y="104" text-anchor="middle" class="small">不把 [Cluster 0] 当作合法证据引用</text>
+  </g>
+
+  <path class="line" d="M1200,330 C1190,385 365,385 260,455"/>
+  <path class="line" d="M393,528 C425,528 443,528 475,528"/>
+  <path class="line" d="M765,528 C797,528 815,528 847,528"/>
+  <path class="line" d="M1137,528 C1169,528 1187,528 1219,528"/>
+
+  <g transform="translate(180,700)">
+    <rect x="0" y="0" width="1240" height="96" rx="22" fill="#FFFFFF" stroke="#CCE0D7" stroke-width="2" filter="url(#shadow)"/>
+    <text x="36" y="38" class="h">为什么这条链路有技术含量？</text>
+    <text x="360" y="38" class="t">传统报告生成只看最终文本；本项目把“证据是否存在、引用是否合法、计划是否覆盖”变成可计算对象</text>
+    <text x="360" y="66" class="t">因此答辩时可以展示每次运行的证据账本、引用映射、忠实度审查和终稿引用校验</text>
+  </g>
+
+  <path class="dash" d="M860,350 C840,405 700,420 620,455"/>
+  <path class="dash" d="M870,350 C900,402 980,420 992,455"/>
+</svg>

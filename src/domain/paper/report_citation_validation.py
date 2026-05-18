@@ -65,7 +65,7 @@ def validate_report_citations(
 
     if citation_map is None or not citation_map.refs:
         return ReportCitationValidationResult(
-            verdict="pass",
+            verdict="warning",
             markers_in_report=[],
             defined_markers=[],
             unknown_markers=[],
@@ -73,8 +73,8 @@ def validate_report_citations(
             missing_references_section=False,
             citation_marker_count=0,
             reference_count=0,
-            issues=["no_citation_map_skip_validation"],
-            summary="no_citation_map_skip_validation",
+            issues=["no_citation_map_validation_incomplete"],
+            summary="no_citation_map_validation_incomplete",
         )
 
     defined_display = [r.inline_marker for r in citation_map.refs if r.inline_marker]

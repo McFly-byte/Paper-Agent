@@ -155,12 +155,18 @@ def build_faithfulness_report(
 ) -> FaithfulnessReviewReport:
     if cmap is None or not cmap.refs:
         return FaithfulnessReviewReport(
-            verdict="pass",
+            verdict="warning",
             section_results=[],
-            global_citation_issues=[],
+            global_citation_issues=[
+                CitationIssue(
+                    marker="",
+                    issue_type="invalid_evidence_id",
+                    detail="CitationMap missing; deterministic faithfulness checks cannot validate markers",
+                )
+            ],
             total_unsupported_claims=0,
-            total_citation_issues=0,
-            summary="no_citation_map_skip_deterministic_checks",
+            total_citation_issues=1,
+            summary="no_citation_map_warning_deterministic_checks_incomplete",
         )
 
     results: list[SectionFaithfulnessResult] = []

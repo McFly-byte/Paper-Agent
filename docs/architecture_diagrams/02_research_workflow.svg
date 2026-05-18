@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FAFBFD"/>
+      <stop offset="100%" stop-color="#EDF3F7"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-20%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1A3445" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#34617D"/>
+    </marker>
+    <style>
+      .title{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:42px;font-weight:800;fill:#142C3C}
+      .subtitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:20px;fill:#526B7B}
+      .phaseTitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:20px;font-weight:800;fill:#284B62}
+      .nodeTitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:17px;font-weight:800;fill:#102D40}
+      .nodeText{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:13px;fill:#536D7F}
+      .index{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:16px;font-weight:800;fill:#FFFFFF}
+      .phase{fill:#EAF4F7;stroke:#C5DAE4;stroke-width:2}
+      .node{fill:#FFFFFF;stroke:#D4E1E9;stroke-width:2;filter:url(#shadow)}
+      .line{stroke:#34617D;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="72" y="80" class="title">Paper-Agent 主研究流程</text>
+  <text x="74" y="116" class="subtitle">从用户问题到可审计调研报告：每个节点都有明确输入、输出和质量边界</text>
+
+  <g transform="translate(65,160)">
+    <rect class="phase" x="0" y="0" width="360" height="260" rx="24"/>
+    <text x="26" y="40" class="phaseTitle">一、理解任务并制定计划</text>
+    <g transform="translate(28,72)">
+      <rect class="node" x="0" y="0" width="300" height="54" rx="14"/>
+      <circle cx="24" cy="27" r="16" fill="#3B7B8F"/><text x="24" y="33" text-anchor="middle" class="index">1</text>
+      <text x="52" y="23" class="nodeTitle">协调节点</text>
+      <text x="52" y="43" class="nodeText">把原始问题转成研究简报</text>
+      <rect class="node" x="0" y="75" width="300" height="54" rx="14"/>
+      <circle cx="24" cy="102" r="16" fill="#3B7B8F"/><text x="24" y="108" text-anchor="middle" class="index">2</text>
+      <text x="52" y="98" class="nodeTitle">背景调查节点</text>
+      <text x="52" y="118" class="nodeText">扩展关键词、术语和检索方向</text>
+      <rect class="node" x="0" y="150" width="300" height="54" rx="14"/>
+      <circle cx="24" cy="177" r="16" fill="#3B7B8F"/><text x="24" y="183" text-anchor="middle" class="index">3</text>
+      <text x="52" y="173" class="nodeTitle">规划与审核节点</text>
+      <text x="52" y="193" class="nodeText">生成并审核 ResearchPlan</text>
+    </g>
+  </g>
+
+  <g transform="translate(475,160)">
+    <rect class="phase" x="0" y="0" width="420" height="260" rx="24"/>
+    <text x="26" y="40" class="phaseTitle">二、检索论文并构建证据</text>
+    <g transform="translate(28,72)">
+      <rect class="node" x="0" y="0" width="340" height="54" rx="14"/>
+      <circle cx="24" cy="27" r="16" fill="#5E7DC7"/><text x="24" y="33" text-anchor="middle" class="index">4</text>
+      <text x="52" y="23" class="nodeTitle">检索节点</text>
+      <text x="52" y="43" class="nodeText">按计划生成检索子任务并召回论文</text>
+      <rect class="node" x="0" y="75" width="340" height="54" rx="14"/>
+      <circle cx="24" cy="102" r="16" fill="#5E7DC7"/><text x="24" y="108" text-anchor="middle" class="index">5</text>
+      <text x="52" y="98" class="nodeTitle">论文过滤节点</text>
+      <text x="52" y="118" class="nodeText">标准化、去重、计划感知评分</text>
+      <rect class="node" x="0" y="150" width="340" height="54" rx="14"/>
+      <circle cx="24" cy="177" r="16" fill="#5E7DC7"/><text x="24" y="183" text-anchor="middle" class="index">6</text>
+      <text x="52" y="173" class="nodeTitle">阅读与证据索引</text>
+      <text x="52" y="193" class="nodeText">结构化抽取并生成 EvidenceLedger</text>
+    </g>
+  </g>
+
+  <g transform="translate(945,160)">
+    <rect class="phase" x="0" y="0" width="590" height="260" rx="24"/>
+    <text x="26" y="40" class="phaseTitle">三、分析、写作、审查与交付</text>
+    <g transform="translate(28,72)">
+      <rect class="node" x="0" y="0" width="250" height="54" rx="14"/>
+      <circle cx="24" cy="27" r="16" fill="#7A65B8"/><text x="24" y="33" text-anchor="middle" class="index">7</text>
+      <text x="52" y="23" class="nodeTitle">分析节点</text>
+      <text x="52" y="43" class="nodeText">聚类分析与全局分析</text>
+      <rect class="node" x="292" y="0" width="250" height="54" rx="14"/>
+      <circle cx="316" cy="27" r="16" fill="#7A65B8"/><text x="316" y="33" text-anchor="middle" class="index">8</text>
+      <text x="344" y="23" class="nodeTitle">写作节点</text>
+      <text x="344" y="43" class="nodeText">证据上下文约束章节写作</text>
+      <rect class="node" x="0" y="98" width="250" height="54" rx="14"/>
+      <circle cx="24" cy="125" r="16" fill="#7A65B8"/><text x="24" y="131" text-anchor="middle" class="index">9</text>
+      <text x="52" y="121" class="nodeTitle">忠实度审查</text>
+      <text x="52" y="141" class="nodeText">检查无证据断言和非法引用</text>
+      <rect class="node" x="292" y="98" width="250" height="54" rx="14"/>
+      <circle cx="316" cy="125" r="16" fill="#7A65B8"/><text x="316" y="131" text-anchor="middle" class="index">10</text>
+      <text x="344" y="121" class="nodeTitle">报告节点</text>
+      <text x="344" y="141" class="nodeText">合并终稿并追加 References</text>
+      <rect class="node" x="146" y="172" width="250" height="54" rx="14"/>
+      <circle cx="170" cy="199" r="16" fill="#7A65B8"/><text x="170" y="205" text-anchor="middle" class="index">11</text>
+      <text x="198" y="195" class="nodeTitle">审计导出</text>
+      <text x="198" y="215" class="nodeText">导出完整运行证据包</text>
+    </g>
+  </g>
+
+  <path class="line" d="M425,290 C445,290 455,290 475,290"/>
+  <path class="line" d="M895,290 C915,290 925,290 945,290"/>
+
+  <g transform="translate(105,505)">
+    <rect x="0" y="0" width="1390" height="248" rx="26" fill="#FFFFFF" stroke="#D3E2EA" stroke-width="2" filter="url(#shadow)"/>
+    <text x="32" y="44" class="phaseTitle">答辩讲解重点：不是线性流水线，而是带质量门禁的研究工作流</text>
+    <g transform="translate(48,78)">
+      <rect x="0" y="0" width="275" height="110" rx="18" fill="#F0F7F8" stroke="#BFD9E0"/>
+      <text x="24" y="36" class="nodeTitle">计划约束</text>
+      <text x="24" y="66" class="nodeText">ResearchPlan 驱动检索、过滤、覆盖率分析和写作结构</text>
+      <rect x="330" y="0" width="275" height="110" rx="18" fill="#F2F5FF" stroke="#C8D2F2"/>
+      <text x="354" y="36" class="nodeTitle">证据约束</text>
+      <text x="354" y="66" class="nodeText">每个事实性论断尽量绑定 EvidenceLedger 与 [C编号]</text>
+      <rect x="660" y="0" width="275" height="110" rx="18" fill="#FFF7EA" stroke="#E7D4A6"/>
+      <text x="684" y="36" class="nodeTitle">质量门禁</text>
+      <text x="684" y="66" class="nodeText">每个阶段输出边界检查，失败可恢复或告警继续</text>
+      <rect x="990" y="0" width="275" height="110" rx="18" fill="#F7F0FF" stroke="#D7C4EE"/>
+      <text x="1014" y="36" class="nodeTitle">全链路审计</text>
+      <text x="1014" y="66" class="nodeText">导出可复查的 timeline、state、证据、引用和报告</text>
+    </g>
+  </g>
+</svg>

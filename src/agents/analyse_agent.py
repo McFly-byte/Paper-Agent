@@ -42,6 +42,7 @@ from src.core.state_models import State, ExecutionState, PaperRunContext
 from autogen_core import message_handler
 from src.services.run_tmp_state_store import get_json, put_text, KEY_EXTRACTED_DATA, KEY_ANALYSE_RESULTS
 from src.core.node_gates import gate_analyse, record_gate
+from src.domain.paper.plan_coverage import build_plan_coverage_report
 from src.core.workflow_recovery import (
     clear_recovery_feedback_for,
     format_recovery_user_block,
@@ -280,6 +281,23 @@ async def analyse_node(state: State, runtime: Runtime[PaperRunContext]) -> State
                 for p in (extracted_papers.papers if extracted_papers else [])
             ],
         )
+        try:
+            plan_cov = build_plan_coverage_report(
+                plan=current_state.plan,
+                filter_report=(current_state.config or {}).get("paper_filter_report"),
+                analyse_results=analyse_results,
+                evidence_ledger=current_state.evidence_ledger,
+            )
+            ag.metrics["plan_analysis_task_coverage_ratio"] = plan_cov.analysis_task_coverage_ratio
+            ag.metrics["missing_plan_dimensions"] = {
+                "analysis_tasks": plan_cov.missing_plan_dimensions.get("analysis_tasks", [])
+            }
+            if plan_cov.representative_papers:
+                ag.metrics["representative_papers"] = plan_cov.representative_papers[:8]
+            current_state.config = dict(current_state.config or {})
+            current_state.config["plan_coverage_report_partial"] = plan_cov.model_dump(mode="json")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[工作流·分析] plan coverage 统计失败（忽略）: %s", exc)
         current_state.boundary_checks = record_gate(current_state.boundary_checks, "analyse", ag)
         if not ag.passed:
             detail = "；".join(ag.reasons) if ag.reasons else "分析门禁未通过"

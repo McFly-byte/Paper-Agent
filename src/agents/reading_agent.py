@@ -13,6 +13,8 @@ from src.services.chroma_client import ChromaClient
 from src.knowledge.knowledge import knowledge_base
 from src.core.config import config
 from src.rag.llamaindex.config import llamaindex_ingestion_enabled
+from src.rag.llamaindex.config import get_rag_backend
+from src.domain.paper.retrieval_mode import diagnose_retrieval_mode
 from src.utils.llm_api_throttle import get_throttler_for_client_type, reading_throttle_token_estimate
 from src.services.run_tmp_state_store import (
     ensure_run_tmp_kb,
@@ -337,6 +339,18 @@ async def reading_node(state: State, runtime: Runtime[PaperRunContext]) -> State
         paper_metadatas=successful_papers,
         llamaindex_node_count=llamaindex_node_count,
     )
+    retrieval_diag = diagnose_retrieval_mode(
+        config={"rag_backend": get_rag_backend()},
+        llamaindex_node_count=llamaindex_node_count,
+        kb_write_count=len(extracted_papers.papers),
+    )
+    rg.metrics["retrieval_mode"] = retrieval_diag.retrieval_mode
+    rg.metrics["retrieval_mode_reasons"] = retrieval_diag.reasons
+    current_state.config = dict(current_state.config or {})
+    current_state.config["retrieval_mode"] = retrieval_diag.retrieval_mode
+    current_state.config["retrieval_mode_diagnosis"] = retrieval_diag.model_dump(mode="json")
+    current_state.config["llamaindex_node_count"] = llamaindex_node_count
+    current_state.config["legacy_tmp_store_kb_write_count"] = len(extracted_papers.papers)
     current_state.boundary_checks = record_gate(current_state.boundary_checks, "reading", rg)
     if not rg.passed:
         detail = "；".join(rg.reasons) if rg.reasons else "阅读门禁未通过"

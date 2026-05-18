@@ -23,6 +23,9 @@ from src.utils.log_utils import setup_logger
 from src.core.run_context import tmp_db_id_var, rag_retrieval_logs_var
 from src.services.run_tmp_state_store import get_text, put_json, KEY_ANALYSE_RESULTS, KEY_WRITTED_SECTIONS
 from src.core.node_gates import gate_writing, record_gate
+from src.domain.paper.plan_coverage import build_plan_coverage_report
+from src.domain.paper.retrieval_mode import diagnose_retrieval_mode
+from src.rag.llamaindex.config import get_rag_backend
 from src.core.workflow_recovery import (
     clear_recovery_feedback_for,
     format_recovery_user_block,
@@ -111,6 +114,38 @@ async def writing_node(state: State, runtime: Runtime[PaperRunContext]) -> State
             writted_sections=writing_state.get("writted_sections") or [],
             rag_retrieval_logs=current_state.rag_retrieval_logs,
         )
+        current_state.config = dict(current_state.config or {})
+        retrieval_diag = diagnose_retrieval_mode(
+            config={"rag_backend": get_rag_backend()},
+            llamaindex_node_count=current_state.config.get("llamaindex_node_count"),
+            kb_write_count=current_state.config.get("legacy_tmp_store_kb_write_count"),
+            rag_retrieval_logs=current_state.rag_retrieval_logs,
+            evidence_bound_sections_count=current_state.config.get("evidence_bound_sections_count"),
+        )
+        wg.metrics["retrieval_mode"] = retrieval_diag.retrieval_mode
+        wg.metrics["retrieval_mode_reasons"] = retrieval_diag.reasons
+        current_state.config["retrieval_mode"] = retrieval_diag.retrieval_mode
+        current_state.config["retrieval_mode_diagnosis"] = retrieval_diag.model_dump(mode="json")
+        try:
+            section_texts_for_cov = [
+                (section.content or "").strip()
+                for section in (writing_state.get("writted_sections") or [])
+            ]
+            plan_cov = build_plan_coverage_report(
+                plan=current_state.plan,
+                filter_report=current_state.config.get("paper_filter_report"),
+                analyse_results=ga,
+                written_sections=section_texts_for_cov,
+                evidence_ledger=current_state.evidence_ledger,
+            )
+            wg.metrics["plan_writing_task_coverage_ratio"] = plan_cov.writing_task_coverage_ratio
+            wg.metrics["plan_analysis_task_coverage_ratio"] = plan_cov.analysis_task_coverage_ratio
+            wg.metrics["missing_plan_dimensions"] = plan_cov.missing_plan_dimensions
+            if plan_cov.representative_papers:
+                wg.metrics["representative_papers"] = plan_cov.representative_papers[:8]
+            current_state.config["plan_coverage_report"] = plan_cov.model_dump(mode="json")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[工作流·写作] plan coverage 统计失败（忽略）: %s", exc)
         current_state.boundary_checks = record_gate(current_state.boundary_checks, "writing", wg)
         if not wg.passed:
             detail = "；".join(wg.reasons) if wg.reasons else "写作门禁未通过"

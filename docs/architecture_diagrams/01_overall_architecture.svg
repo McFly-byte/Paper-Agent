@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F7FAFC"/>
+      <stop offset="100%" stop-color="#EEF4F8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#163047" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2F5E7E"/>
+    </marker>
+    <style>
+      .title{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:44px;font-weight:800;fill:#132D3E}
+      .subtitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:21px;fill:#4B6475}
+      .label{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:22px;font-weight:700;fill:#143247}
+      .small{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:16px;fill:#496375}
+      .tiny{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:14px;fill:#587082}
+      .badge{font-family:"Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;font-size:16px;font-weight:700;fill:#17405C}
+      .box{fill:#FFFFFF;stroke:#D7E3EB;stroke-width:2;filter:url(#shadow)}
+      .phase{fill:#EAF3F7;stroke:#BFD5E2;stroke-width:2}
+      .line{stroke:#2F5E7E;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .softline{stroke:#8AAEC0;stroke-width:2;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="0" fill="url(#bg)"/>
+
+  <text x="72" y="82" class="title">Paper-Agent 总体技术架构</text>
+  <text x="74" y="118" class="subtitle">计划驱动、证据约束、过程可观测、结果可审计的学术 Deep Research Agent</text>
+
+  <g transform="translate(1010,54)">
+    <rect x="0" y="0" width="120" height="38" rx="19" fill="#DDF2EA" stroke="#9BD2BC"/>
+    <text x="60" y="25" text-anchor="middle" class="badge">计划驱动</text>
+    <rect x="135" y="0" width="120" height="38" rx="19" fill="#E5EDFF" stroke="#B8C9F7"/>
+    <text x="195" y="25" text-anchor="middle" class="badge">证据约束</text>
+    <rect x="270" y="0" width="120" height="38" rx="19" fill="#FFF1D8" stroke="#E6C883"/>
+    <text x="330" y="25" text-anchor="middle" class="badge">可观测</text>
+    <rect x="405" y="0" width="120" height="38" rx="19" fill="#F4E9FF" stroke="#CDB3ED"/>
+    <text x="465" y="25" text-anchor="middle" class="badge">可审计</text>
+  </g>
+
+  <g transform="translate(70,185)">
+    <rect class="box" x="0" y="0" width="210" height="120" rx="18"/>
+    <text x="105" y="42" text-anchor="middle" class="label">用户与前端</text>
+    <text x="105" y="72" text-anchor="middle" class="small">研究主题输入</text>
+    <text x="105" y="98" text-anchor="middle" class="small">实时进度与报告展示</text>
+  </g>
+
+  <g transform="translate(345,185)">
+    <rect class="box" x="0" y="0" width="230" height="120" rx="18"/>
+    <text x="115" y="42" text-anchor="middle" class="label">FastAPI 服务层</text>
+    <text x="115" y="72" text-anchor="middle" class="small">任务接口 / SSE 事件流</text>
+    <text x="115" y="98" text-anchor="middle" class="small">审计包读取接口</text>
+  </g>
+
+  <g transform="translate(675,155)">
+    <rect class="box" x="0" y="0" width="300" height="180" rx="22"/>
+    <text x="150" y="46" text-anchor="middle" class="label">LangGraph 编排核心</text>
+    <text x="150" y="80" text-anchor="middle" class="small">节点路由 / 检查点 / 失败恢复</text>
+    <text x="150" y="108" text-anchor="middle" class="small">保留旧流程，逐步增强 V2 能力</text>
+    <rect x="54" y="132" width="192" height="30" rx="15" fill="#EAF3F7" stroke="#BCD6E3"/>
+    <text x="150" y="153" text-anchor="middle" class="tiny">Coordinator → Report</text>
+  </g>
+
+  <path class="line" d="M280,245 C305,245 315,245 345,245"/>
+  <path class="line" d="M575,245 C625,245 625,245 675,245"/>
+
+  <g transform="translate(1060,145)">
+    <rect class="phase" x="0" y="0" width="460" height="235" rx="24"/>
+    <text x="24" y="40" class="label">核心智能体能力层</text>
+    <g transform="translate(25,62)">
+      <rect x="0" y="0" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="95" y="36" text-anchor="middle" class="small">研究计划生成</text>
+      <rect x="220" y="0" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="315" y="36" text-anchor="middle" class="small">论文检索与过滤</text>
+      <rect x="0" y="78" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="95" y="114" text-anchor="middle" class="small">结构化阅读抽取</text>
+      <rect x="220" y="78" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="315" y="114" text-anchor="middle" class="small">聚类与全局分析</text>
+      <rect x="0" y="156" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="95" y="192" text-anchor="middle" class="small">证据约束写作</text>
+      <rect x="220" y="156" width="190" height="58" rx="14" fill="#FFFFFF" stroke="#BFD5E2"/>
+      <text x="315" y="192" text-anchor="middle" class="small">忠实度审查</text>
+    </g>
+  </g>
+  <path class="line" d="M975,245 C1010,245 1025,245 1060,245"/>
+
+  <g transform="translate(130,450)">
+    <rect class="phase" x="0" y="0" width="1340" height="230" rx="26"/>
+    <text x="28" y="42" class="label">数据与证据基础设施</text>
+    <g transform="translate(55,76)">
+      <rect x="0" y="0" width="210" height="92" rx="16" fill="#FFFFFF" stroke="#D5E2EA"/>
+      <text x="105" y="36" text-anchor="middle" class="small" font-weight="700">外部论文源</text>
+      <text x="105" y="64" text-anchor="middle" class="tiny">arXiv 检索结果</text>
+      <rect x="255" y="0" width="225" height="92" rx="16" fill="#FFFFFF" stroke="#D5E2EA"/>
+      <text x="367" y="36" text-anchor="middle" class="small" font-weight="700">临时运行存储</text>
+      <text x="367" y="64" text-anchor="middle" class="tiny">搜索 / 阅读 / 写作中间产物</text>
+      <rect x="525" y="0" width="225" height="92" rx="16" fill="#FFFFFF" stroke="#D5E2EA"/>
+      <text x="637" y="36" text-anchor="middle" class="small" font-weight="700">证据账本</text>
+      <text x="637" y="64" text-anchor="middle" class="tiny">EvidenceItem / EvidenceLedger</text>
+      <rect x="795" y="0" width="225" height="92" rx="16" fill="#FFFFFF" stroke="#D5E2EA"/>
+      <text x="907" y="36" text-anchor="middle" class="small" font-weight="700">引用映射</text>
+      <text x="907" y="64" text-anchor="middle" class="tiny">CitationMap / [C1] 标记</text>
+      <rect x="1065" y="0" width="225" height="92" rx="16" fill="#FFFFFF" stroke="#D5E2EA"/>
+      <text x="1177" y="36" text-anchor="middle" class="small" font-weight="700">审计产物</text>
+      <text x="1177" y="64" text-anchor="middle" class="tiny">run_audits / 可复查样例</text>
+    </g>
+  </g>
+
+  <g transform="translate(150,735)">
+    <rect class="box" x="0" y="0" width="1300" height="85" rx="20"/>
+    <text x="32" y="34" class="label">技术亮点</text>
+    <text x="210" y="34" class="small">研究计划不是展示用文本，而是驱动检索、过滤、覆盖分析和写作结构的运行时对象</text>
+    <text x="210" y="62" class="small">每次运行都会生成可审计证据链：论文 → 阅读抽取 → 证据账本 → 引用映射 → 忠实度检查 → 终稿校验</text>
+  </g>
+
+  <path class="softline" d="M790,335 C760,390 705,420 655,450"/>
+  <path class="softline" d="M825,335 C850,385 900,420 1035,450"/>
+</svg>

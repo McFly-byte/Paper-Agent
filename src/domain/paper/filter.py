@@ -23,8 +23,12 @@ class PaperScore(BaseModel):
     relevance_score: float = Field(ge=0.0, le=1.0)
     keyword_score: float = Field(ge=0.0, le=1.0)
     inclusion_score: float = Field(ge=0.0, le=1.0)
+    plan_task_score: float = Field(default=0.0, ge=0.0, le=1.0)
     exclusion_penalty: float = Field(ge=0.0, le=1.0)
     metadata_score: float = Field(ge=0.0, le=1.0)
+    matched_plan_tasks: list[int] = Field(default_factory=list)
+    task_match_details: list[dict[str, Any]] = Field(default_factory=list)
+    dominant_plan_task: int | None = None
     reasons: list[str] = Field(default_factory=list)
 
 
@@ -45,6 +49,8 @@ class PaperFilterResult(BaseModel):
     rejected: list[RejectedPaper]
     scores: list[PaperScore]
     warnings: list[str] = Field(default_factory=list)
+    plan_task_coverage: dict[str, int] = Field(default_factory=dict)
+    task_coverage_summary: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class FilterStats(BaseModel):
@@ -63,6 +69,72 @@ class FilterContext(BaseModel):
     inclusion_phrases: list[str] = Field(default_factory=list)
     exclusion_phrases: list[str] = Field(default_factory=list)
     category_hints: set[str] = Field(default_factory=set)
+    plan_task_specs: list[dict[str, Any]] = Field(default_factory=list)
+
+
+_TOKEN_STOPWORDS = frozenset(
+    {
+        "about",
+        "across",
+        "address",
+        "addresses",
+        "advanced",
+        "agent",
+        "agentic",
+        "agents",
+        "also",
+        "and",
+        "application",
+        "applications",
+        "approach",
+        "architectural",
+        "architecture",
+        "based",
+        "benchmark",
+        "benchmarks",
+        "between",
+        "capability",
+        "complex",
+        "covers",
+        "design",
+        "discusses",
+        "domain",
+        "domains",
+        "empirical",
+        "evaluation",
+        "evaluates",
+        "framework",
+        "frameworks",
+        "for",
+        "from",
+        "includes",
+        "large",
+        "language",
+        "llm",
+        "llms",
+        "model",
+        "models",
+        "paper",
+        "papers",
+        "provides",
+        "research",
+        "specific",
+        "study",
+        "system",
+        "systems",
+        "task",
+        "tasks",
+        "that",
+        "the",
+        "their",
+        "these",
+        "this",
+        "through",
+        "using",
+        "with",
+        "without",
+    }
+)
 
 
 def _safe_str(v: Any) -> str:
@@ -313,6 +385,63 @@ def _tokenize(text: str) -> set[str]:
     return {p for p in parts if len(p) >= 2}
 
 
+def _content_tokens(text: str) -> set[str]:
+    return _tokenize(text)
+
+
+def _core_tokens(text: str) -> set[str]:
+    toks = _tokenize(text)
+    return {t for t in toks if t not in _TOKEN_STOPWORDS and not t.isdigit()}
+
+
+def _task_label(task: Any, idx: int) -> str:
+    q = _safe_str(getattr(task, "query", "")) if task is not None else ""
+    return q[:120] or f"search_task_{idx}"
+
+
+def _build_plan_task_specs(plan: ResearchPlan | None) -> list[dict[str, Any]]:
+    if not plan or not plan.search_tasks:
+        return []
+
+    raw_specs: list[dict[str, Any]] = []
+    token_freq: dict[str, int] = {}
+    for i, task in enumerate(plan.search_tasks):
+        query = _safe_str(getattr(task, "query", ""))
+        inclusion = [
+            _safe_str(x)
+            for x in (getattr(task, "inclusion_criteria", None) or [])
+            if _safe_str(x)
+        ]
+        text_for_tokens = " ".join([query, *inclusion])
+        tokens = _core_tokens(text_for_tokens)
+        for tok in tokens:
+            token_freq[tok] = token_freq.get(tok, 0) + 1
+        raw_specs.append(
+            {
+                "task_index": i,
+                "query": query,
+                "label": _task_label(task, i),
+                "inclusion_criteria": inclusion,
+                "raw_tokens": sorted(tokens),
+            }
+        )
+
+    task_count = len(raw_specs)
+    common_cutoff = max(2, int(task_count * 0.5) + 1)
+    for spec in raw_specs:
+        raw_tokens = set(spec.get("raw_tokens") or [])
+        distinctive = {
+            tok
+            for tok in raw_tokens
+            if token_freq.get(tok, 0) < common_cutoff
+        }
+        if len(distinctive) < 2:
+            distinctive = raw_tokens
+        spec["tokens"] = sorted(distinctive)
+        spec.pop("raw_tokens", None)
+    return raw_specs
+
+
 def build_filter_context(
     plan: ResearchPlan | None,
     background_context: BackgroundContext | None,
@@ -376,6 +505,7 @@ def build_filter_context(
         inclusion_phrases=inclusion,
         exclusion_phrases=exclusion,
         category_hints=cats,
+        plan_task_specs=_build_plan_task_specs(plan),
     )
 
 
@@ -391,12 +521,110 @@ def _overlap_score(tokens: set[str], text: str, *, weight: float) -> tuple[float
     return min(1.0, ratio * weight), hits[:8]
 
 
+def _token_overlap(tokens: set[str], text_tokens: set[str], text: str) -> list[str]:
+    if not tokens:
+        return []
+    tl = (text or "").lower()
+    hits: list[str] = []
+    for tok in sorted(tokens):
+        if tok in text_tokens or (len(tok) >= 4 and tok in tl):
+            hits.append(tok)
+    return hits
+
+
+def _inclusion_overlap_score(phrases: list[str], blob_tokens: set[str], blob: str) -> tuple[float, list[str]]:
+    if not phrases:
+        return 0.0, []
+    hits: list[str] = []
+    scores: list[float] = []
+    blob_l = (blob or "").lower()
+    for phrase in phrases:
+        p = (phrase or "").strip().lower()
+        if not p:
+            continue
+        if p in blob_l:
+            hits.append(p[:50])
+            scores.append(1.0)
+            continue
+        toks = _core_tokens(p)
+        if not toks:
+            continue
+        overlap = toks & blob_tokens
+        ratio = len(overlap) / max(1, len(toks))
+        if ratio >= 0.34 and len(overlap) >= 2:
+            hits.append(",".join(sorted(overlap)[:5]))
+        scores.append(ratio)
+    if not scores:
+        return 0.0, []
+    # Use the best-matching criterion as a relevance hint; average would bury
+    # papers that are intentionally focused on one search subtask.
+    return min(1.0, max(scores)), hits[:8]
+
+
+def _score_plan_tasks(
+    candidate: PaperCandidate,
+    ctx: FilterContext,
+    *,
+    title_tokens: set[str],
+    abstract_tokens: set[str],
+    blob: str,
+) -> tuple[float, list[int], list[dict[str, Any]], int | None]:
+    if not ctx.plan_task_specs:
+        return 0.0, [], [], None
+
+    details: list[dict[str, Any]] = []
+    matched: list[int] = []
+    best_score = 0.0
+    best_task: int | None = None
+    for spec in ctx.plan_task_specs:
+        idx = int(spec.get("task_index", 0))
+        tokens = set(spec.get("tokens") or [])
+        title_hits = _token_overlap(tokens, title_tokens, candidate.title or "")
+        abstract_hits = _token_overlap(tokens, abstract_tokens, candidate.abstract or "")
+        all_hits = sorted(set(title_hits + abstract_hits))
+        denom = max(3, min(len(tokens), 8))
+        score = min(1.0, (len(title_hits) * 1.35 + len(abstract_hits) * 0.75) / denom)
+
+        inc_score, inc_hits = _inclusion_overlap_score(
+            list(spec.get("inclusion_criteria") or []),
+            title_tokens | abstract_tokens,
+            blob,
+        )
+        score = min(1.0, score * 0.82 + inc_score * 0.18)
+
+        strong_enough = score >= 0.26 and (len(all_hits) >= 2 or len(title_hits) >= 2)
+        if strong_enough:
+            matched.append(idx)
+        if score > best_score:
+            best_score = score
+            best_task = idx
+        details.append(
+            {
+                "task_index": idx,
+                "query": spec.get("query"),
+                "score": round(score, 4),
+                "matched_terms": all_hits[:12],
+                "title_terms": title_hits[:8],
+                "abstract_terms": abstract_hits[:8],
+                "inclusion_hits": inc_hits[:5],
+            }
+        )
+
+    if not matched:
+        best_task = None
+        best_score = 0.0
+    return round(best_score, 4), matched, details, best_task
+
+
 def score_candidate(candidate: PaperCandidate, ctx: FilterContext) -> PaperScore:
     reasons: list[str] = []
     title = candidate.title or ""
     abstract = (candidate.abstract or "").lower()
     blob_title = (title or "").lower()
     blob = f"{blob_title} {abstract}".strip()
+    title_tokens = _content_tokens(blob_title)
+    abstract_tokens = _content_tokens(abstract)
+    blob_tokens = title_tokens | abstract_tokens
 
     kw_title, ht = _overlap_score(ctx.query_tokens, blob_title, weight=1.2)
     kw_abs, ha = _overlap_score(ctx.query_tokens, abstract, weight=0.7)
@@ -406,12 +634,19 @@ def score_candidate(candidate: PaperCandidate, ctx: FilterContext) -> PaperScore
     if ha:
         reasons.append(f"keywords_in_abstract:{','.join(ha[:5])}")
 
-    inc_hits = 0
-    for phrase in ctx.inclusion_phrases:
-        if phrase and phrase in blob:
-            inc_hits += 1
-            reasons.append(f"inclusion_hit:{phrase[:40]}")
-    inclusion_score = min(1.0, inc_hits * 0.25)
+    inclusion_score, inc_hits = _inclusion_overlap_score(ctx.inclusion_phrases, blob_tokens, blob)
+    for hit in inc_hits[:5]:
+        reasons.append(f"inclusion_hit:{hit[:40]}")
+
+    plan_task_score, matched_plan_tasks, task_details, dominant_plan_task = _score_plan_tasks(
+        candidate,
+        ctx,
+        title_tokens=title_tokens,
+        abstract_tokens=abstract_tokens,
+        blob=blob,
+    )
+    if matched_plan_tasks:
+        reasons.append(f"plan_task_match:{','.join(str(x) for x in matched_plan_tasks[:6])}")
 
     exc_hits = 0
     for phrase in ctx.exclusion_phrases:
@@ -439,9 +674,10 @@ def score_candidate(candidate: PaperCandidate, ctx: FilterContext) -> PaperScore
         reasons.append("untitled_penalty")
 
     relevance = (
-        0.52 * keyword_score
-        + 0.28 * inclusion_score
-        + 0.15 * metadata_score
+        0.50 * keyword_score
+        + 0.32 * plan_task_score
+        + 0.13 * inclusion_score
+        + 0.05 * metadata_score
         - 0.35 * exclusion_penalty
     )
     if title.strip() == "Untitled Paper":
@@ -453,8 +689,12 @@ def score_candidate(candidate: PaperCandidate, ctx: FilterContext) -> PaperScore
         relevance_score=relevance,
         keyword_score=keyword_score,
         inclusion_score=inclusion_score,
+        plan_task_score=plan_task_score,
         exclusion_penalty=exclusion_penalty,
         metadata_score=metadata_score,
+        matched_plan_tasks=matched_plan_tasks,
+        task_match_details=task_details,
+        dominant_plan_task=dominant_plan_task,
         reasons=reasons[:20],
     )
 
@@ -469,6 +709,51 @@ def _resolve_top_k(
         if tops:
             k = min(k, min(tops))
     return max(1, k)
+
+
+def _build_task_coverage_summary(
+    selected: list[PaperCandidate],
+    selected_scores: list[PaperScore],
+    ctx: FilterContext,
+) -> tuple[dict[str, int], list[dict[str, Any]]]:
+    if not ctx.plan_task_specs:
+        return {}, []
+
+    by_id = {s.paper_id: s for s in selected_scores}
+    coverage: dict[str, int] = {}
+    summary: list[dict[str, Any]] = []
+    for spec in ctx.plan_task_specs:
+        idx = int(spec.get("task_index", 0))
+        key = str(idx)
+        rows: list[dict[str, Any]] = []
+        for cand in selected:
+            score = by_id.get(cand.paper_id)
+            if score is None or idx not in score.matched_plan_tasks:
+                continue
+            detail = next(
+                (d for d in score.task_match_details if int(d.get("task_index", -1)) == idx),
+                {},
+            )
+            rows.append(
+                {
+                    "paper_id": cand.paper_id,
+                    "title": cand.title,
+                    "task_score": detail.get("score"),
+                    "matched_terms": detail.get("matched_terms", []),
+                }
+            )
+        rows.sort(key=lambda x: float(x.get("task_score") or 0.0), reverse=True)
+        coverage[key] = len(rows)
+        summary.append(
+            {
+                "task_index": idx,
+                "query": spec.get("query"),
+                "core_terms": spec.get("tokens", []),
+                "covered_paper_count": len(rows),
+                "covered_papers": rows[:10],
+            }
+        )
+    return coverage, summary
 
 
 def filter_candidates(
@@ -498,6 +783,8 @@ def filter_candidates(
             rejected=[],
             scores=[],
             warnings=["empty_input"],
+            plan_task_coverage={},
+            task_coverage_summary=[],
         )
 
     deduped, stats = deduplicate_candidates(candidates)
@@ -548,6 +835,13 @@ def filter_candidates(
             )
         )
 
+    selected_scores = [s for c, s in pool]
+    plan_task_coverage, task_coverage_summary = _build_task_coverage_summary(
+        selected,
+        selected_scores,
+        ctx,
+    )
+
     return PaperFilterResult(
         input_count=input_count,
         normalized_count=input_count,
@@ -558,4 +852,6 @@ def filter_candidates(
         rejected=rejected,
         scores=[s for _, s in ranked],
         warnings=warnings,
+        plan_task_coverage=plan_task_coverage,
+        task_coverage_summary=task_coverage_summary,
     )

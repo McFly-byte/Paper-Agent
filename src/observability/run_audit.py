@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from src.core.config import config
 from src.core.state_models import BackToFrontData, ExecutionState, PaperAgentState
+from src.domain.paper.plan_coverage import build_plan_coverage_report
 from src.observability.redaction import redact_mapping, redact_value
 from src.utils.log_utils import setup_logger
 
@@ -250,7 +251,43 @@ def _written_sections_md(
     return "\n".join(lines)
 
 
-def _extracted_data_compact(extracted: Any, max_papers: int, max_chars: int, redact: bool) -> Any:
+def _meta_from_row(row: Any) -> dict[str, Any]:
+    if hasattr(row, "model_dump"):
+        d = row.model_dump(mode="json")
+    elif isinstance(row, dict):
+        d = dict(row)
+    else:
+        return {}
+    paper = d.get("paper") if isinstance(d.get("paper"), dict) else None
+    if paper:
+        d = {**paper, **{k: v for k, v in d.items() if k != "paper"}}
+    raw = d.get("raw") if isinstance(d.get("raw"), dict) else {}
+    return {
+        "paper_id": d.get("paper_id") or d.get("arxiv_id") or d.get("id") or raw.get("paper_id") or raw.get("id"),
+        "title": d.get("title") or raw.get("title"),
+        "url": d.get("url") or d.get("pdf_url") or raw.get("url") or raw.get("pdf_url"),
+        "published": d.get("published") or d.get("published_date") or d.get("year") or raw.get("published"),
+    }
+
+
+def _metadata_at(metadata_sources: list[list[Any]], idx: int) -> dict[str, Any]:
+    for source in metadata_sources:
+        if idx >= len(source):
+            continue
+        meta = _meta_from_row(source[idx])
+        if any(meta.values()):
+            return meta
+    return {}
+
+
+def _extracted_data_compact(
+    extracted: Any,
+    max_papers: int,
+    max_chars: int,
+    redact: bool,
+    *,
+    metadata_sources: list[list[Any]] | None = None,
+) -> Any:
     if extracted is None:
         return _na("no_extracted_data")
     papers_raw: list[Any] = []
@@ -261,19 +298,24 @@ def _extracted_data_compact(extracted: Any, max_papers: int, max_chars: int, red
     if not papers_raw:
         return _na("empty_extracted_papers")
     rows: list[dict[str, Any]] = []
-    for p in papers_raw[:max_papers]:
+    metadata_sources = metadata_sources or []
+    for i, p in enumerate(papers_raw[:max_papers]):
         if hasattr(p, "model_dump"):
             d = p.model_dump(mode="json")
         elif isinstance(p, dict):
             d = dict(p)
         else:
             continue
+        meta = _metadata_at(metadata_sources, i)
         km = d.get("key_methodology") or {}
         if isinstance(km, dict):
             km = {"name": str(km.get("name", ""))[:120], "novelty_excerpt": str(km.get("novelty", ""))[:200]}
         rows.append(
             {
-                "paper_id": str(d.get("paper_id", ""))[:120],
+                "paper_id": str(d.get("paper_id") or meta.get("paper_id") or "")[:120],
+                "title": str(d.get("title") or meta.get("title") or "")[:300],
+                "url": d.get("url") or meta.get("url"),
+                "published": d.get("published") or meta.get("published"),
                 "core_problem_excerpt": str(d.get("core_problem", ""))[:max_chars],
                 "key_methodology": km,
                 "contributions_count": len(d.get("contributions") or []) if isinstance(d.get("contributions"), list) else 0,
@@ -400,6 +442,9 @@ class RunAuditExporter:
         report = state.report_markdown or ""
         fr = state.faithfulness_review or tmp.get("faithfulness_review")
         rcv = (state.config or {}).get("report_citation_validation") or tmp.get("report_citation_validation")
+        retrieval_mode = (state.config or {}).get("retrieval_mode")
+        evidence_chain_status = "ok" if extracted_n > 0 and ev_n > 0 else "broken"
+        citation_chain_status = "ok" if ev_n > 0 and _citation_ref_count(cm) > 0 else "broken"
         return {
             "run_id": state.run_id,
             "current_step": str(state.current_step),
@@ -416,6 +461,9 @@ class RunAuditExporter:
             "boundary_check_keys": list((state.boundary_checks or {}).keys()),
             "faithfulness_verdict": _faithfulness_verdict(fr),
             "report_citation_verdict": _report_citation_verdict(rcv),
+            "evidence_chain_status": evidence_chain_status,
+            "citation_chain_status": citation_chain_status,
+            "retrieval_mode": retrieval_mode,
         }
 
     def _build_audit_notes_md(
@@ -433,6 +481,7 @@ class RunAuditExporter:
             warnings.append("report_citation_verdict=fail")
         if self.load_notes:
             warnings.append(f"tmp_store_read_issues: {len(self.load_notes)}")
+        retrieval_mode = summary.get("retrieval_mode") or (state.config or {}).get("retrieval_mode") or "unknown"
         checks = [
             "research brief 与 user_request 对齐",
             "background_context 关键词与检索意图",
@@ -463,6 +512,10 @@ class RunAuditExporter:
             "## Warnings",
             "",
             *warn_lines,
+            "",
+            "## Retrieval mode",
+            "",
+            f"- `{retrieval_mode}`",
             "",
             "## Tmp store 读取",
             "",
@@ -541,7 +594,19 @@ class RunAuditExporter:
             redact=rd,
             max_chars=mc,
         )
-        _dump_json(run_dir / "boundary_checks.json", state.boundary_checks or {}, redact=rd, max_chars=mc)
+        boundary_to_dump = dict(state.boundary_checks or {})
+        retrieval_diag = (state.config or {}).get("retrieval_mode_diagnosis")
+        retrieval_mode = (state.config or {}).get("retrieval_mode")
+        if retrieval_mode:
+            for node in ("reading", "writing"):
+                row = dict(boundary_to_dump.get(node) or {})
+                metrics = dict(row.get("metrics") or {})
+                metrics.setdefault("retrieval_mode", retrieval_mode)
+                if isinstance(retrieval_diag, dict):
+                    metrics.setdefault("retrieval_mode_reasons", retrieval_diag.get("reasons") or [])
+                row["metrics"] = metrics
+                boundary_to_dump[node] = row
+        _dump_json(run_dir / "boundary_checks.json", boundary_to_dump, redact=rd, max_chars=mc)
 
         # coordinator
         if state.brief is not None:
@@ -624,7 +689,18 @@ class RunAuditExporter:
         )
         _dump_json(
             run_dir / "reading" / "extracted_data.summary.json",
-            _extracted_data_compact(extracted, self.max_papers, mc, rd),
+            _extracted_data_compact(
+                extracted,
+                self.max_papers,
+                mc,
+                rd,
+                metadata_sources=[
+                    readings if isinstance(readings, list) else [],
+                    tmp.get("reading_successful_papers") if isinstance(tmp.get("reading_successful_papers"), list) else [],
+                    filtered if isinstance(filtered, list) else [],
+                    search_results if isinstance(search_results, list) else [],
+                ],
+            ),
             redact=False,
             max_chars=mc,
         )
@@ -653,6 +729,41 @@ class RunAuditExporter:
         _dump_text(
             run_dir / "analysis" / "analysis_results.md",
             analyse_text if isinstance(analyse_text, str) and analyse_text.strip() else "# not_available\n",
+            redact=rd,
+            max_chars=mc * 4,
+        )
+        plan_cov_obj = (state.config or {}).get("plan_coverage_report")
+        if not plan_cov_obj:
+            try:
+                plan_cov = build_plan_coverage_report(
+                    plan=state.plan,
+                    filter_report=(state.config or {}).get("paper_filter_report"),
+                    analyse_results=analyse_text,
+                    written_sections=sections,
+                    evidence_ledger=ledger,
+                )
+                plan_cov_obj = plan_cov.model_dump(mode="json")
+                plan_cov_md = plan_cov.to_markdown()
+            except Exception as exc:  # noqa: BLE001
+                plan_cov_obj = _na(f"plan_coverage_failed:{type(exc).__name__}")
+                plan_cov_md = "# Plan Coverage Summary\n\nnot_available\n"
+        else:
+            try:
+                from src.domain.paper.plan_coverage import PlanCoverageReport
+
+                plan_cov = PlanCoverageReport.model_validate(plan_cov_obj)
+                plan_cov_md = plan_cov.to_markdown()
+            except Exception:
+                plan_cov_md = "# Plan Coverage Summary\n\nnot_available\n"
+        _dump_json(
+            run_dir / "analysis" / "plan_coverage_report.json",
+            plan_cov_obj,
+            redact=rd,
+            max_chars=mc,
+        )
+        _dump_text(
+            run_dir / "analysis" / "plan_coverage_summary.md",
+            plan_cov_md,
             redact=rd,
             max_chars=mc * 4,
         )
@@ -721,6 +832,8 @@ class RunAuditExporter:
             "evidence/evidence_ledger.summary.json",
             "evidence/evidence_items.sample.json",
             "analysis/analysis_results.md",
+            "analysis/plan_coverage_report.json",
+            "analysis/plan_coverage_summary.md",
             "writing/outline.md",
             "writing/written_sections.md",
             "writing/citation_map.json",

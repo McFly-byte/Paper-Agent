@@ -206,7 +206,14 @@ class LlamaIndexRAGService:
             emd = embedding_settings_for_db(embed_info if isinstance(embed_info, dict) else {})
             emb_fn = self._chromadb_embedding_fn(emd, OpenAIEmbeddingFunction)
             li_name = li_collection_name(db_id)
-            client = chromadb.PersistentClient(path=chroma_path)
+            # 复用 ChromaKB 的 client，避免同 path 下 Settings 不一致触发 Chroma 单例冲突。
+            client = getattr(kb, "chroma_client", None)
+            if client is None:
+                from chromadb.config import Settings
+
+                client = chromadb.PersistentClient(
+                    path=chroma_path, settings=Settings(anonymized_telemetry=False)
+                )
             try:
                 client.delete_collection(li_name)
             except Exception:  # noqa: BLE001
@@ -281,7 +288,13 @@ class LlamaIndexRAGService:
             embed_info = (kb.databases_meta.get(db_id) or {}).get("embed_info") or {}
             emd = embedding_settings_for_db(embed_info if isinstance(embed_info, dict) else {})
             emb_fn = self._chromadb_embedding_fn(emd, OpenAIEmbeddingFunction)
-            client = chromadb.PersistentClient(path=chroma_path)
+            client = getattr(kb, "chroma_client", None)
+            if client is None:
+                from chromadb.config import Settings
+
+                client = chromadb.PersistentClient(
+                    path=chroma_path, settings=Settings(anonymized_telemetry=False)
+                )
             li_name = li_collection_name(db_id)
             collection = client.get_collection(name=li_name, embedding_function=emb_fn)
             embed_model = self._openai_embed_model(emd, OpenAIEmbedding)

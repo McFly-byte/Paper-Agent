@@ -68,3 +68,9 @@ def test_global_unused_refs():
     cmap = _tiny_map()
     rep = build_faithfulness_report(["short"], cmap, long_section_chars=5000)
     assert rep.global_citation_issues
+
+
+def test_missing_citation_map_is_not_pass():
+    rep = build_faithfulness_report(["A factual claim improves accuracy."], None)
+    assert rep.verdict == "warning"
+    assert rep.total_citation_issues > 0

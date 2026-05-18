@@ -194,6 +194,9 @@ async def send_input_deprecated(data: dict):
 
 
 if __name__ == "__main__":
+    import os
+
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    port = int(os.environ.get("PAPER_AGENT_API_PORT", "8001"))
+    uvicorn.run(app, host="0.0.0.0", port=port)

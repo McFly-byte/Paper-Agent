@@ -124,3 +124,10 @@ def test_unused_not_allowed_fail():
     report = "Body [C1] only.\n\n## References\n\n" + cmap.to_markdown_references()
     r = validate_report_citations(report, cmap, allow_unused_references=False)
     assert r.verdict == "fail"
+
+
+def test_missing_citation_map_returns_warning_not_empty_pass():
+    r = validate_report_citations("# R\n\nBody [C1].", None)
+    assert r.verdict == "warning"
+    assert r.issues
+    assert r.summary
